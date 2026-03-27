@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projektzeitstrahl</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f6f2; --surface:#fff; --border:#e2e0d8;
+  --text:#1a1915; --muted:#8a8880; --accent:#2d5be3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-height:100vh;}
+
+.app-header{
+  padding:.9rem 1.5rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 8px rgba(0,0,0,.05);
+}
+.app-header h1{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;color:var(--muted);letter-spacing:.04em;}
+#proj-title{
+  font-size:1.05rem;font-weight:600;color:var(--text);
+  border:none;background:transparent;font-family:'DM Sans',sans-serif;
+  outline:none;min-width:260px;border-bottom:2px solid transparent;
+}
+#proj-title:focus{border-bottom-color:var(--accent);}
+.hbtns{display:flex;gap:.4rem;align-items:center;}
+.btn{
+  font-family:'DM Mono',monospace;font-size:.7rem;
+  padding:.28rem .7rem;border-radius:4px;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text);transition:all .12s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.primary:hover{background:#1e46c4;}
+.btn.danger{border-color:#e8503a;color:#e8503a;}
+.btn.danger:hover{background:#e8503a;color:#fff;}
+.save-badge{
+  font-family:'DM Mono',monospace;font-size:.65rem;color:#3aaa6e;
+  opacity:0;transition:opacity .3s;padding:.12rem .5rem;
+  background:#e8f5ee;border-radius:3px;
+}
+.save-badge.show{opacity:1;}
+
+.app-body{display:flex;height:calc(100vh - 54px);}
+
+.sidebar{
+  width:288px;min-width:288px;background:var(--surface);
+  border-right:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.ss{padding:.85rem 1rem;border-bottom:1px solid var(--border);}
+.ss h2{
+  font-family:'DM Mono',monospace;font-size:.67rem;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.7rem;
+}
+.fr{margin-bottom:.55rem;}
+.fr label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.18rem;}
+.fr input{
+  width:100%;padding:.32rem .45rem;
+  border:1px solid var(--border);border-radius:3px;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;
+  background:var(--bg);color:var(--text);outline:none;
+}
+.fr input:focus{border-color:var(--accent);}
+.fr select{
+  width:100%;padding:.32rem .45rem;
+  border:1px solid var(--border);border-radius:3px;
+  font-family:'DM Sans',sans-serif;font-size:.78rem;
+  background:var(--bg);color:var(--text);outline:none;
+}
+.fr select:focus{border-color:var(--accent);}
+.cprow{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.25rem;}
+.cpick{
+  width:20px;height:20px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:transform .1s,border-color .1s;
+}
+.cpick:hover{transform:scale(1.2);}
+.cpick.sel{border-color:var(--text);}
+.li{
+  display:flex;align-items:center;
+  padding:.38rem .45rem;border-radius:3px;margin-bottom:.22rem;
+  background:var(--bg);font-size:.76rem;cursor:pointer;
+  border:1px solid transparent;transition:border-color .1s;
+}
+.li:hover{border-color:var(--border);}
+.li.sel{border-color:var(--accent);background:#eef2fc;}
+.li .dot{width:9px;height:9px;border-radius:50%;margin-right:.45rem;flex-shrink:0;}
+.li .nm{flex:1;overflow:hidden;line-height:1.35;}
+.li .del{color:var(--muted);font-size:.75rem;padding:0 .15rem;margin-left:.3rem;}
+.li .del:hover{color:#e8503a;}
+.empty-hint{font-size:.72rem;color:var(--muted);font-family:'DM Mono',monospace;padding:.3rem 0;}
+
+.canvas-area{flex:1;overflow:auto;padding:1.5rem;}
+#tl-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:1.8rem 2.5rem 1.5rem;min-width:700px;
+  box-shadow:0 2px 20px rgba(0,0,0,.04);
+}
+#tl-title{font-size:1rem;font-weight:600;margin-bottom:.2rem;font-family:'DM Sans',sans-serif;}
+#tl-sub{font-size:.72rem;color:var(--muted);margin-bottom:1.4rem;font-family:'DM Mono',monospace;}
+
+/* milestone zone — above axis */
+.ms-zone{position:relative;margin-bottom:0;}
+
+/* axis */
+.axis-wrap{position:relative;height:28px;}
+.axis-line{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--text);}
+.axis-tick{
+  position:absolute;top:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;
+}
+.tick-ln{width:1px;height:8px;background:var(--text);margin-bottom:2px;}
+.tick-lb{
+  font-family:'DM Mono',monospace;font-size:.63rem;
+  color:var(--muted);white-space:nowrap;transform:translateY(1px);
+}
+
+/* milestone markers */
+.ms-mk{
+  position:absolute;display:flex;flex-direction:column;align-items:center;
+  transform:translateX(-50%);cursor:pointer;bottom:0;
+}
+.ms-lb{
+  font-size:.67rem;color:var(--text);text-align:center;
+  max-width:85px;line-height:1.2;margin-bottom:3px;
+}
+.ms-arr{width:1px;background:var(--text);}
+.ms-dot{
+  width:8px;height:8px;border-radius:50%;
+  border:2px solid var(--text);background:var(--surface);margin-top:-1px;
+}
+.ms-mk.sel .ms-dot{background:var(--accent);border-color:var(--accent);}
+
+/* phase bars — BELOW axis */
+.phases-zone{display:flex;flex-direction:column;gap:4px;margin-top:18px;}
+.ph-row{position:relative;height:26px;}
+.ph-bar{
+  position:absolute;height:100%;border-radius:3px;
+  display:flex;align-items:center;padding:0 7px;
+  font-size:.67rem;font-weight:500;color:#fff;
+  overflow:hidden;cursor:pointer;transition:opacity .1s;white-space:nowrap;
+}
+.ph-bar:hover{opacity:.82;}
+.ph-bar.sel{outline:2px solid var(--text);outline-offset:1px;}
+.ph-bar .bl{overflow:hidden;text-overflow:ellipsis;}
+
+/* legend */
+.leg{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--border);}
+.leg-i{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:var(--muted);}
+.leg-d{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.exp-note{margin-top:.7rem;font-size:.64rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;}
+.canvas-empty{
+  text-align:center;padding:3rem 2rem;color:var(--muted);
+  font-size:.8rem;font-family:'DM Mono',monospace;line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div style="display:flex;align-items:center;gap:1rem">
+    <h1>ZEITSTRAHL</h1>
+    <input id="proj-title" placeholder="Projektname …" />
+  </div>
+  <div class="hbtns">
+    <span class="save-badge" id="save-badge">✓ gespeichert</span>
+    <button class="btn danger" onclick="clearAll()">✕ Alles löschen</button>
+    <button class="btn" onclick="exportPNG()">↓ PNG</button>
+  </div>
+</div>
+
+<div class="app-body">
+<div class="sidebar">
+
+  <div class="ss">
+    <h2>Einstellungen</h2>
+    <div class="fr"><label>Projekttitel</label><input id="proj-title-2" placeholder="z.B. Kassensystem POS" oninput="syncTitle(this);save();render()"></div>
+    <div class="fr"><label>Untertitel</label><input id="subtitle-inp" placeholder="z.B. FH SWF · Gruppe 2" oninput="save();render()"></div>
+    <div class="fr"><label>Zeitraum Start</label><input type="date" id="range-start" oninput="save();render()"></div>
+    <div class="fr"><label>Zeitraum Ende</label><input type="date" id="range-end" oninput="save();render()"></div>
+  </div>
+
+  <div class="ss">
+    <h2>Achsenbeschriftung</h2>
+    <div class="fr">
+      <label>Einteilung</label>
+      <select id="tick-mode" oninput="save();render()">
+        <option value="month">Monatlich</option>
+        <option value="week">Wöchentlich</option>
+        <option value="quarter">Quartalsweise (3 Monate)</option>
+        <option value="custom">Eigener Abstand (Tage)</option>
+      </select>
+    </div>
+    <div class="fr" id="tick-custom-wrap" style="display:none">
+      <label>Abstand in Tagen</label>
+      <input type="number" id="tick-days" min="1" max="365" value="14" oninput="save();render()">
+    </div>
+    <div class="fr">
+      <label>Beschriftungsformat</label>
+      <select id="tick-fmt" oninput="save();render()">
+        <option value="short">Mär 26</option>
+        <option value="long">März 2026</option>
+        <option value="date">01.03.2026</option>
+        <option value="week">KW 12</option>
+      </select>
+    </div>
+    <div class="fr">
+      <label>Jeden N-ten Tick zeigen</label>
+      <input type="number" id="tick-step" min="1" max="20" value="1" style="width:70px" oninput="save();render()">
+    </div>
+  </div>
+
+  <div class="ss">
+    <h2>Meilenstein hinzufügen</h2>
+    <div class="fr"><label>Datum</label><input type="date" id="ms-date"></div>
+    <div class="fr"><label>Bezeichnung</label><input type="text" id="ms-lbl" placeholder="z.B. Kickoff" onkeydown="if(event.key==='Enter')addMilestone()"></div>
+    <button class="btn primary" style="width:100%;margin-top:.3rem" onclick="addMilestone()">+ Meilenstein</button>
+  </div>
+
+  <div class="ss">
+    <h2>Meilensteine</h2>
+    <div id="ms-list"></div>
+  </div>
+
+  <div class="ss">
+    <h2>Phase hinzufügen</h2>
+    <div class="fr"><label>Name</label><input type="text" id="ph-name" placeholder="z.B. Implementierung" onkeydown="if(event.key==='Enter')addPhase()"></div>
+    <div class="fr"><label>Start</label><input type="date" id="ph-start"></div>
+    <div class="fr"><label>Ende</label><input type="date" id="ph-end"></div>
+    <div class="fr">
+      <label>Farbe</label>
+      <div class="cprow" id="ph-colors">
+        <div class="cpick sel" style="background:#2d5be3" data-c="#2d5be3" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#e8503a" data-c="#e8503a" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#3aaa6e" data-c="#3aaa6e" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#e8a030" data-c="#e8a030" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#9b59b6" data-c="#9b59b6" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#1abc9c" data-c="#1abc9c" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#e91e63" data-c="#e91e63" onclick="pickC(this)"></div>
+        <div class="cpick"    style="background:#607d8b" data-c="#607d8b" onclick="pickC(this)"></div>
+      </div>
+    </div>
+    <button class="btn primary" style="width:100%;margin-top:.3rem" onclick="addPhase()">+ Phase</button>
+  </div>
+
+  <div class="ss">
+    <h2>Phasen</h2>
+    <div id="ph-list"></div>
+  </div>
+
+</div>
+
+<div class="canvas-area">
+  <div id="tl-wrap">
+    <div id="tl-title"></div>
+    <div id="tl-sub"></div>
+    <div class="ms-zone" id="ms-zone"></div>
+    <div class="axis-wrap" id="axis-wrap"></div>
+    <div class="phases-zone" id="phases-zone"></div>
+    <div class="leg" id="leg"></div>
+    <div class="exp-note" id="exp-note"></div>
+  </div>
+</div>
+</div>
+
+<script>
+const LS = 'zeitstrahl_v3';
+let state = { title:'', subtitle:'', rangeStart:'', rangeEnd:'', milestones:[], phases:[] };
+let nextId = 1, selMs = null, selPh = null, selColor = '#2d5be3';
+
+// ── PERSISTENCE ──────────────────────────────────
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS);
+    if (raw) {
+      state = JSON.parse(raw);
+      const ids = [...state.milestones.map(m=>m.id), ...state.phases.map(p=>p.id)];
+      if (ids.length) nextId = Math.max(...ids) + 1;
+    }
+  } catch(e) {}
+}
+function save() {
+  state.title      = document.getElementById('proj-title-2').value;
+  state.subtitle   = document.getElementById('subtitle-inp').value;
+  state.rangeStart = document.getElementById('range-start').value;
+  state.rangeEnd   = document.getElementById('range-end').value;
+  state.tickMode = (document.getElementById('tick-mode')||{value:'month'}).value;
+  state.tickFmt  = (document.getElementById('tick-fmt') ||{value:'short'}).value;
+  state.tickStep = (document.getElementById('tick-step')||{value:'1'}).value;
+  state.tickDays = (document.getElementById('tick-days')||{value:'14'}).value;
+  try {
+    localStorage.setItem(LS, JSON.stringify(state));
+    const b = document.getElementById('save-badge');
+    b.classList.add('show');
+    clearTimeout(b._t);
+    b._t = setTimeout(() => b.classList.remove('show'), 1600);
+  } catch(e) {}
+}
+function applyToForm() {
+  document.getElementById('proj-title').value   = state.title;
+  document.getElementById('proj-title-2').value = state.title;
+  document.getElementById('subtitle-inp').value = state.subtitle;
+  document.getElementById('range-start').value  = state.rangeStart;
+  document.getElementById('range-end').value    = state.rangeEnd;
+  if(state.tickMode && document.getElementById('tick-mode')) document.getElementById('tick-mode').value=state.tickMode;
+  if(state.tickFmt  && document.getElementById('tick-fmt'))  document.getElementById('tick-fmt').value=state.tickFmt;
+  if(state.tickStep && document.getElementById('tick-step')) document.getElementById('tick-step').value=state.tickStep;
+  if(state.tickDays && document.getElementById('tick-days')) document.getElementById('tick-days').value=state.tickDays;
+}
+function syncTitle(inp) {
+  document.getElementById('proj-title').value = inp.value;
+}
+document.getElementById('proj-title').addEventListener('input', function() {
+  document.getElementById('proj-title-2').value = this.value;
+  save(); render();
+});
+
+// ── DATE HELPERS ─────────────────────────────────
+function pd(s) { return new Date(s + 'T00:00:00'); }
+function pct(d, s, e) {
+  return Math.max(0, Math.min(100, (pd(d)-pd(s))/(pd(e)-pd(s))*100));
+}
+function fmtL(s) { return pd(s).toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtS(s) { return pd(s).toLocaleDateString('de-DE',{month:'short',year:'2-digit'}); }
+function toYMD(d) {
+  // timezone-safe: use local year/month/day instead of UTC-based toISOString
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function getTickMode() { return (document.getElementById('tick-mode')||{value:'month'}).value; }
+function getTickFmt()  { return (document.getElementById('tick-fmt') ||{value:'short'}).value; }
+function getTickStep() { return parseInt((document.getElementById('tick-step')||{value:'1'}).value)||1; }
+function getTickDays() { return parseInt((document.getElementById('tick-days')||{value:'14'}).value)||14; }
+
+function isoWeek(d) {
+  const tmp=new Date(d); tmp.setHours(0,0,0,0);
+  tmp.setDate(tmp.getDate()+3-(tmp.getDay()+6)%7);
+  const w1=new Date(tmp.getFullYear(),0,4);
+  return 1+Math.round(((tmp-w1)/86400000-3+(w1.getDay()+6)%7)/7);
+}
+function fmtTick(s) {
+  const d = pd(s);
+  const fmt  = getTickFmt();
+  const mode = getTickMode();
+  // week/custom: always show day so ticks are distinguishable within same month
+  const needDay = (mode==='week' || mode==='custom');
+  if (fmt==='week') return 'KW '+isoWeek(d);
+  if (fmt==='date') return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  if (fmt==='long') {
+    if (needDay) return d.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
+    return d.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  }
+  // short (default): monthly/quarterly show "Mär 2026" (full year, NOT 2-digit to avoid "26" confusion)
+  if (needDay) return d.toLocaleDateString('de-DE',{day:'2-digit',month:'short',year:'numeric'});
+  return d.toLocaleDateString('de-DE',{month:'short',year:'numeric'});
+}
+
+function ticks(s, e) {
+  const arr=[], endD=pd(e);
+  const mode = getTickMode();
+  if (mode==='month') {
+    let c=new Date(pd(s).getFullYear(),pd(s).getMonth(),1);
+    while(c<=endD){arr.push(toYMD(c));c=new Date(c.getFullYear(),c.getMonth()+1,1);}
+  } else if (mode==='week') {
+    let c=new Date(pd(s)); c.setDate(c.getDate()-c.getDay()+1); // monday
+    while(c<=endD){arr.push(toYMD(c));c=new Date(c.getTime()+7*86400000);}
+  } else if (mode==='quarter') {
+    let c=new Date(pd(s).getFullYear(),Math.floor(pd(s).getMonth()/3)*3,1);
+    while(c<=endD){arr.push(toYMD(c));c=new Date(c.getFullYear(),c.getMonth()+3,1);}
+  } else if (mode==='custom') {
+    const days=getTickDays();
+    let c=new Date(pd(s));
+    while(c<=endD){arr.push(toYMD(c));c=new Date(c.getTime()+days*86400000);}
+  }
+  return arr;
+}
+
+// ── RENDER ───────────────────────────────────────
+function render() {
+  const S=state.rangeStart, E=state.rangeEnd;
+  document.getElementById('tl-title').textContent = state.title || 'Projektzeitstrahl';
+  document.getElementById('tl-sub').textContent   = state.subtitle;
+  document.getElementById('exp-note').textContent = 'Erstellt am ' + new Date().toLocaleDateString('de-DE');
+
+  const valid = S && E && pd(S) < pd(E);
+
+  // axis
+  const aw = document.getElementById('axis-wrap');
+  aw.innerHTML = valid ? '<div class="axis-line"></div>' : '';
+  if (valid) {
+    // show/hide custom day input
+    const cw=document.getElementById('tick-custom-wrap');
+    if(cw) cw.style.display = getTickMode()==='custom'?'block':'none';
+    const tk = ticks(S,E);
+    const step = getTickStep();
+    tk.forEach((t,i)=>{
+      if(i%step!==0) return;
+      const el=document.createElement('div');
+      el.className='axis-tick'; el.style.left=pct(t,S,E)+'%';
+      el.innerHTML=`<div class="tick-ln"></div><div class="tick-lb">${fmtTick(t)}</div>`;
+      aw.appendChild(el);
+    });
+    const et=document.createElement('div');
+    et.className='axis-tick'; et.style.left='100%';
+    et.innerHTML=`<div class="tick-ln"></div><div class="tick-lb">${fmtS(E)}</div>`;
+    aw.appendChild(et);
+  }
+
+  // milestones
+  const mz=document.getElementById('ms-zone');
+  mz.innerHTML='';
+  if (valid && state.milestones.length) {
+    const sorted=[...state.milestones].sort((a,b)=>a.date.localeCompare(b.date));
+    // Assign rows smartly: avoid overlap by checking horizontal proximity
+    const RH=52, ROWS=3;
+    const MIN_PCT_GAP = 12; // minimum % gap before bumping to next row
+    const rowLastPct = [null, null, null]; // last used x-pct per row
+    const rowAssign = sorted.map(ms => {
+      const p = pct(ms.date, S, E);
+      for (let r = 0; r < ROWS; r++) {
+        if (rowLastPct[r] === null || (p - rowLastPct[r]) >= MIN_PCT_GAP) {
+          rowLastPct[r] = p;
+          return r;
+        }
+      }
+      // all rows too close — use least recently used
+      const minIdx = rowLastPct.indexOf(Math.min(...rowLastPct));
+      rowLastPct[minIdx] = p;
+      return minIdx;
+    });
+    sorted.forEach((ms,i)=>{
+      const row=rowAssign[i];
+      const mk=document.createElement('div');
+      mk.className='ms-mk'+(selMs===ms.id?' sel':'');
+      mk.style.left=pct(ms.date,S,E)+'%';
+      mk.innerHTML=`
+        <div class="ms-lb" style="margin-top:${row*RH}px">
+          ${ms.label}<br>
+          <span style="color:var(--muted);font-size:.59rem;font-family:'DM Mono',monospace">${fmtL(ms.date)}</span>
+        </div>
+        <div class="ms-arr" style="height:${18+(ROWS-1-row)*RH}px"></div>
+        <div class="ms-dot"></div>`;
+      mk.onclick=()=>{selMs=ms.id;selPh=null;render();};
+      mz.appendChild(mk);
+    });
+    mz.style.minHeight=(ROWS*RH+18)+'px';
+  } else {
+    mz.style.minHeight='8px';
+  }
+
+  // phases — below axis
+  const pz=document.getElementById('phases-zone');
+  pz.innerHTML='';
+  if (valid && state.phases.length) {
+    state.phases.forEach(ph=>{
+      const l=pct(ph.start,S,E), r=pct(ph.end,S,E), w=r-l;
+      const row=document.createElement('div');
+      row.className='ph-row';
+      if(w>0){
+        const bar=document.createElement('div');
+        bar.className='ph-bar'+(selPh===ph.id?' sel':'');
+        bar.style.cssText=`left:${l}%;width:${w}%;background:${ph.color};`;
+        bar.innerHTML=`<span class="bl">${ph.name}</span>`;
+        bar.onclick=()=>{selPh=ph.id;selMs=null;render();};
+        row.appendChild(bar);
+      }
+      pz.appendChild(row);
+    });
+  } else if (!valid) {
+    pz.innerHTML='<div class="canvas-empty">↑ Bitte zuerst Zeitraum festlegen<br>dann Meilensteine und Phasen hinzufügen</div>';
+  }
+
+  // legend
+  const lg=document.getElementById('leg');
+  lg.innerHTML='';
+  state.phases.forEach(ph=>{
+    const i=document.createElement('div');
+    i.className='leg-i';
+    i.innerHTML=`<div class="leg-d" style="background:${ph.color}"></div>${ph.name}`;
+    lg.appendChild(i);
+  });
+
+  // sidebar lists
+  const ml=document.getElementById('ms-list');
+  ml.innerHTML='';
+  if(!state.milestones.length){
+    ml.innerHTML='<div class="empty-hint">Noch keine Meilensteine</div>';
+  }
+  [...state.milestones].sort((a,b)=>a.date.localeCompare(b.date)).forEach(ms=>{
+    const el=document.createElement('div');
+    el.className='li'+(selMs===ms.id?' sel':'');
+    el.innerHTML=`
+      <div class="dot" style="background:var(--text)"></div>
+      <div class="nm">${ms.label}<br><span style="color:var(--muted);font-size:.62rem">${fmtL(ms.date)}</span></div>
+      <span class="del" onclick="delMs(${ms.id},event)">✕</span>`;
+    el.onclick=()=>{selMs=ms.id;selPh=null;render();};
+    ml.appendChild(el);
+  });
+
+  const pl=document.getElementById('ph-list');
+  pl.innerHTML='';
+  if(!state.phases.length){
+    pl.innerHTML='<div class="empty-hint">Noch keine Phasen</div>';
+  }
+  state.phases.forEach(ph=>{
+    const el=document.createElement('div');
+    el.className='li'+(selPh===ph.id?' sel':'');
+    el.innerHTML=`
+      <div class="dot" style="background:${ph.color}"></div>
+      <div class="nm">${ph.name}<br><span style="color:var(--muted);font-size:.62rem">${fmtL(ph.start)} – ${fmtL(ph.end)}</span></div>
+      <span class="del" onclick="delPh(${ph.id},event)">✕</span>`;
+    el.onclick=()=>{selPh=ph.id;selMs=null;render();};
+    pl.appendChild(el);
+  });
+}
+
+// ── ACTIONS ──────────────────────────────────────
+function addMilestone() {
+  const date=document.getElementById('ms-date').value;
+  const label=document.getElementById('ms-lbl').value.trim();
+  if(!date||!label) return alert('Bitte Datum und Bezeichnung eingeben.');
+  state.milestones.push({id:nextId++,date,label});
+  document.getElementById('ms-lbl').value='';
+  save(); render();
+}
+function delMs(id,e) {
+  e.stopPropagation();
+  state.milestones=state.milestones.filter(m=>m.id!==id);
+  if(selMs===id) selMs=null;
+  save(); render();
+}
+function addPhase() {
+  const name=document.getElementById('ph-name').value.trim();
+  const start=document.getElementById('ph-start').value;
+  const end=document.getElementById('ph-end').value;
+  if(!name||!start||!end) return alert('Bitte alle Felder ausfüllen.');
+  if(pd(start)>=pd(end)) return alert('Start muss vor Ende liegen.');
+  state.phases.push({id:nextId++,name,start,end,color:selColor});
+  document.getElementById('ph-name').value='';
+  save(); render();
+}
+function delPh(id,e) {
+  e.stopPropagation();
+  state.phases=state.phases.filter(p=>p.id!==id);
+  if(selPh===id) selPh=null;
+  save(); render();
+}
+function pickC(el) {
+  document.querySelectorAll('#ph-colors .cpick').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); selColor=el.dataset.c;
+}
+function clearAll() {
+  if(!confirm('Alle Daten löschen?')) return;
+  state={title:'',subtitle:'',rangeStart:'',rangeEnd:'',milestones:[],phases:[]};
+  nextId=1; selMs=null; selPh=null;
+  applyToForm(); save(); render();
+}
+
+// ── PNG EXPORT ───────────────────────────────────
+function exportPNG() {
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload=()=>{
+    html2canvas(document.getElementById('tl-wrap'),{scale:2,backgroundColor:'#ffffff',useCORS:true})
+    .then(canvas=>{
+      const a=document.createElement('a');
+      a.download=(state.title||'Zeitstrahl')+'.png';
+      a.href=canvas.toDataURL('image/png'); a.click();
+    });
+  };
+  document.head.appendChild(s);
+}
+
+// ── INIT ─────────────────────────────────────────
+window.addEventListener('load',()=>{ loadState(); applyToForm(); render(); });
+</script>
+</body>
+</html>
