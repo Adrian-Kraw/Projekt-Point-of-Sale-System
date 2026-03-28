@@ -63,3 +63,21 @@ build/
 
 # ".env"
 application-dev.yml
+
+package.json
+package-lock.json
+tsconfig.json
+types.d.ts
+vite.config.ts
+vite.generated.ts
+
+
+# Vaadin auto-generated – nie committen
+src/main/frontend/generated/
+src/main/frontend/index.html
+
+# Vaadin Build-Output
+src/main/bundles/
+
+# Node
+node_modules/

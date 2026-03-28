@@ -8,6 +8,9 @@ spring:
 #  1. "Edit Configurations..."
 #  2. Deine Spring Boot Run Configuration auswählen
 #  3. unter Active Profiles `dev` eingeben
+
+# WICHTIG: Passwort NICHT hier eintragen!
+# Lege stattdessen eine lokale application-dev.yml an, hier sieht man nur wie sie aussehen soll
 spring:
   config:
     activate:
