@@ -11,12 +11,17 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.RouterLink;
 import de.fhswf.kassensystem.views.artikel.ArtikelView;
 import de.fhswf.kassensystem.views.berichte.BerichteView;
 import de.fhswf.kassensystem.views.benutzer.BenutzerView;
 import de.fhswf.kassensystem.views.lager.LagerView;
 import de.fhswf.kassensystem.views.verkauf.VerkaufView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MainLayout ist das zentrale Grundgerüst der Anwendung.
@@ -33,7 +38,7 @@ import de.fhswf.kassensystem.views.verkauf.VerkaufView;
  *   - Software Einführung Button
  *   - User-Card mit Popup-Menü (Ausloggen)
  */
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
     /**
      * Speichert ob der Dark Mode aktuell aktiv ist.
@@ -46,6 +51,9 @@ public class MainLayout extends AppLayout {
      * (Mond/Sonne) im Event-Handler wechseln können.
      */
     private Span darkModeIcon;
+
+
+    private final List<RouterLink> navLinks = new ArrayList<>();
 
     /**
      * Konstruktor – baut die Sidebar auf und konfiguriert das AppLayout.
@@ -66,10 +74,11 @@ public class MainLayout extends AppLayout {
          * des AppLayout-Elements, das per JavaScript erreichbar ist.
          */
         getElement().executeJs(
-                "const navbar = this.shadowRoot.querySelector('[part=\"navbar\"]');" +
-                        "if (navbar) navbar.style.display = 'none';" +
-                        "const content = this.shadowRoot.querySelector('[part=\"content\"]');" +
-                        "if (content) content.style.paddingTop = '0';"
+                "setTimeout(() => {" +
+                        "  document.querySelectorAll('a.nav-link').forEach(el => {" +
+                        "    el.style.textDecoration = 'none';" +
+                        "  });" +
+                        "}, 100);"
         );
     }
 
@@ -254,29 +263,18 @@ public class MainLayout extends AppLayout {
                                      Class<? extends Component> view) {
         RouterLink link = new RouterLink();
         link.setRoute(view);
-        link.getStyle()
-                .set("display", "flex")
-                .set("align-items", "center")
-                .set("gap", "1rem")
-                .set("padding", "0.75rem 1.25rem")
-                .set("border-radius", "9999px")
-                .set("color", "#475569")
-                .set("font-size", "0.875rem")
-                .set("font-weight", "500")
-                .set("text-decoration", "none")
-                .set("transition", "all 0.2s")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+        link.addClassName("nav-link");
 
         Span iconSpan = new Span(icon);
         iconSpan.addClassName("material-symbols-outlined");
-        iconSpan.getStyle()
-                .set("font-size", "1.25rem")
-                .set("line-height", "1");
 
         Span labelSpan = new Span(label);
         link.add(iconSpan, labelSpan);
+
+        navLinks.add(link);
         return link;
     }
+
 
     // ═══════════════════════════════════════════════════════════
     // UNTERER BEREICH
@@ -492,10 +490,38 @@ public class MainLayout extends AppLayout {
     }
 
     /**
+     * Wird nach jeder Navigation aufgerufen.
+     * Setzt den aktiven Link manuell mit Inline-Style –
+     * da CSS-Klassen im Vaadin Shadow DOM nicht greifen.
+     */
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        String aktuellerPfad = event.getLocation().getPath();
+
+        for (RouterLink link : navLinks) {
+            String linkPfad = link.getHref();
+            if (aktuellerPfad.equals(linkPfad)) {
+                link.getStyle()
+                        .set("background-color", "#e8d5c4")
+                        .set("color", "#553722")
+                        .set("font-weight", "700");
+            } else {
+                link.getStyle()
+                        .remove("background-color")
+                        .remove("color")
+                        .remove("font-weight");
+            }
+        }
+    }
+
+    /**
      * Meldet den aktuellen Nutzer ab und leitet zur Login-Seite weiter.
      * TODO: Spring Security Session beenden wenn Backend integriert wird.
      */
     private void logout() {
         UI.getCurrent().navigate(LoginView.class);
     }
+
+
+
 }

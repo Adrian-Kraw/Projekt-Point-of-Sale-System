@@ -1,43 +1,44 @@
 /* ================================================
-   THEME: kassensystem
-   Globale CSS-Variablen und Schriften
-   Vaadin liest diese Datei automatisch wenn der
-   Theme-Name in der Application-Klasse gesetzt ist
+   THEME: cafepos – Canapé Café
+   Globale CSS-Variablen, Schriften und Komponenten-Styles
    ================================================ */
 
-/* Plus Jakarta Sans von Google Fonts laden */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
-/* Vaadin's Root-Element stylen */
-:host {
+/* ── CSS-Variablen ── */
+:root, :host {
     --lumo-font-family: 'Plus Jakarta Sans', sans-serif;
 
-    /* Primärfarben aus dem Stitch Design System */
-    --color-primary: #553722;
-    --color-primary-container: #6F4E37;
-    --color-primary-fixed: #ffdcc6;
+    --color-primary:              #553722;
+    --color-primary-container:    #6F4E37;
+    --color-primary-fixed:        #ffdcc6;
 
-    /* Surface-Farben */
-    --color-surface: #fcf8ff;
-    --color-surface-container-low: #f5f2ff;
-    --color-surface-container: #efecff;
-    --color-surface-container-high: #e8e5ff;
-    --color-surface-container-highest: #e2e0fc;
+    --color-surface:                  #fcf8ff;
+    --color-surface-container-low:    #f5f2ff;
+    --color-surface-container:        #efecff;
+    --color-surface-container-high:   #e8e5ff;
+    --color-surface-container-highest:#e2e0fc;
 
-    /* Text-Farben */
-    --color-on-surface: #1a1a2e;
+    --color-on-surface:         #1a1a2e;
     --color-on-surface-variant: #50453e;
-    --color-outline: #82746d;
-    --color-outline-variant: #d4c3ba;
+    --color-outline:            #82746d;
+    --color-outline-variant:    #d4c3ba;
 
-    /* Dark Mode Farben */
-    --color-dark-bg: #1a1a2e;
+    --color-dark-bg:      #1a1a2e;
     --color-dark-surface: #2f2e43;
     --color-dark-sidebar: #12122a;
 }
 
-/* Material Symbols konfigurieren */
+/* ── Body ── */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--color-surface);
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Material Symbols ── */
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     font-family: 'Material Symbols Outlined';
@@ -51,7 +52,55 @@
     direction: ltr;
 }
 
-/* Sidebar Styles */
+/* ── Vaadin AppLayout ── */
+vaadin-app-layout::part(drawer) {
+    background: transparent;
+    box-shadow: none;
+    width: 240px;
+    overflow: hidden;
+    border-right: none;
+}
+
+vaadin-app-layout::part(navbar) {
+    display: none;
+    height: 0;
+    padding: 0;
+}
+
+vaadin-app-layout::part(content) {
+    padding-top: 0;
+}
+
+/* ── Vaadin Button internes Layout ── */
+vaadin-button::part(label) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+}
+
+/* ── Vaadin Suchfeld (VerkaufView) ── */
+vaadin-text-field::part(input-field) {
+    border-radius: 9999px;
+    background: #efecff;
+    border: none;
+    box-shadow: none;
+}
+
+vaadin-text-field::part(input-field):hover {
+    background: #e8e5ff;
+}
+
+/* ── Rabatt-Feld (Warenkorb) ── */
+.rabatt-feld::part(input-field) {
+    border-radius: 0.75rem;
+    background: white;
+    border: none;
+    box-shadow: none;
+}
+
+/* ── Sidebar ── */
 .sidebar {
     width: 240px;
     min-height: 100vh;
@@ -62,91 +111,59 @@
     flex-direction: column;
     padding: 2rem 1rem;
     justify-content: space-between;
-    position: sticky;
-    top: 0;
+    box-sizing: border-box;
 }
 
-/* Dark Mode Sidebar */
 .sidebar.dark {
     background-color: var(--color-dark-sidebar);
 }
 
-/* Nav-Link standard */
+/* ── Navigation Links ── */
 .nav-link {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1.25rem;
     border-radius: 9999px;
-    color: #64748b;
+    color: #475569;
     font-size: 0.875rem;
     font-weight: 500;
-    letter-spacing: 0.025em;
-    cursor: pointer;
-    transition: all 0.2s;
     text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
 }
 
 .nav-link:hover {
-    background-color: rgba(252, 248, 255, 0.5);
-}
-
-/* Aktiver Nav-Link */
-.nav-link.active {
-    background-color: var(--color-surface-container-highest);
+    background-color: rgba(239, 236, 255, 0.7);
     color: var(--color-primary);
-    font-weight: 700;
 }
 
-/* RouterLink setzt automatisch diese Klasse wenn die Route aktiv ist */
+/*
+ * .highlight wird von Vaadin's RouterLink automatisch gesetzt
+ * wenn die aktuelle Route mit der verlinkten View übereinstimmt.
+ * Keine Inline-Styles am RouterLink – sonst überschreiben sie das hier.
+ */
 .nav-link.highlight {
     background-color: var(--color-surface-container-highest);
-    color: var(--color-primary);
+    color: #553722;
     font-weight: 700;
 }
 
-/* Dark Mode Nav-Links */
+.nav-link.highlight .material-symbols-outlined {
+    color: var(--color-primary);
+}
+
 .sidebar.dark .nav-link {
     color: #94a3b8;
 }
 
-.sidebar.dark .nav-link.active {
+.sidebar.dark .nav-link.highlight {
     background-color: #2d2d44;
     color: white;
 }
 
-/* Hauptbereich */
-.main-content {
-    flex: 1;
-    min-height: 100vh;
-    background-color: var(--color-surface);
-    overflow-y: auto;
-    padding: 2rem;
-}
-
-.main-content.dark {
-    background-color: var(--color-dark-bg);
-    color: white;
-}
-
-/* Neuer-Beleg Button (CTA in Sidebar) */
-.btn-primary {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(to right, var(--color-primary), var(--color-primary-container));
-    color: white;
-    border-radius: 9999px;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-}
-
-/* User-Card unten in Sidebar */
+/* ── User-Card ── */
 .user-card {
     padding: 1rem;
     background-color: white;
@@ -160,21 +177,62 @@
     background-color: rgba(45, 45, 68, 0.5);
 }
 
-/* ── Vaadin AppLayout Drawer-Container fixen ── */
-vaadin-app-layout::part(drawer) {
+/* ── Artikel-Grid (VerkaufView) ── */
+.artikel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    width: 100%;
+}
+
+@media (max-width: 1100px) {
+    .artikel-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
     background: transparent;
-    box-shadow: none;
-    width: 240px;
-    overflow: hidden;
-    border-right: none;  /* ← das war die Linie */
 }
 
-vaadin-app-layout::part(navbar) {
-    display: none;
-    height: 0;
-    padding: 0;
+::-webkit-scrollbar-thumb {
+    background: var(--color-outline-variant);
+    border-radius: 9999px;
 }
 
-vaadin-app-layout::part(content) {
-    padding-top: 0;
+/* ── Dark Mode Body ── */
+body.dark {
+    background-color: var(--color-dark-bg);
+    color: white;
+}
+
+/* ── Kategorie-Chips Hover-Unterstreichung entfernen ── */
+vaadin-button::part(label) {
+    text-decoration: none;
+}
+
+vaadin-button:hover::part(label) {
+    text-decoration: none;
+}
+
+/* ── Kategorie-Chip Hover ── */
+.kategorie-chip:hover {
+    background: #d4d0f0 !important;
+    cursor: pointer;
+}
+
+.kategorie-chip-aktiv {
+    background: #553722;
+    color: white;
+    border-radius: 9999px;
+}
+
+.kategorie-chip-aktiv:hover {
+    background: #553722 !important;
+    opacity: 0.9;
 }
