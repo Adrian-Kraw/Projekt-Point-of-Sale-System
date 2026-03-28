@@ -236,3 +236,11 @@ vaadin-button:hover::part(label) {
     background: #553722 !important;
     opacity: 0.9;
 }
+
+/* ── ArtikelView Suchfeld ── */
+.artikel-suchfeld::part(input-field) {
+    border-radius: 1rem;
+    background: #efecff;
+    border: none;
+    box-shadow: none;
+}
