@@ -10,20 +10,20 @@
 :root, :host {
     --lumo-font-family: 'Plus Jakarta Sans', sans-serif;
 
-    --color-primary:              #553722;
-    --color-primary-container:    #6F4E37;
-    --color-primary-fixed:        #ffdcc6;
+    --color-primary:               #553722;
+    --color-primary-container:     #6F4E37;
+    --color-primary-fixed:         #ffdcc6;
 
-    --color-surface:                  #fcf8ff;
-    --color-surface-container-low:    #f5f2ff;
-    --color-surface-container:        #efecff;
-    --color-surface-container-high:   #e8e5ff;
-    --color-surface-container-highest:#e2e0fc;
+    --color-surface:                   #fcf8ff;
+    --color-surface-container-low:     #f5f2ff;
+    --color-surface-container:         #efecff;
+    --color-surface-container-high:    #e8e5ff;
+    --color-surface-container-highest: #e2e0fc;
 
-    --color-on-surface:         #1a1a2e;
-    --color-on-surface-variant: #50453e;
-    --color-outline:            #82746d;
-    --color-outline-variant:    #d4c3ba;
+    --color-on-surface:          #1a1a2e;
+    --color-on-surface-variant:  #50453e;
+    --color-outline:             #82746d;
+    --color-outline-variant:     #d4c3ba;
 
     --color-dark-bg:      #1a1a2e;
     --color-dark-surface: #2f2e43;
@@ -36,6 +36,11 @@ body {
     background-color: var(--color-surface);
     margin: 0;
     padding: 0;
+}
+
+body.dark {
+    background-color: var(--color-dark-bg);
+    color: white;
 }
 
 /* ── Material Symbols ── */
@@ -52,12 +57,30 @@ body {
     direction: ltr;
 }
 
-/* ── Vaadin AppLayout ── */
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-outline-variant);
+    border-radius: 9999px;
+}
+
+/* ════════════════════════════════════════════════
+   VAADIN KOMPONENTEN
+   ════════════════════════════════════════════════ */
+
+/* ── AppLayout Drawer ── */
 vaadin-app-layout::part(drawer) {
     background: transparent;
     box-shadow: none;
     width: 240px;
-    overflow: hidden;
+    overflow: visible;
     border-right: none;
 }
 
@@ -71,16 +94,21 @@ vaadin-app-layout::part(content) {
     padding-top: 0;
 }
 
-/* ── Vaadin Button internes Layout ── */
+/* ── Button internes Layout ── */
 vaadin-button::part(label) {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
     padding: 0;
+    text-decoration: none;
 }
 
-/* ── Vaadin Suchfeld (VerkaufView) ── */
+vaadin-button:hover::part(label) {
+    text-decoration: none;
+}
+
+/* ── Suchfeld global (VerkaufView pill-form) ── */
 vaadin-text-field::part(input-field) {
     border-radius: 9999px;
     background: #efecff;
@@ -92,6 +120,14 @@ vaadin-text-field::part(input-field):hover {
     background: #e8e5ff;
 }
 
+/* ── ArtikelView Suchfeld (abgerundet, nicht pill) ── */
+.artikel-suchfeld::part(input-field) {
+    border-radius: 1rem;
+    background: #efecff;
+    border: none;
+    box-shadow: none;
+}
+
 /* ── Rabatt-Feld (Warenkorb) ── */
 .rabatt-feld::part(input-field) {
     border-radius: 0.75rem;
@@ -100,7 +136,34 @@ vaadin-text-field::part(input-field):hover {
     box-shadow: none;
 }
 
-/* ── Sidebar ── */
+/* ── Dialog Eingabefelder ── */
+.dialog-feld::part(input-field),
+.dialog-feld::part(toggle-button) {
+    border-radius: 1rem;
+    background: #efecff;
+    border: none;
+    box-shadow: none;
+}
+
+.dialog-feld::part(input-field):focus-within {
+    background: #e8e5ff;
+}
+
+/* ── Dialog Overlay ── */
+vaadin-dialog-overlay::part(overlay) {
+    border-radius: 1rem;
+    padding: 0;
+    overflow: hidden;
+}
+
+vaadin-dialog-overlay::part(content) {
+    padding: 0;
+}
+
+/* ════════════════════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════════════════════ */
+
 .sidebar {
     width: 240px;
     min-height: 100vh;
@@ -142,7 +205,6 @@ vaadin-text-field::part(input-field):hover {
 /*
  * .highlight wird von Vaadin's RouterLink automatisch gesetzt
  * wenn die aktuelle Route mit der verlinkten View übereinstimmt.
- * Keine Inline-Styles am RouterLink – sonst überschreiben sie das hier.
  */
 .nav-link.highlight {
     background-color: var(--color-surface-container-highest);
@@ -177,7 +239,11 @@ vaadin-text-field::part(input-field):hover {
     background-color: rgba(45, 45, 68, 0.5);
 }
 
-/* ── Artikel-Grid (VerkaufView) ── */
+/* ════════════════════════════════════════════════
+   VERKAUF VIEW
+   ════════════════════════════════════════════════ */
+
+/* ── Artikel-Grid responsiv ── */
 .artikel-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -191,34 +257,9 @@ vaadin-text-field::part(input-field):hover {
     }
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar {
-    width: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--color-outline-variant);
-    border-radius: 9999px;
-}
-
-/* ── Dark Mode Body ── */
-body.dark {
-    background-color: var(--color-dark-bg);
-    color: white;
-}
-
-/* ── Kategorie-Chips Hover-Unterstreichung entfernen ── */
-vaadin-button::part(label) {
-    text-decoration: none;
-}
-
-vaadin-button:hover::part(label) {
-    text-decoration: none;
-}
+/* ════════════════════════════════════════════════
+   ARTIKEL VIEW
+   ════════════════════════════════════════════════ */
 
 /* ── Kategorie-Chip Hover ── */
 .kategorie-chip:hover {
@@ -235,12 +276,4 @@ vaadin-button:hover::part(label) {
 .kategorie-chip-aktiv:hover {
     background: #553722 !important;
     opacity: 0.9;
-}
-
-/* ── ArtikelView Suchfeld ── */
-.artikel-suchfeld::part(input-field) {
-    border-radius: 1rem;
-    background: #efecff;
-    border: none;
-    box-shadow: none;
 }

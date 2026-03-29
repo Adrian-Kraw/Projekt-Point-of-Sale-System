@@ -161,6 +161,8 @@ public class ArtikelView extends VerticalLayout {
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
                 .set("white-space", "nowrap");
 
+        btn.addClickListener(event -> new NeuerArtikelDialog().open());
+
         return btn;
     }
 
