@@ -92,6 +92,8 @@ vaadin-app-layout::part(navbar) {
 
 vaadin-app-layout::part(content) {
     padding-top: 0;
+    overflow-y: auto;    /* ← neu */
+    height: 100vh;       /* ← neu */
 }
 
 /* ── Button internes Layout ── */
@@ -276,4 +278,12 @@ vaadin-dialog-overlay::part(content) {
 .kategorie-chip-aktiv:hover {
     background: #553722 !important;
     opacity: 0.9;
+}
+
+/* ── LagerView Suchfeld ── */
+.lager-suchfeld::part(input-field) {
+    border-radius: 9999px;
+    background: #efecff;
+    border: none;
+    box-shadow: none;
 }
