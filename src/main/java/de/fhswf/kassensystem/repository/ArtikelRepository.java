@@ -3,6 +3,7 @@ package de.fhswf.kassensystem.repository;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,4 +28,19 @@ public interface ArtikelRepository extends JpaRepository<Artikel, Long> {
      * @return Liste an Artikeln
      */
     List<Artikel> findByNameContainingIgnoreCase(String name);
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    Artikel getArtikelById(Long id);
+
+    /**
+     *
+     * @param minimalbestand
+     * @return
+     */
+    @Query("SELECT a FROM Artikel a WHERE a.bestand < a.minimalbestand")
+    List<Artikel> findArtikelUnterMinimalbestand();
 }

@@ -7,6 +7,7 @@ import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
 import de.fhswf.kassensystem.repository.VerkaufRepository;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.util.Map;
 /**
  * TODO: Kommentar ergänzen
  */
+@Service
 public class BerichteService {
     private final VerkaufRepository verkaufRepository;
 

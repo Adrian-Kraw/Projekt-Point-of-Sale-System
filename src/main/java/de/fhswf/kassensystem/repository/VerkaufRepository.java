@@ -15,8 +15,18 @@ public interface VerkaufRepository extends JpaRepository<Verkauf, Long> {
 
     /**
      * Gibt alle Verkäufe an einem bestimmten Datum als Liste zurück.
-     * @param date Datum
+     * @param start Datum
+     * @param end Ende
      * @return Liste der Verkäufe
      */
     List<Verkauf> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
+
+    /**
+     *
+     * @param verkaufId
+     * @return
+     */
+    Verkauf getVerkaufById(Long verkaufId);
+
+
 }

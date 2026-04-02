@@ -1,23 +1,34 @@
 package de.fhswf.kassensystem.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Entity
-@Table(name = Wareneingang)
+@Table(name = "Wareneingang")
 @Getter
 @Setter
 public class Wareneingang {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "artikel_id")
     private Artikel artikel;
+
+    @Column(nullable = false)
     private int menge;
+
+    @Column(length = 100)
     private String kommentar;
+
+    @Column(length = 50)
     private String lieferant;
+
+    @Column
     private LocalDate datum;
 }

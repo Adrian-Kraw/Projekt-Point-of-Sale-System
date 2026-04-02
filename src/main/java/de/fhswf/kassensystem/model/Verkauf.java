@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.model;
 
+import de.fhswf.kassensystem.model.enums.Status;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -38,6 +39,10 @@ public class Verkauf {
     @Column(nullable = false)
     private BigDecimal rabatt;
 
-    @OneToMany(mappedBy = "Verkauf", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "verkauf", cascade = CascadeType.ALL)
     private List<Verkaufsposition> positionen;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 }

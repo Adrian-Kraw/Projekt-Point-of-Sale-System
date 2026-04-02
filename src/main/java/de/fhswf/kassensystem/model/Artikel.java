@@ -14,6 +14,9 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class Artikel {
+
+    public static final int STANDARD_MINIMALBESTAND = 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +38,7 @@ public class Artikel {
     private int bestand;
 
     @Column(nullable = false)
-    private int minimalbestand;
+    private int minimalbestand = STANDARD_MINIMALBESTAND;
 
     @ManyToOne
     @JoinColumn(name = "mehrwertsteuer_id", nullable = false)
