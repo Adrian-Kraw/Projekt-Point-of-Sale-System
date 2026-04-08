@@ -39,7 +39,7 @@ public class Verkauf {
     @Column(nullable = false)
     private BigDecimal rabatt;
 
-    @OneToMany(mappedBy = "verkauf", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "verkauf", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Verkaufsposition> positionen;
 
     @Enumerated(EnumType.STRING)

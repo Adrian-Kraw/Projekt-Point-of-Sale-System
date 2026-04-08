@@ -5,34 +5,62 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.model.Kategorie;
+import de.fhswf.kassensystem.model.Mehrwertsteuer;
+import de.fhswf.kassensystem.service.ArtikelService;
+
+import java.math.BigDecimal;
 
 /**
- * NeuerArtikelDialog ist ein modaler Dialog zum Erstellen eines neuen Artikels.
+ * NeuerArtikelDialog ermöglicht das Erstellen eines neuen Artikels.
  *
  * Felder:
  * - Name des Artikels
- * - Kategorie (Dropdown)
+ * - Kategorie (Dropdown aus DB)
  * - Preis (Zahlenfeld)
- * - MwSt (Dropdown: 7% / 19%)
+ * - MwSt (Dropdown: 7% / 19% aus DB)
  * - Anfangsbestand (Zahlenfeld)
  * - Minimalbestand mit Hinweistext
  *
- * Im Prototyp ohne Speicher-Logik.
- * TODO: ArtikelService.save() einbinden wenn Backend bereit ist.
+ * Speichert über ArtikelService.createArtikel().
  */
 public class NeuerArtikelDialog extends Dialog {
 
+    private final ArtikelService artikelService;
+
+    // Felder als Instanzvariablen für buildBody() und speichern()
+    private TextField nameFeld;
+    private Select<Kategorie> kategorieSelect;
+    private NumberField preisFeld;
+    private Select<Mehrwertsteuer> mwstSelect;
+    private NumberField bestandFeld;
+    private NumberField minBestandFeld;
+
+    /** Wenn != null, wird der Dialog im Bearbeitungsmodus geöffnet. */
+    private Artikel zuBearbeitenderArtikel = null;
+    private byte[] hochgeladensBild = null;  // Artikelbild als Byte-Array
+
     /**
      * Konstruktor baut den Dialog vollständig auf.
-     * Aufruf: new NeuerArtikelDialog().open()
+     * Aufruf: new NeuerArtikelDialog(artikelService).open()
+     *
+     * @param artikelService Service für Datenbankoperationen
      */
-    public NeuerArtikelDialog() {
+    public NeuerArtikelDialog(ArtikelService artikelService) {
+        this.artikelService = artikelService;
+
         setWidth("36rem");
         setCloseOnOutsideClick(true);
 
@@ -49,10 +77,9 @@ public class NeuerArtikelDialog extends Dialog {
         );
 
         add(layout);
+
         /*
-         * Das Vaadin Dialog Overlay hat intern einen weißen Hintergrund
-         * der sich per CSS nicht überschreiben lässt.
-         * Wir setzen ihn direkt per JavaScript auf die Sidebar-Farbe.
+         * Dialog-Overlay per JavaScript stylen (Shadow DOM).
          */
         getElement().executeJs(
                 "setTimeout(() => {" +
@@ -65,11 +92,38 @@ public class NeuerArtikelDialog extends Dialog {
                         "  const content = this.$.overlay.$.content;" +
                         "  if (content) {" +
                         "    content.style.padding = '0';" +
-                        "    content.style.borderRadius = '1rem';" +  // ← neu
-                        "    content.style.overflow = 'hidden';" +     // ← neu
+                        "    content.style.borderRadius = '1rem';" +
+                        "    content.style.overflow = 'hidden';" +
                         "  }" +
                         "}, 50);"
         );
+    }
+
+    /**
+     * Konstruktor für Bearbeitungsmodus: Felder werden mit vorhandenen Werten vorausgefüllt.
+     */
+    public NeuerArtikelDialog(ArtikelService artikelService, Artikel artikel) {
+        this(artikelService);
+        this.zuBearbeitenderArtikel = artikel;
+        nameFeld.setValue(artikel.getName());
+        preisFeld.setValue(artikel.getPreis().doubleValue());
+        bestandFeld.setValue((double) artikel.getBestand());
+        if (minBestandFeld != null) {
+            minBestandFeld.setValue((double) artikel.getMinimalbestand());
+        }
+        if (artikel.getKategorie() != null) {
+            kategorieSelect.getListDataView().getItems()
+                    .filter(k -> k.getId().equals(artikel.getKategorie().getId()))
+                    .findFirst().ifPresent(kategorieSelect::setValue);
+        }
+        if (artikel.getMehrwertsteuer() != null) {
+            mwstSelect.getListDataView().getItems()
+                    .filter(m -> m.getId().equals(artikel.getMehrwertsteuer().getId()))
+                    .findFirst().ifPresent(mwstSelect::setValue);
+        }
+        if (artikel.getBild() != null) {
+            hochgeladensBild = artikel.getBild();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -127,12 +181,6 @@ public class NeuerArtikelDialog extends Dialog {
 
     /**
      * Body mit allen Eingabefeldern.
-     *
-     * Layout:
-     * - Name (volle Breite)
-     * - Kategorie + Preis (zwei Spalten)
-     * - MwSt + Anfangsbestand (zwei Spalten)
-     * - Minimalbestand + Hinweis (volle Breite)
      */
     private VerticalLayout buildBody() {
         VerticalLayout body = new VerticalLayout();
@@ -145,25 +193,30 @@ public class NeuerArtikelDialog extends Dialog {
                 .set("background", "white")
                 .set("margin", "0");
 
-        body.add(buildFeld("NAME DES ARTIKELS", buildNameFeld()));
+        nameFeld = buildNameFeld();
+        kategorieSelect = buildKategorieSelect();
+        preisFeld = buildPreisFeld();
+        mwstSelect = buildMwstSelect();
+        bestandFeld = buildBestandFeld();
+        minBestandFeld = buildMinBestandFeld();
+
+        body.add(buildFeld("NAME DES ARTIKELS", nameFeld));
         body.add(buildZweispaltig(
-                buildFeld("KATEGORIE",  buildKategorieSelect()),
-                buildFeld("PREIS (€)",  buildPreisFeld())
+                buildFeld("KATEGORIE", kategorieSelect),
+                buildFeld("PREIS (€)",  preisFeld)
         ));
         body.add(buildZweispaltig(
-                buildFeld("MWST",           buildMwstSelect()),
-                buildFeld("ANFANGSBESTAND", buildBestandFeld())
+                buildFeld("MWST",           mwstSelect),
+                buildFeld("ANFANGSBESTAND", bestandFeld)
         ));
         body.add(buildMinBestandBlock());
+        body.add(buildBildUploadBlock());
 
         return body;
     }
 
     /**
      * Zwei Felder nebeneinander in einer Zeile.
-     *
-     * @param links  linkes Feld
-     * @param rechts rechtes Feld
      */
     private HorizontalLayout buildZweispaltig(VerticalLayout links,
                                               VerticalLayout rechts) {
@@ -181,9 +234,6 @@ public class NeuerArtikelDialog extends Dialog {
 
     /**
      * Label + Eingabefeld als Block.
-     *
-     * @param label       Feldbezeichnung (wird uppercase dargestellt)
-     * @param eingabefeld das Vaadin-Eingabefeld
      */
     private VerticalLayout buildFeld(String label, Component eingabefeld) {
         VerticalLayout block = new VerticalLayout();
@@ -213,7 +263,7 @@ public class NeuerArtikelDialog extends Dialog {
         block.setSpacing(false);
         block.getStyle().set("gap", "0.25rem");
 
-        block.add(buildFeld("MINIMALBESTAND (WARNUNG)", buildMinBestandFeld()));
+        block.add(buildFeld("MINIMALBESTAND (WARNUNG)", minBestandFeld));
 
         Paragraph hinweis = new Paragraph(
                 "* Bei Erreichen wird eine Warnung in der Liste angezeigt.");
@@ -240,12 +290,25 @@ public class NeuerArtikelDialog extends Dialog {
         return feld;
     }
 
-    private Select<String> buildKategorieSelect() {
-        Select<String> select = new Select<>();
+    /**
+     * Kategorie-Dropdown mit Daten aus der Datenbank.
+     * Zeigt den Kategorienamen an.
+     */
+    private Select<Kategorie> buildKategorieSelect() {
+        Select<Kategorie> select = new Select<>();
         select.setWidthFull();
-        select.setItems("Heißgetränke", "Gebäck", "Kaltgetränke");
-        select.setValue("Heißgetränke");
         select.addClassName("dialog-feld");
+
+        // Kategorien über ArtikelService laden (alle aktiven Artikel → Kategorien)
+        // Da kein KategorieService existiert, holen wir sie aus Artikeln
+        java.util.Set<Kategorie> kategorien = new java.util.LinkedHashSet<>();
+        artikelService.findAllArtikel().forEach(a -> kategorien.add(a.getKategorie()));
+        select.setItems(kategorien);
+        select.setItemLabelGenerator(Kategorie::getName);
+
+        if (!kategorien.isEmpty()) {
+            select.setValue(kategorien.iterator().next());
+        }
         return select;
     }
 
@@ -258,12 +321,24 @@ public class NeuerArtikelDialog extends Dialog {
         return feld;
     }
 
-    private Select<String> buildMwstSelect() {
-        Select<String> select = new Select<>();
+    /**
+     * MwSt-Dropdown mit Daten aus der Datenbank.
+     * Zeigt Bezeichnung + Satz an (z.B. "7% (Ermäßigt)").
+     */
+    private Select<Mehrwertsteuer> buildMwstSelect() {
+        Select<Mehrwertsteuer> select = new Select<>();
         select.setWidthFull();
-        select.setItems("7% (Ermäßigt)", "19% (Standard)");
-        select.setValue("7% (Ermäßigt)");
         select.addClassName("dialog-feld");
+
+        java.util.Set<Mehrwertsteuer> mwstSaetze = new java.util.LinkedHashSet<>();
+        artikelService.findAllArtikel().forEach(a -> mwstSaetze.add(a.getMehrwertsteuer()));
+        select.setItems(mwstSaetze);
+        select.setItemLabelGenerator(m ->
+                m.getSatz().stripTrailingZeros().toPlainString() + "% (" + m.getBezeichnung() + ")");
+
+        if (!mwstSaetze.isEmpty()) {
+            select.setValue(mwstSaetze.iterator().next());
+        }
         return select;
     }
 
@@ -279,7 +354,7 @@ public class NeuerArtikelDialog extends Dialog {
     private NumberField buildMinBestandFeld() {
         NumberField feld = new NumberField();
         feld.setWidthFull();
-        feld.setPlaceholder("5");
+        feld.setPlaceholder(String.valueOf(Artikel.STANDARD_MINIMALBESTAND));
         feld.setMin(0);
         feld.addClassName("dialog-feld");
         return feld;
@@ -291,7 +366,7 @@ public class NeuerArtikelDialog extends Dialog {
 
     /**
      * Footer mit Abbrechen und Speichern Button.
-     * TODO: Speichern mit ArtikelService verbinden.
+     * Speichern liest die Feldwerte aus und ruft artikelService.createArtikel() auf.
      */
     private HorizontalLayout buildFooter() {
         HorizontalLayout footer = new HorizontalLayout();
@@ -313,7 +388,7 @@ public class NeuerArtikelDialog extends Dialog {
                 .set("color", "#553722")
                 .set("cursor", "pointer")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
-                .set("flex", "1")        // ← neu
+                .set("flex", "1")
                 .set("justify-content", "center");
         abbrechenBtn.addClickListener(e -> close());
 
@@ -328,13 +403,133 @@ public class NeuerArtikelDialog extends Dialog {
                 .set("cursor", "pointer")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
                 .set("box-shadow", "0 4px 15px rgba(85,55,34,0.25)")
-                .set("flex", "1")        // ← neu
+                .set("flex", "1")
                 .set("justify-content", "center");
 
-        speichernBtn.addClickListener(e -> close());
+        speichernBtn.addClickListener(e -> speichern());
 
         footer.add(abbrechenBtn, speichernBtn);
         return footer;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // BILD-UPLOAD
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Upload-Block für Artikelbild (optional).
+     * Lädt Bild in hochgeladensBild als byte[] vor dem Speichern.
+     */
+    private VerticalLayout buildBildUploadBlock() {
+        VerticalLayout block = new VerticalLayout();
+        block.setPadding(false);
+        block.setSpacing(false);
+        block.getStyle().set("gap", "0.4rem");
+
+        Span labelSpan = new Span("ARTIKELBILD (OPTIONAL)");
+        labelSpan.getStyle()
+                .set("font-size", "0.6rem").set("font-weight", "800")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.1em")
+                .set("color", "#82746d")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        MemoryBuffer buffer = new MemoryBuffer();
+        Upload upload = new Upload(buffer);
+        upload.setWidthFull();
+        upload.setAcceptedFileTypes("image/jpeg", "image/png", "image/webp");
+        upload.setMaxFiles(1);
+        upload.setMaxFileSize(5 * 1024 * 1024); // 5 MB
+
+        // Vorschaubild
+        Image vorschau = new Image();
+        vorschau.getStyle()
+                .set("width", "100%").set("max-height", "8rem")
+                .set("object-fit", "cover").set("border-radius", "0.75rem")
+                .set("display", "none");
+
+        upload.addSucceededListener(event -> {
+            try {
+                hochgeladensBild = buffer.getInputStream().readAllBytes();
+                StreamResource sr = new StreamResource(
+                        event.getFileName(),
+                        () -> new java.io.ByteArrayInputStream(hochgeladensBild));
+                vorschau.setSrc(sr);
+                vorschau.getStyle().set("display", "block");
+                Notification.show("Bild geladen: " + event.getFileName(),
+                        2000, Notification.Position.BOTTOM_START);
+            } catch (Exception e) {
+                Notification.show("Fehler beim Laden des Bildes.",
+                        3000, Notification.Position.MIDDLE);
+            }
+        });
+
+        upload.addFileRemovedListener(event -> {
+            hochgeladensBild = null;
+            vorschau.setSrc("");
+            vorschau.getStyle().set("display", "none");
+        });
+
+        block.add(labelSpan, upload, vorschau);
+        return block;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SPEICHERN-LOGIK
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Validiert die Eingaben und speichert den neuen Artikel über den ArtikelService.
+     * Bei Erfolg wird der Dialog geschlossen.
+     * Bei fehlenden Pflichtfeldern wird eine Notification angezeigt.
+     */
+    private void speichern() {
+        if (nameFeld.isEmpty()) {
+            Notification.show("Bitte einen Namen eingeben.", 3000,
+                    Notification.Position.MIDDLE);
+            return;
+        }
+        if (kategorieSelect.isEmpty()) {
+            Notification.show("Bitte eine Kategorie auswählen.", 3000,
+                    Notification.Position.MIDDLE);
+            return;
+        }
+        if (preisFeld.isEmpty()) {
+            Notification.show("Bitte einen Preis eingeben.", 3000,
+                    Notification.Position.MIDDLE);
+            return;
+        }
+        if (mwstSelect.isEmpty()) {
+            Notification.show("Bitte einen MwSt-Satz auswählen.", 3000,
+                    Notification.Position.MIDDLE);
+            return;
+        }
+
+        Artikel neuerArtikel = new Artikel();
+        neuerArtikel.setName(nameFeld.getValue().trim());
+        neuerArtikel.setKategorie(kategorieSelect.getValue());
+        neuerArtikel.setPreis(BigDecimal.valueOf(preisFeld.getValue()));
+        neuerArtikel.setMehrwertsteuer(mwstSelect.getValue());
+        neuerArtikel.setBestand(bestandFeld.isEmpty() ? 0
+                : bestandFeld.getValue().intValue());
+        neuerArtikel.setMinimalbestand(minBestandFeld.isEmpty()
+                ? Artikel.STANDARD_MINIMALBESTAND
+                : minBestandFeld.getValue().intValue());
+        neuerArtikel.setAktiv(true);
+        if (hochgeladensBild != null) {
+            neuerArtikel.setBild(hochgeladensBild);
+        }
+
+        if (zuBearbeitenderArtikel != null) {
+            neuerArtikel.setId(zuBearbeitenderArtikel.getId());
+            artikelService.updateArtikel(neuerArtikel);
+            Notification.show("Artikel \"" + neuerArtikel.getName() + "\" wurde aktualisiert.",
+                    3000, Notification.Position.BOTTOM_START);
+        } else {
+            artikelService.createArtikel(neuerArtikel);
+            Notification.show("Artikel \"" + neuerArtikel.getName() + "\" wurde erstellt.",
+                    3000, Notification.Position.BOTTOM_START);
+        }
+        close();
     }
 
     // ═══════════════════════════════════════════════════════════

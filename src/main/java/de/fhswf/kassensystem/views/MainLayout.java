@@ -20,6 +20,12 @@ import de.fhswf.kassensystem.views.benutzer.BenutzerView;
 import de.fhswf.kassensystem.views.lager.LagerView;
 import de.fhswf.kassensystem.views.verkauf.VerkaufView;
 
+import de.fhswf.kassensystem.views.DashboardView;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +44,7 @@ import java.util.List;
  *   - Software Einführung Button
  *   - User-Card mit Popup-Menü (Ausloggen)
  */
+@PermitAll
 public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
     /**
@@ -238,14 +245,29 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         nav.setSpacing(false);
         nav.getStyle().set("gap", "0.25rem");
 
-        nav.add(
-                createNavLink("receipt_long", "Kassieren", VerkaufView.class),
-                createNavLink("label", "Artikel", ArtikelView.class),
-                createNavLink("inventory_2", "Lager", LagerView.class),
-                createNavLink("bar_chart", "Berichte", BerichteView.class),
-                createNavLink("person", "Benutzer", BenutzerView.class)
-        );
+        // Beide Rollen: Kassieren und Lager
+        nav.add(createNavLink("receipt_long", "Kassieren", VerkaufView.class));
+        nav.add(createNavLink("inventory_2",  "Lager",     LagerView.class));
+
+        // Nur MANAGER: Artikel, Berichte, Benutzer
+        if (istManager()) {
+            nav.add(createNavLink("label",      "Artikel",  ArtikelView.class));
+            nav.add(createNavLink("bar_chart",  "Berichte", BerichteView.class));
+            nav.add(createNavLink("person",     "Benutzer", BenutzerView.class));
+        }
+
         return nav;
+    }
+
+    /**
+     * Prüft ob der eingeloggte User die Rolle MANAGER hat.
+     */
+    private boolean istManager() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_MANAGER"::equals);
     }
 
     /**
@@ -381,7 +403,13 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
                 .set("min-width", "0")
                 .set("flex", "1");
 
-        Span userName = new Span("Max Mustermann");
+        // Benutzername und Rolle aus Spring Security holen
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String angezeigterName = (auth != null && auth.isAuthenticated())
+                ? auth.getName() : "Unbekannt";
+        String angezeigteRolle = istManager() ? "Manager" : "Kassierer";
+
+        Span userName = new Span(angezeigterName);
         userName.getStyle()
                 .set("font-size", "0.8rem")
                 .set("font-weight", "700")
@@ -391,7 +419,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
                 .set("text-overflow", "ellipsis")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        Span userRole = new Span("MANAGER");
+        Span userRole = new Span(angezeigteRolle);
         userRole.getStyle()
                 .set("font-size", "0.6rem")
                 .set("text-transform", "uppercase")
@@ -519,7 +547,8 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
      * TODO: Spring Security Session beenden wenn Backend integriert wird.
      */
     private void logout() {
-        UI.getCurrent().navigate(LoginView.class);
+        // Spring Security Session invalidieren und zur Login-Seite navigieren
+        UI.getCurrent().getPage().setLocation("/logout");
     }
 
 

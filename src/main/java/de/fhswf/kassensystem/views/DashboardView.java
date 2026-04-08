@@ -6,7 +6,12 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * DashboardView ist der Willkommen-Screen der Anwendung.
@@ -19,8 +24,9 @@ import com.vaadin.flow.router.Route;
  * - Zentrierter Begrüßungstext mit Café-Name
  * - Kurzer Untertitel mit Hinweis auf die Navigation
  */
+@RolesAllowed({"KASSIERER", "MANAGER"})
 @Route(value = "dashboard", layout = MainLayout.class)
-public class DashboardView extends Div {
+public class DashboardView extends Div implements BeforeEnterObserver {
 
     public DashboardView() {
         setSizeFull();
@@ -167,4 +173,14 @@ public class DashboardView extends Div {
                 .set("margin", "0");
         return subtitle;
     }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal().equals("anonymousUser")) {
+            event.rerouteTo("login");
+        }
+    }
+
 }

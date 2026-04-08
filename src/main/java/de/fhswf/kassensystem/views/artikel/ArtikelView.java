@@ -9,7 +9,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.MainLayout;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ArtikelView zeigt alle Artikel des Cafés in einer Tabelle.
@@ -19,7 +24,7 @@ import de.fhswf.kassensystem.views.MainLayout;
  * - Tabelle: ID, Name, Kategorie, Preis, MwSt, Bestand, Minimalgrenze, Status, Aktionen
  * - Statistik-Karten: Gesamtartikel, Aktiv, Niedriger Bestand, Kategorien
  *
- * Im Prototyp mit Dummy-Daten – später mit ArtikelService verbunden.
+ * Daten kommen aus ArtikelService.
  */
 @Route(value = "artikel", layout = MainLayout.class)
 public class ArtikelView extends VerticalLayout {
@@ -39,7 +44,23 @@ public class ArtikelView extends VerticalLayout {
     private static final String BREITE_STATUS    = "10%";
     private static final String BREITE_AKTIONEN  = "13%";
 
-    public ArtikelView() {
+    private final ArtikelService artikelService;
+
+    /*
+     * tabelle: Instanzfeld damit buildTabelle() und ladeArtikel()
+     * auf dasselbe Layout zugreifen können.
+     */
+    private final VerticalLayout tabelle = new VerticalLayout();
+
+    /*
+     * statistikKarten: Instanzfeld damit die Karten nach Aktionen
+     * neu geladen werden können.
+     */
+    private final HorizontalLayout statistikKartenLayout = new HorizontalLayout();
+
+    public ArtikelView(ArtikelService artikelService) {
+        this.artikelService = artikelService;
+
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -49,10 +70,95 @@ public class ArtikelView extends VerticalLayout {
                 .set("box-sizing", "border-box")
                 .set("overflow-y", "auto");
 
+        tabelle.setWidthFull();
+        tabelle.setPadding(false);
+        tabelle.setSpacing(false);
+        tabelle.getStyle().set("gap", "0.25rem");
+
+        statistikKartenLayout.setWidthFull();
+        statistikKartenLayout.setSpacing(false);
+        statistikKartenLayout.getStyle()
+                .set("gap", "1.5rem")
+                .set("margin-top", "1.5rem");
+
         add(
                 buildHeader(),
                 buildTabellenBereich(),
-                buildStatistikKarten()
+                statistikKartenLayout
+        );
+
+        ladeArtikel(null);
+        ladeStatistikKarten();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // DATEN LADEN
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Lädt Artikel aus dem ArtikelService und befüllt die Tabelle.
+     * Bei suchBegriff != null wird gefiltert, sonst alle Artikel geladen.
+     *
+     * @param suchBegriff Suchbegriff oder null für alle Artikel
+     */
+    private void ladeArtikel(String suchBegriff) {
+        tabelle.removeAll();
+        tabelle.add(buildTabellenHeader());
+
+        List<Artikel> artikel;
+        if (suchBegriff != null && !suchBegriff.isBlank()) {
+            artikel = artikelService.findByName(suchBegriff);
+        } else {
+            artikel = artikelService.findAllArtikel();
+        }
+        // Nach ID aufsteigend sortieren
+        artikel.sort(java.util.Comparator.comparing(Artikel::getId));
+
+        for (Artikel a : artikel) {
+            boolean warnBestand = a.getBestand() < a.getMinimalbestand();
+            String bestandText = a.getBestand() == Integer.MAX_VALUE
+                    ? "∞"
+                    : a.getBestand() + " Stk.";
+            String preisText = String.format("%,.2f €", a.getPreis());
+            String mwstText  = a.getMehrwertsteuer().getSatz()
+                    .stripTrailingZeros().toPlainString() + "%";
+            String idText    = "#ART-" + String.format("%03d", a.getId());
+
+            tabelle.add(buildArtikelZeile(
+                    idText,
+                    a.getName(),
+                    a.getKategorie().getName(),
+                    preisText,
+                    mwstText,
+                    bestandText,
+                    String.valueOf(a.getMinimalbestand()),
+                    a.isAktiv(),
+                    warnBestand,
+                    a
+            ));
+        }
+    }
+
+    /**
+     * Lädt die Statistik-Karten mit echten Zahlen aus dem Service.
+     */
+    private void ladeStatistikKarten() {
+        statistikKartenLayout.removeAll();
+
+        List<Artikel> alle   = artikelService.findAllArtikel();
+        long gesamtArtikel   = alle.size();
+        long aktiv           = alle.stream().filter(Artikel::isAktiv).count();
+        long niedrigBestand  = alle.stream()
+                .filter(a -> a.getBestand() < a.getMinimalbestand()).count();
+        long kategorien      = alle.stream()
+                .map(a -> a.getKategorie().getId())
+                .collect(Collectors.toSet()).size();
+
+        statistikKartenLayout.add(
+                buildStatistikKarte("GESAMTARTIKEL",     String.valueOf(gesamtArtikel), "inventory_2",  false),
+                buildStatistikKarte("AKTIV",             String.valueOf(aktiv),          "check_circle", false),
+                buildStatistikKarte("NIEDRIGER BESTAND", String.valueOf(niedrigBestand), "warning",      true),
+                buildStatistikKarte("KATEGORIEN",        String.valueOf(kategorien),     "category",     false)
         );
     }
 
@@ -127,13 +233,19 @@ public class ArtikelView extends VerticalLayout {
         suchfeld.addClassName("artikel-suchfeld");
         suchfeld.getStyle().set("width", "18rem");
 
+        /*
+         * Suche bei jeder Eingabe – kein Button nötig.
+         * ValueChangeListener feuert bei jedem Tastendruck.
+         */
+        suchfeld.addValueChangeListener(e -> ladeArtikel(e.getValue()));
+
         aktionen.add(suchfeld, buildNeuerArtikelButton());
         return aktionen;
     }
 
     /**
      * "Neuer Artikel" Button mit Gradient und Plus-Icon.
-     * TODO: Öffnet später einen Dialog zum Erstellen eines neuen Artikels.
+     * Öffnet NeuerArtikelDialog und lädt nach dem Schließen die Tabelle neu.
      */
     private Button buildNeuerArtikelButton() {
         Span plusIcon = createIcon("add");
@@ -161,7 +273,20 @@ public class ArtikelView extends VerticalLayout {
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
                 .set("white-space", "nowrap");
 
-        btn.addClickListener(event -> new NeuerArtikelDialog().open());
+        btn.addClickListener(event -> {
+            NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService);
+            /*
+             * Nach dem Schließen des Dialogs Tabelle und Statistik neu laden,
+             * damit der neue Artikel sofort erscheint.
+             */
+            dialog.addOpenedChangeListener(e -> {
+                if (!e.isOpened()) {
+                    ladeArtikel(null);
+                    ladeStatistikKarten();
+                }
+            });
+            dialog.open();
+        });
 
         return btn;
     }
@@ -184,40 +309,12 @@ public class ArtikelView extends VerticalLayout {
                 .set("padding", "1.5rem")
                 .set("gap", "0");
 
-        bereich.add(buildTabelle(), buildPagination());
+        bereich.add(tabelle);
         return bereich;
     }
 
     /**
-     * Tabelle mit Header und allen Datenzeilen.
-     */
-    private VerticalLayout buildTabelle() {
-        VerticalLayout tabelle = new VerticalLayout();
-        tabelle.setWidthFull();
-        tabelle.setPadding(false);
-        tabelle.setSpacing(false);
-        tabelle.getStyle().set("gap", "0.25rem");
-
-        tabelle.add(buildTabellenHeader());
-
-        /*
-         * Dummy-Daten – später durch ArtikelService.findAll() ersetzen.
-         * Parameter: id, name, kategorie, preis, mwst, bestand,
-         *            minBestand, aktiv, warnBestand
-         */
-        tabelle.add(buildArtikelZeile("#ART-001", "Espresso",        "Heißgetränke", "2,50 €", "7%",  "∞",       "20", true,  false));
-        tabelle.add(buildArtikelZeile("#ART-002", "Cappuccino",      "Heißgetränke", "3,80 €", "7%",  "∞",       "20", true,  false));
-        tabelle.add(buildArtikelZeile("#ART-003", "Croissant",       "Gebäck",       "2,20 €", "7%",  "12 Stk.", "20", true,  false));
-        tabelle.add(buildArtikelZeile("#ART-004", "Muffin",          "Gebäck",       "2,90 €", "7%",  "2 Stk.",  "20", true,  true));
-        tabelle.add(buildArtikelZeile("#ART-005", "Wasser",          "Kaltgetränke", "1,90 €", "19%", "45 Stk.", "20", false, false));
-        tabelle.add(buildArtikelZeile("#ART-006", "Latte Macchiato", "Heißgetränke", "4,20 €", "7%",  "∞",       "20", true,  false));
-
-        return tabelle;
-    }
-
-    /**
      * Header-Zeile mit allen Spaltenbezeichnungen.
-     * Breiten kommen aus den BREITE_*-Konstanten.
      */
     private HorizontalLayout buildTabellenHeader() {
         HorizontalLayout header = new HorizontalLayout();
@@ -245,9 +342,6 @@ public class ArtikelView extends VerticalLayout {
 
     /**
      * Einzelne Spaltenüberschrift.
-     *
-     * @param text   Spaltenbezeichnung
-     * @param breite CSS-Breite aus den BREITE_*-Konstanten
      */
     private Span buildHeaderZelle(String text, String breite) {
         Span zelle = new Span(text);
@@ -265,24 +359,23 @@ public class ArtikelView extends VerticalLayout {
     /**
      * Eine Artikel-Datenzeile in der Tabelle.
      *
-     * Hover-Effekt: Hintergrund aufhellen + Aktionsbuttons einblenden.
-     * Warnbestand: Bestand-Zelle wird rot mit Warnsymbol markiert.
-     *
      * @param id          Artikel-ID (z.B. "#ART-001")
      * @param name        Artikelname
-     * @param kategorie   Kategorie
-     * @param preis       formatierter Preis (z.B. "2,50 €")
-     * @param mwst        MwSt-Satz (z.B. "7%")
-     * @param bestand     aktueller Bestand (z.B. "12 Stk." oder "∞")
-     * @param minBestand  Minimalgrenze (z.B. "20")
+     * @param kategorie   Kategoriename
+     * @param preis       formatierter Preis
+     * @param mwst        MwSt-Satz
+     * @param bestand     Bestandstext
+     * @param minBestand  Minimalbestand
      * @param aktiv       ob der Artikel aktiv ist
      * @param warnBestand ob der Bestand unter der Minimalgrenze liegt
+     * @param artikel     das Artikel-Entity für Aktionsbuttons
      */
     private HorizontalLayout buildArtikelZeile(String id, String name,
                                                String kategorie, String preis,
                                                String mwst, String bestand,
                                                String minBestand,
-                                               boolean aktiv, boolean warnBestand) {
+                                               boolean aktiv, boolean warnBestand,
+                                               Artikel artikel) {
         HorizontalLayout zeile = new HorizontalLayout();
         zeile.setWidthFull();
         zeile.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -334,10 +427,6 @@ public class ArtikelView extends VerticalLayout {
                 .set("color", "#50453e")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        /*
-         * Bestand-Zelle: bei Unterschreitung der Minimalgrenze
-         * wird ein Warnsymbol vorangestellt und der Text rot markiert.
-         */
         HorizontalLayout bestandZelle = new HorizontalLayout();
         bestandZelle.setAlignItems(FlexComponent.Alignment.CENTER);
         bestandZelle.setPadding(false);
@@ -372,12 +461,8 @@ public class ArtikelView extends VerticalLayout {
         Div statusZelle = new Div(buildStatusBadge(aktiv));
         statusZelle.getStyle().set("width", BREITE_STATUS);
 
-        Div aktionenZelle = buildAktionenZelle(aktiv);
+        Div aktionenZelle = buildAktionenZelle(aktiv, artikel);
 
-        /*
-         * Hover per JavaScript: Hintergrund + Aktionen-Sichtbarkeit.
-         * Inline-Events weil Vaadin kein direktes :hover für Java hat.
-         */
         zeile.getElement().executeJs(
                 "this.addEventListener('mouseenter', () => {" +
                         "  this.style.background = '#f0eeff';" +
@@ -400,8 +485,6 @@ public class ArtikelView extends VerticalLayout {
 
     /**
      * Status-Badge: olivgrün für Aktiv, grau für Inaktiv.
-     *
-     * @param aktiv ob der Artikel aktiv ist
      */
     private Span buildStatusBadge(boolean aktiv) {
         Span badge = new Span(aktiv ? "Aktiv" : "Inaktiv");
@@ -418,12 +501,13 @@ public class ArtikelView extends VerticalLayout {
     }
 
     /**
-     * Aktionsbuttons-Zelle (Bearbeiten + Sichtbarkeit).
-     * Standardmäßig unsichtbar – erscheinen beim Hover der Zeile.
+     * Aktionsbuttons-Zelle (Bearbeiten + Sichtbarkeit umschalten).
+     * Sichtbarkeit-Button ruft artikelService.deleteArtikel() auf (deaktiviert).
      *
-     * @param aktiv beeinflusst das Sichtbarkeits-Icon (ein/ausblenden)
+     * @param aktiv   aktueller Aktivstatus
+     * @param artikel das Artikel-Entity
      */
-    private Div buildAktionenZelle(boolean aktiv) {
+    private Div buildAktionenZelle(boolean aktiv, Artikel artikel) {
         Div zelle = new Div();
         zelle.addClassName("aktionen-gruppe");
         zelle.getStyle()
@@ -434,23 +518,46 @@ public class ArtikelView extends VerticalLayout {
                 .set("opacity", "0")
                 .set("transition", "opacity 0.15s");
 
-        zelle.add(
-                buildAktionsButton("edit", "#553722", "#ffdcc6"),
-                buildAktionsButton(
-                        aktiv ? "visibility_off" : "visibility",
-                        aktiv ? "#ba1a1a" : "#553722",
-                        aktiv ? "#ffdad6" : "#ffdcc6"
-                )
+        // Bearbeiten-Button öffnet NeuerArtikelDialog im Bearbeitungsmodus
+        Button editBtn = buildAktionsButton("edit", "#553722", "#ffdcc6");
+        editBtn.addClickListener(e -> {
+            NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService, artikel);
+            dialog.addOpenedChangeListener(ev -> {
+                if (!ev.isOpened()) {
+                    ladeArtikel(null);
+                    ladeStatistikKarten();
+                }
+            });
+            dialog.open();
+        });
+
+        // Sichtbarkeit umschalten (aktiv/inaktiv)
+        Button sichtbarBtn = buildAktionsButton(
+                aktiv ? "visibility_off" : "visibility",
+                aktiv ? "#ba1a1a" : "#553722",
+                aktiv ? "#ffdad6" : "#ffdcc6"
         );
+        sichtbarBtn.addClickListener(e -> {
+            /*
+             * deleteArtikel() setzt aktiv=false (Soft-Delete).
+             * Für Reaktivierung müsste ein updateArtikel() verwendet werden.
+             */
+            if (aktiv) {
+                artikelService.deleteArtikel(artikel.getId());
+            } else {
+                artikel.setAktiv(true);
+                artikelService.updateArtikel(artikel);
+            }
+            ladeArtikel(null);
+            ladeStatistikKarten();
+        });
+
+        zelle.add(editBtn, sichtbarBtn);
         return zelle;
     }
 
     /**
      * Einzelner Icon-only Aktionsbutton.
-     *
-     * @param iconName   Material Symbol Icon-Name
-     * @param iconFarbe  Farbe des Icons im Normalzustand
-     * @param hoverFarbe Hintergrundfarbe beim Hover
      */
     private Button buildAktionsButton(String iconName,
                                       String iconFarbe,
@@ -487,33 +594,12 @@ public class ArtikelView extends VerticalLayout {
     // ═══════════════════════════════════════════════════════════
 
     /**
-     * Vier Statistik-Karten als Zusammenfassung unterhalb der Tabelle:
-     * Gesamtartikel, Aktiv, Niedriger Bestand, Kategorien.
-     */
-    private HorizontalLayout buildStatistikKarten() {
-        HorizontalLayout reihe = new HorizontalLayout();
-        reihe.setWidthFull();
-        reihe.setSpacing(false);
-        reihe.getStyle()
-                .set("gap", "1.5rem")
-                .set("margin-top", "1.5rem");
-
-        reihe.add(
-                buildStatistikKarte("GESAMTARTIKEL",     "24", "inventory_2",  false),
-                buildStatistikKarte("AKTIV",             "18", "check_circle", false),
-                buildStatistikKarte("NIEDRIGER BESTAND", "2",  "warning",      true),
-                buildStatistikKarte("KATEGORIEN",        "4",  "category",     false)
-        );
-        return reihe;
-    }
-
-    /**
-     * Einzelne Statistik-Karte mit Label, großem Zahlenwert und Icon.
+     * Einzelne Statistik-Karte mit Label, Zahlenwert und Icon.
      *
-     * @param label   Bezeichnung (z.B. "GESAMTARTIKEL")
-     * @param wert    anzuzeigender Wert (z.B. "24")
+     * @param label   Bezeichnung
+     * @param wert    Wert als String
      * @param icon    Material Symbol Icon-Name
-     * @param warnung ob diese Karte in Rot hervorgehoben wird
+     * @param warnung ob diese Karte rot hervorgehoben wird
      */
     private VerticalLayout buildStatistikKarte(String label, String wert,
                                                String icon, boolean warnung) {
@@ -575,97 +661,13 @@ public class ArtikelView extends VerticalLayout {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // PAGINATION
-    // ═══════════════════════════════════════════════════════════
-
-    /**
-     * Pagination mit Info-Text links und Seitenbuttons rechts.
-     * Im Prototyp ohne Funktionalität.
-     */
-    private HorizontalLayout buildPagination() {
-        HorizontalLayout pagination = new HorizontalLayout();
-        pagination.setWidthFull();
-        pagination.setAlignItems(FlexComponent.Alignment.CENTER);
-        pagination.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
-        pagination.setPadding(false);
-        pagination.getStyle().set("margin-top", "1.5rem");
-
-        Span info = new Span("Zeige 1–6 von 24 Artikeln");
-        info.getStyle()
-                .set("font-size", "0.8rem")
-                .set("color", "#82746d")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif");
-
-        HorizontalLayout seitenButtons = new HorizontalLayout();
-        seitenButtons.setAlignItems(FlexComponent.Alignment.CENTER);
-        seitenButtons.setSpacing(false);
-        seitenButtons.getStyle().set("gap", "0.25rem");
-
-        seitenButtons.add(
-                buildPaginationButton("chevron_left",  true),
-                buildSeiteButton("1", true),
-                buildSeiteButton("2", false),
-                buildSeiteButton("3", false),
-                buildPaginationButton("chevron_right", false)
-        );
-
-        pagination.add(info, seitenButtons);
-        return pagination;
-    }
-
-    /**
-     * Navigations-Pfeil-Button für die Pagination.
-     *
-     * @param iconName Material Symbol Icon ("chevron_left" oder "chevron_right")
-     * @param deaktiv  ob der Button ausgegraut dargestellt wird
-     */
-    private Button buildPaginationButton(String iconName, boolean deaktiv) {
-        Button btn = new Button();
-        Span icon = createIcon(iconName);
-        icon.getStyle().set("font-size", "1.25rem");
-        btn.getElement().appendChild(icon.getElement());
-        btn.getStyle()
-                .set("background", "none")
-                .set("border", "none")
-                .set("cursor", deaktiv ? "default" : "pointer")
-                .set("padding", "0.5rem")
-                .set("border-radius", "0.75rem")
-                .set("opacity", deaktiv ? "0.3" : "1")
-                .set("color", "#553722")
-                .set("min-width", "unset");
-        return btn;
-    }
-
-    /**
-     * Seiten-Nummer-Button für die Pagination.
-     *
-     * @param nummer anzuzeigende Seitenzahl
-     * @param aktiv  ob diese Seite gerade aktiv ist
-     */
-    private Button buildSeiteButton(String nummer, boolean aktiv) {
-        Button btn = new Button(nummer);
-        btn.getStyle()
-                .set("width", "2.5rem")
-                .set("height", "2.5rem")
-                .set("border-radius", "0.75rem")
-                .set("border", "none")
-                .set("cursor", "pointer")
-                .set("font-weight", aktiv ? "700" : "500")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif")
-                .set("font-size", "0.875rem")
-                .set("background", aktiv ? "#553722" : "none")
-                .set("color", aktiv ? "white" : "#50453e");
-        return btn;
-    }
-
-    // ═══════════════════════════════════════════════════════════
     // HILFSMETHODEN
     // ═══════════════════════════════════════════════════════════
 
     /**
      * Erstellt einen Material Symbols Icon-Span.
      *
-     * @param iconName Name des Icons (z.B. "edit", "warning", "label")
+     * @param iconName Name des Icons
      */
     private Span createIcon(String iconName) {
         Span icon = new Span(iconName);

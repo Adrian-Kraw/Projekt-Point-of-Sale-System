@@ -43,4 +43,11 @@ public class Artikel {
     @ManyToOne
     @JoinColumn(name = "mehrwertsteuer_id", nullable = false)
     private Mehrwertsteuer mehrwertsteuer;
+
+    /**
+     * Artikelbild als Byte-Array (JPEG oder PNG).
+     * Null wenn kein Bild hochgeladen wurde.
+     */
+    @Column(name = "bild", columnDefinition = "BYTEA")
+    private byte[] bild;
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
  * Repräsentiert einen Benutzer im System.
  */
 @Entity
-@Table(name = "User")
+@Table(name = "kassensystem_user")
 @Getter
 @Setter
 public class User {

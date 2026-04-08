@@ -2,6 +2,8 @@ package de.fhswf.kassensystem.repository;
 
 import de.fhswf.kassensystem.model.Verkauf;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,19 +16,18 @@ import java.util.List;
 public interface VerkaufRepository extends JpaRepository<Verkauf, Long> {
 
     /**
-     * Gibt alle Verkäufe an einem bestimmten Datum als Liste zurück.
-     * @param start Datum
-     * @param end Ende
-     * @return Liste der Verkäufe
+     * Lädt alle Verkäufe in einem Zeitraum MIT Positionen (eager via JOIN FETCH).
+     * Verhindert LazyInitializationException in Views außerhalb der DB-Session.
      */
-    List<Verkauf> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
+    @Query("SELECT DISTINCT v FROM Verkauf v " +
+            "LEFT JOIN FETCH v.positionen p " +
+            "LEFT JOIN FETCH p.artikel a " +
+            "LEFT JOIN FETCH a.kategorie " +
+            "WHERE v.timestamp BETWEEN :start AND :end " +
+            "AND v.status = de.fhswf.kassensystem.model.enums.Status.ABGESCHLOSSEN")
+    List<Verkauf> findByTimestampBetween(
+            @Param("start") LocalDateTime start,
+            @Param("end")   LocalDateTime end);
 
-    /**
-     *
-     * @param verkaufId
-     * @return
-     */
     Verkauf getVerkaufById(Long verkaufId);
-
-
 }
