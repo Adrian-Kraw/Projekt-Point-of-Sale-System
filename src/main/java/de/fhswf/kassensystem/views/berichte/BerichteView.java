@@ -13,6 +13,7 @@ import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
 import de.fhswf.kassensystem.service.BerichteService;
+import de.fhswf.kassensystem.service.EinstellungService;
 import de.fhswf.kassensystem.service.PdfExportService;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.SecuredView;
@@ -23,27 +24,32 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Berichte-View. Steuert drei Tabs; jeder Tab rendert sein eigenes Panel.
+ * Berichte-View.
+ * FIX: Bon-Zielwert wird jetzt in der DB gespeichert (EinstellungService)
+ *      und überlebt Seitenreloads und Neustarts.
  */
 @Route(value = "berichte", layout = MainLayout.class)
 public class BerichteView extends SecuredView {
 
-    private final BerichteService berichteService;
-    private final PdfExportService pdfExportService;
+    private final BerichteService    berichteService;
+    private final PdfExportService   pdfExportService;
+    private final EinstellungService einstellungService;
 
     private final Div       tabInhalt  = new Div();
     private       LocalDate aktivDatum = LocalDate.now();
     private       String    aktiverTab = "tagesabschluss";
-    private       BigDecimal bonZielwert = BigDecimal.ZERO;
 
     private Span tagesTab;
     private Span umsatzTab;
     private Span artikelTab;
 
-    public BerichteView(BerichteService berichteService, PdfExportService pdfExportService) {
+    public BerichteView(BerichteService berichteService,
+                        PdfExportService pdfExportService,
+                        EinstellungService einstellungService) {
         super(Rolle.KASSIERER);
-        this.berichteService  = berichteService;
-        this.pdfExportService = pdfExportService;
+        this.berichteService    = berichteService;
+        this.pdfExportService   = pdfExportService;
+        this.einstellungService = einstellungService;
 
         applyStandardBackground();
         tabInhalt.setWidthFull();
@@ -55,9 +61,15 @@ public class BerichteView extends SecuredView {
         tabInhalt.removeAll();
         switch (aktiverTab) {
             case "tagesabschluss" -> {
-                TagesabschlussDTO dto = berichteService.getTagesabschluss(aktivDatum);
+                // Zielwert frisch aus DB laden
+                BigDecimal bonZielwert = einstellungService.getBonZielwert();
+                TagesabschlussDTO dto  = berichteService.getTagesabschluss(aktivDatum);
                 tabInhalt.add(new TagesabschlussPanel(dto, bonZielwert, istManager(),
-                        wert -> { bonZielwert = wert; ladeTabInhalt(); }));
+                        wert -> {
+                            // Zielwert in DB speichern, dann Tab neu laden
+                            einstellungService.setBonZielwert(wert);
+                            ladeTabInhalt();
+                        }));
             }
             case "umsatz"  -> tabInhalt.add(new UmsatzuebersichtPanel(berichteService, aktivDatum));
             case "artikel" -> {
@@ -119,12 +131,12 @@ public class BerichteView extends SecuredView {
         tabs.getStyle().set("gap", "3rem").set("border-bottom", "1px solid rgba(130,116,109,0.15)")
                 .set("margin-bottom", "2rem");
 
-        tagesTab   = buildTab("Tagesabschluss",  true);
-        umsatzTab  = buildTab("Umsatzübersicht", false);
+        tagesTab   = buildTab("Tagesabschluss",   true);
+        umsatzTab  = buildTab("Umsatzübersicht",  false);
         artikelTab = buildTab("Artikelstatistik", false);
 
-        tagesTab.addClickListener(e   -> wechsleTab("tagesabschluss", tagesTab, new Span[]{umsatzTab, artikelTab}));
-        umsatzTab.addClickListener(e  -> wechsleTab("umsatz",         umsatzTab, new Span[]{tagesTab, artikelTab}));
+        tagesTab.addClickListener(e   -> wechsleTab("tagesabschluss", tagesTab,   new Span[]{umsatzTab, artikelTab}));
+        umsatzTab.addClickListener(e  -> wechsleTab("umsatz",         umsatzTab,  new Span[]{tagesTab, artikelTab}));
         artikelTab.addClickListener(e -> wechsleTab("artikel",        artikelTab, new Span[]{tagesTab, umsatzTab}));
 
         tabs.add(tagesTab, umsatzTab, artikelTab);
@@ -134,7 +146,8 @@ public class BerichteView extends SecuredView {
     private void wechsleTab(String tab, Span aktiv, Span[] inaktive) {
         aktiverTab = tab;
         aktiv.getStyle().set("color", "#553722").set("border-bottom", "3px solid #6f4e37");
-        for (Span s : inaktive) s.getStyle().set("color", "rgba(85,55,34,0.4)").set("border-bottom", "3px solid transparent");
+        for (Span s : inaktive)
+            s.getStyle().set("color", "rgba(85,55,34,0.4)").set("border-bottom", "3px solid transparent");
         ladeTabInhalt();
     }
 
@@ -175,8 +188,7 @@ public class BerichteView extends SecuredView {
     private void exportiereAlsPdf() {
         try {
             TagesabschlussDTO tagesabschluss = berichteService.getTagesabschluss(aktivDatum);
-            List<de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO> statistik =
-                    berichteService.getArtikelStatistik(30);
+            List<ArtikelStatistikDTO> statistik = berichteService.getArtikelStatistik(30);
             byte[] pdfBytes = pdfExportService.exportiereTagebericht(tagesabschluss, statistik);
             String dateiname = "Tagesbericht_" +
                     aktivDatum.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
@@ -189,12 +201,13 @@ public class BerichteView extends SecuredView {
                             "a.href=url;a.download=$1;document.body.appendChild(a);a.click();" +
                             "document.body.removeChild(a);URL.revokeObjectURL(url);",
                     base64, dateiname);
-            com.vaadin.flow.component.notification.Notification.show("PDF wird heruntergeladen...", 3000,
+            com.vaadin.flow.component.notification.Notification.show(
+                    "PDF wird heruntergeladen...", 3000,
                     com.vaadin.flow.component.notification.Notification.Position.BOTTOM_START);
         } catch (Exception ex) {
-            com.vaadin.flow.component.notification.Notification.show("Fehler beim PDF-Export: " + ex.getMessage(), 4000,
+            com.vaadin.flow.component.notification.Notification.show(
+                    "Fehler beim PDF-Export: " + ex.getMessage(), 4000,
                     com.vaadin.flow.component.notification.Notification.Position.MIDDLE);
         }
     }
-
 }

@@ -89,7 +89,7 @@ class TagesabschlussPanel extends VerticalLayout {
 
     private VerticalLayout buildBonWertKarte(BigDecimal bonWert, BigDecimal bonZielwert,
                                              boolean istManager, Consumer<BigDecimal> onZielwertSpeichern) {
-        VerticalLayout karte = buildMetricKarte("Oe Bon-Wert", BerichteUtils.fp(bonWert), "coffee", null, false);
+        VerticalLayout karte = buildMetricKarte("ø Bon-Wert", BerichteUtils.fp(bonWert), "coffee", null, false);
         karte.add(new BonZielwertPanel(bonZielwert, istManager ? onZielwertSpeichern : null));
         return karte;
     }

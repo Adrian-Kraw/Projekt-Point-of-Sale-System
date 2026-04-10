@@ -80,6 +80,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         loginForm.setI18n(i18n);
         loginForm.setAction("login");  // POST /login → Spring Security
+        loginForm.setForgotPasswordButtonVisible(false);
         loginForm.getStyle()
                 .set("border-radius", "1.25rem")
                 .set("box-shadow", "0 8px 32px rgba(85,55,34,0.12)");
