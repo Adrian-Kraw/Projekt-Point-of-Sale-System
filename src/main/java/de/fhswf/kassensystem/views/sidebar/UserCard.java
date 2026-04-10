@@ -1,0 +1,92 @@
+package de.fhswf.kassensystem.views.sidebar;
+
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+/**
+ * User-Karte am unteren Rand der Sidebar mit Avatar, Name, Rolle
+ * und aufklappbarem Logout-Popup.
+ */
+public class UserCard extends HorizontalLayout {
+
+    public UserCard(String name, String rolle, Runnable onLogout) {
+        setWidthFull();
+        setAlignItems(FlexComponent.Alignment.CENTER);
+        setSpacing(false);
+        getStyle()
+                .set("background", "white").set("border-radius", "1.5rem")
+                .set("padding", "0.75rem 1rem").set("gap", "0.75rem")
+                .set("box-shadow", "0 1px 3px rgba(0,0,0,0.06)")
+                .set("cursor", "pointer").set("position", "relative");
+
+        Div popup = buildPopup(onLogout);
+        addClickListener(e -> togglePopup(popup));
+        add(buildAvatar(), buildUserInfo(name, rolle), popup);
+    }
+
+    private Div buildAvatar() {
+        Div avatar = new Div();
+        avatar.getStyle()
+                .set("width", "2.5rem").set("height", "2.5rem").set("border-radius", "9999px")
+                .set("background-color", "#ffdcc6").set("flex-shrink", "0")
+                .set("border", "2px solid white").set("box-shadow", "0 1px 3px rgba(0,0,0,0.1)")
+                .set("display", "flex").set("align-items", "center").set("justify-content", "center");
+
+        Span icon = new Span("person");
+        icon.addClassName("material-symbols-outlined");
+        icon.getStyle().set("color", "#553722").set("font-size", "1.25rem").set("line-height", "1");
+        avatar.add(icon);
+        return avatar;
+    }
+
+    private VerticalLayout buildUserInfo(String name, String rolle) {
+        VerticalLayout info = new VerticalLayout();
+        info.setPadding(false);
+        info.setSpacing(false);
+        info.getStyle().set("min-width", "0").set("flex", "1");
+
+        Span nameSpan = new Span(name);
+        nameSpan.getStyle()
+                .set("font-size", "0.8rem").set("font-weight", "700").set("color", "#1a1a2e")
+                .set("white-space", "nowrap").set("overflow", "hidden").set("text-overflow", "ellipsis")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Span rolleSpan = new Span(rolle);
+        rolleSpan.getStyle()
+                .set("font-size", "0.6rem").set("text-transform", "uppercase")
+                .set("letter-spacing", "0.08em").set("color", "#82746d")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        info.add(nameSpan, rolleSpan);
+        return info;
+    }
+
+    private Div buildPopup(Runnable onLogout) {
+        Div popup = new Div();
+        popup.getStyle()
+                .set("position", "absolute").set("bottom", "calc(100% + 8px)")
+                .set("left", "0").set("right", "0").set("background", "white")
+                .set("border-radius", "1rem").set("box-shadow", "0 4px 20px rgba(0,0,0,0.12)")
+                .set("padding", "0.5rem").set("display", "none").set("z-index", "1000");
+
+        Span logoutItem = new Span("Ausloggen");
+        logoutItem.getStyle()
+                .set("display", "flex").set("align-items", "center")
+                .set("padding", "0.6rem 1rem").set("border-radius", "0.5rem")
+                .set("cursor", "pointer").set("color", "#ba1a1a")
+                .set("font-size", "0.875rem")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif").set("font-weight", "600");
+        logoutItem.addClickListener(e -> onLogout.run());
+
+        popup.add(logoutItem);
+        return popup;
+    }
+
+    private void togglePopup(Div popup) {
+        String current = popup.getStyle().get("display");
+        popup.getStyle().set("display", "none".equals(current) ? "block" : "none");
+    }
+}

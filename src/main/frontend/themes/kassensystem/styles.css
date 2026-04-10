@@ -1,33 +1,26 @@
 /* ================================================
    THEME: cafepos – Canapé Café
-   Globale CSS-Variablen, Schriften und Komponenten-Styles
    ================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css');
 
 /* ── CSS-Variablen ── */
 :root, :host {
     --lumo-font-family: 'Plus Jakarta Sans', sans-serif;
-
     --color-primary:               #553722;
     --color-primary-container:     #6F4E37;
     --color-primary-fixed:         #ffdcc6;
-
     --color-surface:                   #fcf8ff;
     --color-surface-container-low:     #f5f2ff;
     --color-surface-container:         #efecff;
     --color-surface-container-high:    #e8e5ff;
     --color-surface-container-highest: #e2e0fc;
-
     --color-on-surface:          #1a1a2e;
     --color-on-surface-variant:  #50453e;
     --color-outline:             #82746d;
     --color-outline-variant:     #d4c3ba;
-
-    --color-dark-bg:      #1a1a2e;
-    --color-dark-surface: #2f2e43;
-    --color-dark-sidebar: #12122a;
 }
 
 /* ── Body ── */
@@ -36,11 +29,6 @@ body {
     background-color: var(--color-surface);
     margin: 0;
     padding: 0;
-}
-
-body.dark {
-    background-color: var(--color-dark-bg);
-    color: white;
 }
 
 /* ── Material Symbols ── */
@@ -58,26 +46,19 @@ body.dark {
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar {
-    width: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--color-outline-variant);
-    border-radius: 9999px;
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 9999px; }
 
 /* ════════════════════════════════════════════════
-   VAADIN KOMPONENTEN
+   VAADIN APP LAYOUT
    ════════════════════════════════════════════════ */
 
-/* ── AppLayout Drawer ── */
+/* FIX: Drawer-Hintergrund auf Seitenfarbe setzen,
+   damit die abgerundeten Sidebar-Ecken sauber sind
+   und kein anderer Farbton dahinter durchscheint. */
 vaadin-app-layout::part(drawer) {
-    background: transparent;
+    background: #fcf8ff;   /* gleiche Farbe wie Seite */
     box-shadow: none;
     width: 240px;
     overflow: visible;
@@ -92,8 +73,9 @@ vaadin-app-layout::part(navbar) {
 
 vaadin-app-layout::part(content) {
     padding-top: 0;
-    overflow-y: auto;    /* ← neu */
-    height: 100vh;       /* ← neu */
+    overflow-y: auto;
+    height: 100vh;
+    background: #fcf8ff;   /* ebenfalls sauber */
 }
 
 /* ── Button internes Layout ── */
@@ -106,11 +88,9 @@ vaadin-button::part(label) {
     text-decoration: none;
 }
 
-vaadin-button:hover::part(label) {
-    text-decoration: none;
-}
+vaadin-button:hover::part(label) { text-decoration: none; }
 
-/* ── Suchfeld global (VerkaufView pill-form) ── */
+/* ── Suchfelder ── */
 vaadin-text-field::part(input-field) {
     border-radius: 9999px;
     background: #efecff;
@@ -118,11 +98,8 @@ vaadin-text-field::part(input-field) {
     box-shadow: none;
 }
 
-vaadin-text-field::part(input-field):hover {
-    background: #e8e5ff;
-}
+vaadin-text-field::part(input-field):hover { background: #e8e5ff; }
 
-/* ── ArtikelView Suchfeld (abgerundet, nicht pill) ── */
 .artikel-suchfeld::part(input-field) {
     border-radius: 1rem;
     background: #efecff;
@@ -130,7 +107,6 @@ vaadin-text-field::part(input-field):hover {
     box-shadow: none;
 }
 
-/* ── Rabatt-Feld (Warenkorb) ── */
 .rabatt-feld::part(input-field) {
     border-radius: 0.75rem;
     background: white;
@@ -138,7 +114,7 @@ vaadin-text-field::part(input-field):hover {
     box-shadow: none;
 }
 
-/* ── Dialog Eingabefelder ── */
+/* ── Dialog Felder ── */
 .dialog-feld::part(input-field),
 .dialog-feld::part(toggle-button) {
     border-radius: 1rem;
@@ -147,9 +123,7 @@ vaadin-text-field::part(input-field):hover {
     box-shadow: none;
 }
 
-.dialog-feld::part(input-field):focus-within {
-    background: #e8e5ff;
-}
+.dialog-feld::part(input-field):focus-within { background: #e8e5ff; }
 
 /* ── Dialog Overlay ── */
 vaadin-dialog-overlay::part(overlay) {
@@ -158,32 +132,12 @@ vaadin-dialog-overlay::part(overlay) {
     overflow: hidden;
 }
 
-vaadin-dialog-overlay::part(content) {
-    padding: 0;
-}
+vaadin-dialog-overlay::part(content) { padding: 0; }
 
 /* ════════════════════════════════════════════════
-   SIDEBAR
+   SIDEBAR NAV-LINKS
    ════════════════════════════════════════════════ */
 
-.sidebar {
-    width: 240px;
-    min-height: 100vh;
-    background-color: var(--color-surface-container-low);
-    border-radius: 0 3rem 3rem 0;
-    box-shadow: 40px 0 60px -15px rgba(85, 55, 34, 0.05);
-    display: flex;
-    flex-direction: column;
-    padding: 2rem 1rem;
-    justify-content: space-between;
-    box-sizing: border-box;
-}
-
-.sidebar.dark {
-    background-color: var(--color-dark-sidebar);
-}
-
-/* ── Navigation Links ── */
 .nav-link {
     display: flex;
     align-items: center;
@@ -204,48 +158,18 @@ vaadin-dialog-overlay::part(content) {
     color: var(--color-primary);
 }
 
-/*
- * .highlight wird von Vaadin's RouterLink automatisch gesetzt
- * wenn die aktuelle Route mit der verlinkten View übereinstimmt.
- */
 .nav-link.highlight {
     background-color: var(--color-surface-container-highest);
     color: #553722;
     font-weight: 700;
 }
 
-.nav-link.highlight .material-symbols-outlined {
-    color: var(--color-primary);
-}
-
-.sidebar.dark .nav-link {
-    color: #94a3b8;
-}
-
-.sidebar.dark .nav-link.highlight {
-    background-color: #2d2d44;
-    color: white;
-}
-
-/* ── User-Card ── */
-.user-card {
-    padding: 1rem;
-    background-color: white;
-    border-radius: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.sidebar.dark .user-card {
-    background-color: rgba(45, 45, 68, 0.5);
-}
+.nav-link.highlight .material-symbols-outlined { color: var(--color-primary); }
 
 /* ════════════════════════════════════════════════
    VERKAUF VIEW
    ════════════════════════════════════════════════ */
 
-/* ── Artikel-Grid responsiv ── */
 .artikel-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -254,16 +178,13 @@ vaadin-dialog-overlay::part(content) {
 }
 
 @media (max-width: 1100px) {
-    .artikel-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .artikel-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ════════════════════════════════════════════════
-   ARTIKEL VIEW
+   ARTIKEL VIEW – Kategorie-Chips
    ════════════════════════════════════════════════ */
 
-/* ── Kategorie-Chip Hover ── */
 .kategorie-chip:hover {
     background: #d4d0f0 !important;
     cursor: pointer;
