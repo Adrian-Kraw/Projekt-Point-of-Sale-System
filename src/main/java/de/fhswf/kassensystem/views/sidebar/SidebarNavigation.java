@@ -26,13 +26,13 @@ public class SidebarNavigation extends VerticalLayout {
         setSpacing(false);
         getStyle().set("gap", "0.25rem");
 
-        add(buildNavLink("receipt_long", "Kassieren", VerkaufView.class));
-        add(buildNavLink("inventory_2",  "Lager",     LagerView.class));
+        add(buildNavLink("receipt_long", "Kassieren", VerkaufView.class,  "kassieren-nav"));
+        add(buildNavLink("inventory_2",  "Lager",     LagerView.class,    "lager-nav"));
 
         if (istManager) {
-            add(buildNavLink("label",     "Artikel",  ArtikelView.class));
-            add(buildNavLink("bar_chart", "Berichte", BerichteView.class));
-            add(buildNavLink("person",    "Benutzer", BenutzerView.class));
+            add(buildNavLink("label",     "Artikel",  ArtikelView.class,  "artikel-nav"));
+            add(buildNavLink("bar_chart", "Berichte", BerichteView.class, "berichte-nav"));
+            add(buildNavLink("person",    "Benutzer", BenutzerView.class, "benutzer-nav"));
         }
     }
 
@@ -41,10 +41,12 @@ public class SidebarNavigation extends VerticalLayout {
     }
 
     private RouterLink buildNavLink(String icon, String label,
-                                    Class<? extends Component> view) {
+                                    Class<? extends Component> view,
+                                    String tourId) {
         RouterLink link = new RouterLink();
         link.setRoute(view);
         link.addClassName("nav-link");
+        link.getElement().setAttribute("tour-id", tourId);
 
         Span iconSpan = new Span(icon);
         iconSpan.addClassName("material-symbols-outlined");

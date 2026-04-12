@@ -38,6 +38,7 @@ public class LagerView extends AbstractTabellenView {
         statistikKartenLayout.setWidthFull();
         statistikKartenLayout.setSpacing(false);
         statistikKartenLayout.getStyle().set("gap", "1.5rem").set("margin-bottom", "2rem");
+        statistikKartenLayout.getElement().setAttribute("tour-id", "statistik-karten");
 
         nachbestellBlock.setWidthFull();
         nachbestellBlock.setPadding(false);
@@ -159,13 +160,17 @@ public class LagerView extends AbstractTabellenView {
     // ═══════════════════════════════════════════════════════════
 
     private VerticalLayout buildKritischKarte(int anzahl) {
-        return buildStatistikKarte("Artikel unter Minimalbestand", String.valueOf(anzahl),
+        VerticalLayout karte = buildStatistikKarte("Artikel unter Minimalbestand", String.valueOf(anzahl),
                 "warning", "#ba1a1a", "#ffdad6", "Nachbestellen empfohlen");
+        karte.getElement().setAttribute("tour-id", "artikel-minimum");
+        return karte;
     }
 
     private VerticalLayout buildGesamtKarte(int anzahl) {
-        return buildStatistikKarte("Gesamtartikel", String.valueOf(anzahl),
+        VerticalLayout karte = buildStatistikKarte("Gesamtartikel", String.valueOf(anzahl),
                 "inventory", "#553722", "#ffdcc6", "Aktive Artikel im System");
+        karte.getElement().setAttribute("tour-id", "gesamtartikel");
+        return karte;
     }
 
     /**
@@ -253,6 +258,7 @@ public class LagerView extends AbstractTabellenView {
         container.setPadding(false);
         container.setSpacing(false);
         container.getStyle().set("background", "white").set("border-radius", "1.25rem").set("overflow", "hidden");
+        container.getElement().setAttribute("tour-id", "bestand-tabelle");
         container.add(buildTabellenKopf(), tabellenZeilen);
         return container;
     }
@@ -275,6 +281,7 @@ public class LagerView extends AbstractTabellenView {
         kopf.setPadding(false);
         kopf.getStyle().set("padding", "1.5rem 2rem").set("border-bottom", "1px solid #f5f2ff");
         kopf.add(titel, suchfeld);
+        kopf.getElement().setAttribute("tour-id", "bestand-tabelle-kopf");
         return kopf;
     }
 
@@ -290,9 +297,15 @@ public class LagerView extends AbstractTabellenView {
                 headerZelle("Kategorie",     LagerZeileFactory.BREITE_KATEGORIE),
                 headerZelle("Bestand",       LagerZeileFactory.BREITE_BESTAND),
                 headerZelle("Minimalgrenze", LagerZeileFactory.BREITE_MINIMAL),
-                headerZelle("Status",        LagerZeileFactory.BREITE_STATUS),
+                buildStatusHeaderZelle(),
                 headerZelle("",              LagerZeileFactory.BREITE_AKTION)
         );
         return header;
     }
+    private Span buildStatusHeaderZelle() {
+        Span zelle = headerZelle("Status", LagerZeileFactory.BREITE_STATUS);
+        zelle.getElement().setAttribute("tour-id", "status-spalte");
+        return zelle;
+    }
+
 }

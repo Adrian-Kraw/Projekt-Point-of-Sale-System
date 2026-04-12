@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.RouterLink;
+import de.fhswf.kassensystem.tour.TourManager;
 import de.fhswf.kassensystem.views.sidebar.LogoRow;
 import de.fhswf.kassensystem.views.sidebar.SidebarNavigation;
 import de.fhswf.kassensystem.views.sidebar.UserCard;
@@ -20,18 +21,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
-/**
- * Zentrales Grundgerüst mit Sidebar-Navigation.
- *
- * FIX: Drawer bekommt overflow:hidden damit die abgerundeten Ecken
- *      der Sidebar sauber abschneiden ohne einen Farbstreifen dahinter.
- */
 @PermitAll
 public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
     private final SidebarNavigation sidebarNavigation;
+    private final TourManager tourManager;
 
-    public MainLayout() {
+    public MainLayout(TourManager tourManager) {
+        this.tourManager       = tourManager;
         this.sidebarNavigation = new SidebarNavigation(istManager());
         setPrimarySection(Section.DRAWER);
         buildSidebar();
@@ -46,10 +43,10 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         sidebar.setSpacing(false);
         sidebar.getStyle()
                 .set("width", "240px")
-                .set("height", "100vh")          // exakt 100vh, kein min-height
+                .set("height", "100vh")
                 .set("background-color", "#f5f2ff")
                 .set("border-radius", "0 3rem 3rem 0")
-                .set("overflow", "hidden")        // FIX: Inhalt wird an Rundung abgeschnitten
+                .set("overflow", "hidden")
                 .set("box-shadow", "20px 0 60px -15px rgba(85,55,34,0.08)")
                 .set("display", "flex")
                 .set("flex-direction", "column")
@@ -108,8 +105,17 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
                 .set("display", "flex").set("align-items", "center").set("justify-content", "flex-start")
                 .set("color", "#553722").set("width", "100%")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif").set("line-height", "1");
-        btn.addClickListener(e -> UI.getCurrent().getElement()
-                .executeJs("alert('Software Einführung folgt...')"));
+
+        // Rollenabhängige Tour starten
+        String tourId = istManager() ? "manager" : "kassierer";
+        btn.addClickListener(e -> tourManager.start(tourId, action -> {
+            // View-spezifische Aktionen an die aktuelle View delegieren
+            Component currentView = getContent();
+            if (currentView instanceof de.fhswf.kassensystem.views.verkauf.VerkaufView vv) {
+                vv.tourAktion(action);
+            }
+        }));
+
         return btn;
     }
 

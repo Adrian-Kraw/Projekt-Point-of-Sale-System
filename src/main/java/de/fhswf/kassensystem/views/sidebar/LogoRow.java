@@ -6,16 +6,13 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.RouterLink;
 import de.fhswf.kassensystem.views.DashboardView;
 
-/**
- * Logo-Zeile der Sidebar mit Café-Name.
- * Dark-Mode-Toggle entfernt.
- */
 public class LogoRow extends HorizontalLayout {
 
     public LogoRow() {
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
         getStyle().set("padding", "0 0.5rem");
+        getElement().setAttribute("tour-id", "logo-row"); // ← NEU
         add(buildLogoLink());
     }
 

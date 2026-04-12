@@ -6,10 +6,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-/**
- * User-Karte am unteren Rand der Sidebar mit Avatar, Name, Rolle
- * und aufklappbarem Logout-Popup.
- */
 public class UserCard extends HorizontalLayout {
 
     public UserCard(String name, String rolle, Runnable onLogout) {
@@ -21,6 +17,7 @@ public class UserCard extends HorizontalLayout {
                 .set("padding", "0.75rem 1rem").set("gap", "0.75rem")
                 .set("box-shadow", "0 1px 3px rgba(0,0,0,0.06)")
                 .set("cursor", "pointer").set("position", "relative");
+        getElement().setAttribute("tour-id", "user-card"); // ← NEU
 
         Div popup = buildPopup(onLogout);
         addClickListener(e -> togglePopup(popup));

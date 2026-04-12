@@ -154,6 +154,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         row.setAlignItems(FlexComponent.Alignment.CENTER);
         row.setSpacing(false);
         row.getStyle().set("gap", "0.75rem").set("margin-bottom", "1.25rem");
+        row.getElement().setAttribute("tour-id", "rabatt-zeile");
         row.add(rabattFeld, anwendenBtn);
         return row;
     }
@@ -236,6 +237,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
                 .set("cursor", "pointer").set("display", "flex").set("flex-direction", "row")
                 .set("align-items", "center").set("justify-content", "center").set("gap", "0.5rem")
                 .set("box-shadow", "0 8px 25px rgba(85,55,34,0.3)");
+        bezahlenBtn.getElement().setAttribute("tour-id", "bezahlen-btn");
         bezahlenBtn.addClickListener(e -> onBezahlen.accept(gesamtBetragSpan.getText()));
 
         HorizontalLayout buttons = new HorizontalLayout();

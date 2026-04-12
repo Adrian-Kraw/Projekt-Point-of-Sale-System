@@ -70,6 +70,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 },
                 this::aktualisiereWarenkorbUI
         );
+        zusammenfassung.getElement().setAttribute("tour-id", "zusammenfassung");
 
         setSizeFull();
         setPadding(false);
@@ -99,6 +100,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 .set("height", "100%").set("padding", "2rem").set("box-sizing", "border-box");
 
         artikelGridDiv.addClassName("artikel-grid");
+        artikelGridDiv.getElement().setAttribute("tour-id", "artikel-grid");
         artikelGridDiv.getStyle()
                 .set("width", "100%").set("display", "grid")
                 .set("grid-template-columns", "repeat(3, 1fr)").set("gap", "1.25rem");
@@ -158,6 +160,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         row.setWidthFull();
         row.setAlignItems(FlexComponent.Alignment.CENTER);
         row.getStyle().set("margin-bottom", "1.5rem");
+        row.getElement().setAttribute("tour-id", "artikel-suche");
         row.add(search);
         return row;
     }
@@ -168,10 +171,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 .map(a -> a.getKategorie().getName())
                 .distinct()
                 .collect(Collectors.toList());
-        return new KategorieChipGroup(kategorien, kat -> {
+        KategorieChipGroup chipGroup = new KategorieChipGroup(kategorien, kat -> {
             aktiveKategorie = kat;
             ladeArtikelGrid();
         });
+        chipGroup.getElement().setAttribute("tour-id", "kategorie-chips");
+        return chipGroup;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -186,6 +191,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 .set("flex", "1").set("background", "#f5f2ff").set("min-height", "100vh")
                 .set("height", "100%").set("display", "flex").set("flex-direction", "column")
                 .set("overflow", "hidden");
+        spalte.getElement().setAttribute("tour-id", "warenkorb-spalte");
         spalte.add(new WarenkorbHeader(this::warenkorbLeeren), warenkorbPositionenLayout, zusammenfassung);
         return spalte;
     }
@@ -373,4 +379,34 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             event.rerouteTo("login");
         }
     }
+    // ═══════════════════════════════════════════════════════════
+    // TOUR-AKTIONEN
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Verarbeitet Tour-Aktionen aus dem TourManager.
+     * Wird als actionHandler an tourManager.start() übergeben.
+     */
+    public void tourAktion(String action) {
+        switch (action) {
+            case "demo-verkauf" -> {
+                // Ersten verfügbaren Artikel in den Warenkorb legen (nur Demo, kein Verkauf)
+                if (warenkorbListe.isEmpty()) {
+                    artikelService.findAllArtikel().stream()
+                            .filter(a -> a.isAktiv() && a.getBestand() > 0)
+                            .findFirst()
+                            .ifPresent(this::artikelZumKorbHinzufuegen);
+                }
+            }
+            case "open-zahlungsdialog" -> {
+                String betrag = zusammenfassung.getGesamtBetragText();
+                String anzeige = (betrag == null || betrag.isBlank()) ? "2,99€" : betrag;
+                new ZahlungsDialog(anzeige, art -> {}).open();
+            }
+            case "open-quittungsdialog" -> {
+                new QuittungsDialog(() -> {}, () -> {}).open();
+            }
+        }
+    }
+
 }

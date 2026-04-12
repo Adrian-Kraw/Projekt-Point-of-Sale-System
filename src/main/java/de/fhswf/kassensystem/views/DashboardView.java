@@ -113,8 +113,8 @@ public class DashboardView extends Div implements BeforeEnterObserver {
                 .set("gap", "0");
 
         content.add(
-                buildHeadline(),
-                buildSubtitle()
+                buildHeadline()//,
+                //buildSubtitle()
         );
         return content;
     }
@@ -160,19 +160,19 @@ public class DashboardView extends Div implements BeforeEnterObserver {
     /**
      * Erstellt den Untertitel unterhalb der Hauptüberschrift.
      */
-    private Paragraph buildSubtitle() {
-        Paragraph subtitle = new Paragraph(
-                "Wählen Sie einen Bereich aus der Navigation " +
-                        "oder starten Sie direkt mit einem neuen Beleg."
-        );
-        subtitle.getStyle()
-                .set("font-size", "1.1rem")
-                .set("color", "#82746d")
-                .set("line-height", "1.7")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif")
-                .set("margin", "0");
-        return subtitle;
-    }
+//    private Paragraph buildSubtitle() {
+//        Paragraph subtitle = new Paragraph(
+//                "Wählen Sie einen Bereich aus der Navigation " +
+//                        "oder starten Sie direkt mit einem neuen Beleg."
+//        );
+//        subtitle.getStyle()
+//                .set("font-size", "1.1rem")
+//                .set("color", "#82746d")
+//                .set("line-height", "1.7")
+//                .set("font-family", "'Plus Jakarta Sans', sans-serif")
+//                .set("margin", "0");
+//        return subtitle;
+//    }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
