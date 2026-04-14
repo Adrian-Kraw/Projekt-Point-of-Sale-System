@@ -122,6 +122,7 @@ public class ArtikelView extends AbstractTabellenView {
         suchfeld.setPrefixComponent(createIcon("search"));
         suchfeld.addClassName("artikel-suchfeld");
         suchfeld.getStyle().set("width", "18rem");
+        suchfeld.getElement().setAttribute("tour-id", "artikel-suchfeld");
         suchfeld.addValueChangeListener(e -> { aktuelleSuche = e.getValue(); ladeDaten(); });
 
         aktionen.add(suchfeld, buildNeuerArtikelButton());
@@ -135,6 +136,7 @@ public class ArtikelView extends AbstractTabellenView {
         btnText.getStyle().set("font-weight", "700").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
         com.vaadin.flow.component.button.Button btn = new com.vaadin.flow.component.button.Button();
+        btn.getElement().setAttribute("tour-id", "neuer-artikel-btn");
         btn.getElement().appendChild(plusIcon.getElement());
         btn.getElement().appendChild(btnText.getElement());
         btn.getStyle()
@@ -151,11 +153,24 @@ public class ArtikelView extends AbstractTabellenView {
         return btn;
     }
 
+    /** Tour-Aktionen für den TourManager. */
+    public void tourAktion(String action) {
+        switch (action) {
+            case "open-neuer-artikel-dialog" -> {
+                NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService);
+                dialog.addOpenedChangeListener(ev -> { if (!ev.isOpened()) refresh(); });
+                dialog.open();
+            }
+            default -> {}
+        }
+    }
+
     private VerticalLayout buildTabellenBereich() {
         VerticalLayout bereich = new VerticalLayout();
         bereich.setWidthFull();
         bereich.setPadding(false);
         bereich.setSpacing(false);
+        bereich.getElement().setAttribute("tour-id", "artikel-tabelle");
         bereich.getStyle()
                 .set("background", "#f5f2ff").set("border-radius", "1.25rem").set("padding", "1.5rem");
         bereich.add(tabelle);
@@ -169,6 +184,8 @@ public class ArtikelView extends AbstractTabellenView {
         header.setPadding(false);
         header.setSpacing(false);
         header.getStyle().set("padding", "0 1.5rem 0.5rem 1.5rem").set("gap", "0");
+        Span aktionenHeader = headerZelle("Aktionen", ArtikelZeileFactory.BREITE_AKTIONEN);
+        aktionenHeader.getElement().setAttribute("tour-id", "artikel-aktionen-header");
         header.add(
                 headerZelle("ID",            ArtikelZeileFactory.BREITE_ID),
                 headerZelle("Name",          ArtikelZeileFactory.BREITE_NAME),
@@ -178,7 +195,7 @@ public class ArtikelView extends AbstractTabellenView {
                 headerZelle("Bestand",       ArtikelZeileFactory.BREITE_BESTAND),
                 headerZelle("Minimalgrenze", ArtikelZeileFactory.BREITE_MINIMAL),
                 headerZelle("Status",        ArtikelZeileFactory.BREITE_STATUS),
-                headerZelle("Aktionen",      ArtikelZeileFactory.BREITE_AKTIONEN)
+                aktionenHeader
         );
         return header;
     }

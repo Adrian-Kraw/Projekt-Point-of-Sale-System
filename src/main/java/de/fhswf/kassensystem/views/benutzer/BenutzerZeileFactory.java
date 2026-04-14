@@ -125,6 +125,7 @@ class BenutzerZeileFactory {
 
         // FIX: Stift öffnet jetzt echten Bearbeiten-Dialog
         Button editBtn = buildAktionsButton("edit", "#553722", "#ffdcc6");
+        editBtn.getElement().setAttribute("tour-id", "benutzer-bearbeiten-btn");
         editBtn.addClickListener(e -> {
             BenutzerBearbeitenDialog dialog =
                     new BenutzerBearbeitenDialog(user, userService, onAenderung);
@@ -135,6 +136,7 @@ class BenutzerZeileFactory {
                 user.isAktiv() ? "block" : "check_circle",
                 user.isAktiv() ? "#ba1a1a" : "#16a34a",
                 user.isAktiv() ? "#ffdad6" : "#dcfce7");
+        sperrBtn.getElement().setAttribute("tour-id", "benutzer-sperren-btn");
         sperrBtn.addClickListener(e -> {
             if (user.isAktiv()) {
                 userService.deactivateUser(user.getId());
@@ -148,6 +150,7 @@ class BenutzerZeileFactory {
         });
 
         Button passwortBtn = buildAktionsButton("vpn_key", "#553722", "#efecff");
+        passwortBtn.getElement().setAttribute("tour-id", "benutzer-passwort-btn");
         passwortBtn.addClickListener(e -> onPasswortReset.accept(user));
 
         zelle.add(editBtn, sperrBtn, passwortBtn);

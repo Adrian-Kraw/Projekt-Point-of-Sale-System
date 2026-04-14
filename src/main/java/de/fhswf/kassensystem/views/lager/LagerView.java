@@ -217,6 +217,7 @@ public class LagerView extends AbstractTabellenView {
         karte.setSpacing(false);
         karte.getStyle().set("flex", "1").set("background", "linear-gradient(135deg, #553722, #6f4e37)")
                 .set("border-radius", "1.25rem").set("padding", "2rem").set("gap", "0.75rem");
+        karte.getElement().setAttribute("tour-id", "lager-aktionen-karte");
 
         H3 titel = new H3("Lager-Aktionen");
         titel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
@@ -236,6 +237,7 @@ public class LagerView extends AbstractTabellenView {
         btn.setWidthFull();
         btn.getElement().appendChild(plusIcon.getElement());
         btn.getElement().appendChild(btnText.getElement());
+        btn.getElement().setAttribute("tour-id", "bestandseingang-btn");
         btn.getStyle()
                 .set("background", "#ffdcc6").set("color", "#553722").set("border", "none")
                 .set("border-radius", "9999px").set("padding", "1rem 1.5rem").set("cursor", "pointer")
@@ -246,6 +248,15 @@ public class LagerView extends AbstractTabellenView {
 
         karte.add(titel, text, btn);
         return karte;
+    }
+
+    /** Tour-Aktionen für den TourManager. */
+    public void tourAktion(String action) {
+        switch (action) {
+            case "open-wareneingang-dialog" ->
+                    new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
+            default -> {}
+        }
     }
 
     // ═══════════════════════════════════════════════════════════

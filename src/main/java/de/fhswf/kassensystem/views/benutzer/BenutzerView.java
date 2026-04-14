@@ -92,6 +92,7 @@ public class BenutzerView extends AbstractTabellenView {
         btnText.getStyle().set("font-weight", "700").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
         com.vaadin.flow.component.button.Button btn = new com.vaadin.flow.component.button.Button();
+        btn.getElement().setAttribute("tour-id", "neuer-benutzer-btn");
         btn.getElement().appendChild(plusIcon.getElement());
         btn.getElement().appendChild(btnText.getElement());
         btn.getStyle()
@@ -104,11 +105,20 @@ public class BenutzerView extends AbstractTabellenView {
         return btn;
     }
 
+    /** Tour-Aktionen für den TourManager. */
+    public void tourAktion(String action) {
+        switch (action) {
+            case "open-neuer-benutzer-dialog" -> new NeuerBenutzerDialog(userService, this::ladeDaten).open();
+            default -> {}
+        }
+    }
+
     private VerticalLayout buildTabellenBereich() {
         VerticalLayout bereich = new VerticalLayout();
         bereich.setWidthFull();
         bereich.setPadding(false);
         bereich.setSpacing(false);
+        bereich.getElement().setAttribute("tour-id", "benutzer-tabelle");
         bereich.getStyle()
                 .set("background", "white").set("border-radius", "1.25rem").set("overflow", "hidden");
         bereich.add(tabelle);

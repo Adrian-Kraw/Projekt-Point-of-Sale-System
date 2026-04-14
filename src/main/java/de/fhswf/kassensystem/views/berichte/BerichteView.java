@@ -53,8 +53,18 @@ public class BerichteView extends SecuredView {
 
         applyStandardBackground();
         tabInhalt.setWidthFull();
+        tabInhalt.getElement().setAttribute("tour-id", "berichte-inhalt");
         add(buildHeader(), buildTabNavigation(), buildDatumZeile(), tabInhalt);
         ladeTabInhalt();
+    }
+
+    /** Tour-Aktionen für den TourManager. */
+    public void tourAktion(String action) {
+        switch (action) {
+            case "navigate-tab-umsatz"  -> wechsleTab("umsatz",  umsatzTab,  new Span[]{tagesTab, artikelTab});
+            case "navigate-tab-artikel" -> wechsleTab("artikel", artikelTab, new Span[]{tagesTab, umsatzTab});
+            default -> {}
+        }
     }
 
     private void ladeTabInhalt() {
@@ -106,6 +116,7 @@ public class BerichteView extends SecuredView {
         titelGruppe.add(iconBox, titel);
 
         Button exportBtn = new Button();
+        exportBtn.getElement().setAttribute("tour-id", "pdf-export-btn");
         Span dlIcon = createIcon("download");
         Span dlText = new Span("Als PDF exportieren");
         dlText.getStyle().set("font-weight", "600").set("font-size", "0.8rem")
@@ -134,6 +145,10 @@ public class BerichteView extends SecuredView {
         tagesTab   = buildTab("Tagesabschluss",   true);
         umsatzTab  = buildTab("Umsatzübersicht",  false);
         artikelTab = buildTab("Artikelstatistik", false);
+
+        tagesTab.getElement().setAttribute("tour-id", "berichte-tab-tages");
+        umsatzTab.getElement().setAttribute("tour-id", "berichte-tab-umsatz");
+        artikelTab.getElement().setAttribute("tour-id", "berichte-tab-artikel");
 
         tagesTab.addClickListener(e   -> wechsleTab("tagesabschluss", tagesTab,   new Span[]{umsatzTab, artikelTab}));
         umsatzTab.addClickListener(e  -> wechsleTab("umsatz",         umsatzTab,  new Span[]{tagesTab, artikelTab}));

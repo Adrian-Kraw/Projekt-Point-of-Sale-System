@@ -109,10 +109,17 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         // Rollenabhängige Tour starten
         String tourId = istManager() ? "manager" : "kassierer";
         btn.addClickListener(e -> tourManager.start(tourId, action -> {
-            // View-spezifische Aktionen an die aktuelle View delegieren
             Component currentView = getContent();
             if (currentView instanceof de.fhswf.kassensystem.views.verkauf.VerkaufView vv) {
                 vv.tourAktion(action);
+            } else if (currentView instanceof de.fhswf.kassensystem.views.lager.LagerView lv) {
+                lv.tourAktion(action);
+            } else if (currentView instanceof de.fhswf.kassensystem.views.artikel.ArtikelView av) {
+                av.tourAktion(action);
+            } else if (currentView instanceof de.fhswf.kassensystem.views.berichte.BerichteView bv) {
+                bv.tourAktion(action);
+            } else if (currentView instanceof de.fhswf.kassensystem.views.benutzer.BenutzerView buv) {
+                buv.tourAktion(action);
             }
         }));
 

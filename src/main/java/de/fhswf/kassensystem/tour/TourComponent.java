@@ -65,7 +65,8 @@ public class TourComponent extends Div {
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
         dotsEl.getStyle().set("display", "flex").set("gap", "5px")
-                .set("align-items", "center").set("flex", "1");
+                .set("align-items", "center").set("flex-wrap", "wrap")
+                .set("margin-bottom", "10px");
 
         backBtn.getStyle().set("background", "none").set("border", "1.5px solid #ccc")
                 .set("border-radius", "8px").set("padding", "6px 14px")
@@ -80,10 +81,16 @@ public class TourComponent extends Div {
                 .set("cursor", "pointer").set("white-space", "nowrap");
         nextBtn.addClickListener(e -> onNext());
 
-        HorizontalLayout nav = new HorizontalLayout(dotsEl, backBtn, nextBtn);
-        nav.setAlignItems(FlexComponent.Alignment.CENTER);
+        HorizontalLayout btnRow = new HorizontalLayout(backBtn, nextBtn);
+        btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        btnRow.setPadding(false); btnRow.setSpacing(false);
+        btnRow.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+        btnRow.setWidthFull();
+        btnRow.getStyle().set("gap", "8px");
+
+        VerticalLayout nav = new VerticalLayout(dotsEl, btnRow);
         nav.setPadding(false); nav.setSpacing(false);
-        nav.getStyle().set("gap", "8px");
+        nav.getStyle().set("gap", "0").set("margin-top", "12px");
 
         VerticalLayout content = new VerticalLayout(titleEl, descEl, nav);
         content.setPadding(false); content.setSpacing(false);
@@ -179,7 +186,17 @@ public class TourComponent extends Div {
                 || sel.contains("bezahlen-btn"))   return "kassieren";
         if (sel.contains("statistik-karten") || sel.contains("artikel-minimum")
                 || sel.contains("gesamtartikel")   || sel.contains("bestand-tabelle")
-                || sel.contains("status-spalte"))  return "lager";
+                || sel.contains("status-spalte")   || sel.contains("lager-aktionen")
+                || sel.contains("bestandseingang")) return "lager";
+        if (sel.contains("artikel-tabelle") || sel.contains("neuer-artikel")
+                || sel.contains("artikel-aktionen") || sel.contains("artikel-suchfeld")
+                || sel.contains("artikel-bearbeiten") || sel.contains("artikel-deaktivieren")
+                || sel.contains("artikel-aktionen-header")) return "artikel";
+        if (sel.contains("berichte-tab") || sel.contains("pdf-export")
+                || sel.contains("berichte-inhalt")) return "berichte";
+        if (sel.contains("benutzer-tabelle") || sel.contains("neuer-benutzer")
+                || sel.contains("benutzer-bearbeiten") || sel.contains("benutzer-sperren")
+                || sel.contains("benutzer-passwort")) return "benutzer";
         return null;
     }
 

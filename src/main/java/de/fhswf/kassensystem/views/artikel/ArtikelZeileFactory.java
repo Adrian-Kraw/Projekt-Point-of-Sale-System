@@ -119,9 +119,11 @@ class ArtikelZeileFactory {
         zelle.getStyle()
                 .set("width", BREITE_AKTIONEN).set("display", "flex")
                 .set("justify-content", "flex-start").set("gap", "0.5rem")
-                .set("opacity", "1"); // FIX: Buttons immer sichtbar
+                .set("opacity", "1");
+        zelle.getElement().setAttribute("tour-id", "artikel-aktionen");
 
         Button editBtn = buildAktionsButton("edit", "#553722", "#ffdcc6");
+        editBtn.getElement().setAttribute("tour-id", "artikel-bearbeiten-btn");
         editBtn.addClickListener(e -> {
             NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService, artikel);
             dialog.addOpenedChangeListener(ev -> { if (!ev.isOpened()) onAenderung.run(); });
@@ -132,6 +134,7 @@ class ArtikelZeileFactory {
                 artikel.isAktiv() ? "visibility_off" : "visibility",
                 artikel.isAktiv() ? "#ba1a1a" : "#553722",
                 artikel.isAktiv() ? "#ffdad6" : "#ffdcc6");
+        sichtbarBtn.getElement().setAttribute("tour-id", "artikel-deaktivieren-btn");
         sichtbarBtn.addClickListener(e -> {
             if (artikel.isAktiv()) {
                 artikelService.deleteArtikel(artikel.getId());
