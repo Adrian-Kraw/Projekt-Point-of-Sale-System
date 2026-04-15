@@ -6,9 +6,11 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.service.LagerService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -98,15 +100,23 @@ class WareneingangDialog extends BaseDialog {
         Wareneingang eingang = new Wareneingang();
         eingang.setArtikel(artikelSelect.getValue());
         eingang.setMenge(mengeFeld.getValue());
-        eingang.setDatum(LocalDate.now());
+        // eingang.setDatum(LocalDate.now());
         if (!lieferantFeld.isEmpty()) eingang.setLieferant(lieferantFeld.getValue());
         if (!kommentarFeld.isEmpty()) eingang.setKommentar(kommentarFeld.getValue());
 
-        lagerService.wareneingangBuchen(eingang);
-        Notification.show("Wareneingang für \"" + artikelSelect.getValue().getName() + "\" gebucht.",
-                3000, Notification.Position.BOTTOM_START);
+
+        lagerService.bestellungAufgeben(eingang);
+
+        Notification.show("Bestellung aufgegeben. Warte auf Lieferbestätigung.",
+            4000, Notification.Position.BOTTOM_START);
+
         onErfolg.run();
         return true;
+        // lagerService.wareneingangBuchen(eingang);
+        // Notification.show("Wareneingang für \"" + artikelSelect.getValue().getName() + "\" gebucht.",
+        //        3000, Notification.Position.BOTTOM_START);
+        // onErfolg.run();
+        // return true;
     }
 
     @Override protected String getSpeichernLabel() { return "Buchen"; }

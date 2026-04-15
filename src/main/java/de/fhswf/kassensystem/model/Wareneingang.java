@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Wareneingang")
@@ -37,9 +38,10 @@ public class Wareneingang {
     @Column(nullable = false)
     private WareneingangStatus status = WareneingangStatus.AUSSTEHEND;
 
-    @Column(length = 100)
-    private String bestelltVon;
+    @ManyToOne
+    @JoinColumn(name = "bestellt_von_id", nullable = false)
+    private User bestelltVon;
 
     @Column
-    private LocalDate besetelltAm;
+    private LocalDateTime bestelltAm;
 }

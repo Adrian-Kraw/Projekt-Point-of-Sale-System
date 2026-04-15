@@ -8,12 +8,14 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.service.LagerService;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -111,18 +113,7 @@ public class LagerView extends AbstractTabellenView {
     private void ladeLieferungshinweise() {
         lieferungBlock.removeAll();
 
-        // ┌─────────────────────────────────────────────────────────────────┐
-        // │  TODO: DUMMY-DATEN – durch echte DB-Abfrage ersetzen            │
-        // │  Wenn fertig: diese 4 Zeilen löschen ↓                          │
-        record DummyLieferung(String artikelName, int menge, String datum, String bestelltVon) {}
-        List<DummyLieferung> offeneLieferungen = List.of(
-                new DummyLieferung("Sauerteigbrot", 20, "15.04.2026", "Max Manager"),
-                new DummyLieferung("Mohnkuchen",     5, "15.04.2026", "Max Manager")
-        );
-        // │  Und diese Zeile einkommentieren ↓                               │
-        // │  List<OffeneLieferung> offeneLieferungen =                       │
-        // │      lieferService.getOffeneLieferungen();                        │
-        // └─────────────────────────────────────────────────────────────────┘
+        List<Wareneingang> offeneLieferungen = lagerService.getAusstehendeLieferungen();
 
         if (offeneLieferungen.isEmpty()) return;
 
@@ -146,8 +137,14 @@ public class LagerView extends AbstractTabellenView {
         grid.setSpacing(false);
         grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
 
-        for (DummyLieferung l : offeneLieferungen) {
-            grid.add(buildLieferungsKarte(l.artikelName(), l.menge(), l.datum(), l.bestelltVon()));
+        for (Wareneingang w : offeneLieferungen) {
+            String datum = w.getBestelltAm()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            String bestelltVon = w.getBestelltVon() != null
+                    ? w.getBestelltVon().getName() : "Unbekannt";
+
+            grid.add(buildLieferungsKarte(w.getId(), w.getArtikel().getName(),
+                    w.getMenge(), datum, bestelltVon));
         }
 
         lieferungBlock.getStyle()
@@ -158,7 +155,7 @@ public class LagerView extends AbstractTabellenView {
 
     // TODO: Parameter anpassen sobald echtes Model vorhanden –
     //       z.B. buildLieferungsKarte(OffeneLieferung lieferung)
-    private HorizontalLayout buildLieferungsKarte(String artikelName, int menge,
+    private HorizontalLayout buildLieferungsKarte(Long lieferungId, String artikelName, int menge,
                                                   String datum, String bestelltVon) {
         HorizontalLayout karte = new HorizontalLayout();
         karte.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -208,6 +205,11 @@ public class LagerView extends AbstractTabellenView {
                 .set("font-weight", "700").set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
+        bestaetigenBtn.addClickListener(e -> {
+            lagerService.lieferungBestaetigen(lieferungId);
+            ladeAlles();
+        });
+
         Button ablehnBtn = new Button("✕");
         ablehnBtn.getStyle()
                 .set("background", "none").set("color", "#ba1a1a")
@@ -215,6 +217,11 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "0.6rem 0.85rem").set("font-weight", "700")
                 .set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        ablehnBtn.addClickListener(e -> {
+            lagerService.lieferungStornieren(lieferungId);
+            ladeAlles();
+        });
 
         btnRow.add(bestaetigenBtn, ablehnBtn);
 
