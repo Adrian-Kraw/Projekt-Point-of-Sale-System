@@ -233,6 +233,11 @@ public class LagerView extends AbstractTabellenView {
         List<Artikel> artikel = (suchBegriff != null && !suchBegriff.isBlank())
                 ? artikelService.findByName(suchBegriff)
                 : artikelService.findAllArtikel();
+        artikel = artikel.stream()
+                .sorted(java.util.Comparator
+                        .comparing((Artikel a) -> a.getKategorie().getName())
+                        .thenComparing(Artikel::getName))
+                .collect(java.util.stream.Collectors.toList());
         boolean zebra = false;
         for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
     }
