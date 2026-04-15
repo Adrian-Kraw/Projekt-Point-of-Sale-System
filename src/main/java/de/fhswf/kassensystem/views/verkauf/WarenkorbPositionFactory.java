@@ -4,6 +4,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -73,7 +74,17 @@ class WarenkorbPositionFactory {
         });
 
         Button plusBtn = buildMengeButton("add");
-        plusBtn.addClickListener(e -> { eintrag.menge++; onAenderung.run(); });
+        plusBtn.addClickListener(e -> {
+            if (eintrag.artikel.getBestand() < 999 && eintrag.menge >= eintrag.artikel.getBestand()) {
+                com.vaadin.flow.component.notification.Notification.show(
+                        "Nicht mehr Bestand vorhanden als bereits im Warenkorb.",
+                        2500, Notification.Position.MIDDLE);
+                return;
+            }
+            eintrag.menge++;
+            onAenderung.run();
+
+        });
 
         HorizontalLayout kontrolle = new HorizontalLayout();
         kontrolle.setAlignItems(FlexComponent.Alignment.CENTER);
