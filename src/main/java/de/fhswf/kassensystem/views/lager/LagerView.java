@@ -28,6 +28,7 @@ public class LagerView extends AbstractTabellenView {
 
     private final HorizontalLayout statistikKartenLayout = new HorizontalLayout();
     private final VerticalLayout   nachbestellBlock      = new VerticalLayout();
+    private final VerticalLayout   lieferungBlock        = new VerticalLayout();
     private final VerticalLayout   tabellenZeilen        = new VerticalLayout();
 
     public LagerView(LagerService lagerService, ArtikelService artikelService) {
@@ -44,12 +45,16 @@ public class LagerView extends AbstractTabellenView {
         nachbestellBlock.setPadding(false);
         nachbestellBlock.setSpacing(false);
 
+        lieferungBlock.setWidthFull();
+        lieferungBlock.setPadding(false);
+        lieferungBlock.setSpacing(false);
+
         tabellenZeilen.setWidthFull();
         tabellenZeilen.setPadding(false);
         tabellenZeilen.setSpacing(false);
         tabellenZeilen.getStyle().set("gap", "0");
 
-        add(buildHeader(), statistikKartenLayout, new Div(nachbestellBlock), buildBestandsTabelle());
+        add(buildHeader(), statistikKartenLayout, new Div(nachbestellBlock), new Div(lieferungBlock), buildBestandsTabelle());
         ladeAlles();
     }
 
@@ -60,6 +65,7 @@ public class LagerView extends AbstractTabellenView {
     private void ladeAlles() {
         ladeStatistikKarten();
         ladeNachbestellHinweise();
+        ladeLieferungshinweise();
         ladeDaten();
     }
 
@@ -100,6 +106,120 @@ public class LagerView extends AbstractTabellenView {
                 .set("background", "#fff5f2").set("border-radius", "1.25rem")
                 .set("overflow", "hidden").set("margin-bottom", "2rem");
         nachbestellBlock.add(warnHeader, grid);
+    }
+
+    private void ladeLieferungshinweise() {
+        lieferungBlock.removeAll();
+
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │  TODO: DUMMY-DATEN – durch echte DB-Abfrage ersetzen            │
+        // │  Wenn fertig: diese 4 Zeilen löschen ↓                          │
+        record DummyLieferung(String artikelName, int menge, String datum, String bestelltVon) {}
+        List<DummyLieferung> offeneLieferungen = List.of(
+                new DummyLieferung("Sauerteigbrot", 20, "15.04.2026", "Max Manager"),
+                new DummyLieferung("Mohnkuchen",     5, "15.04.2026", "Max Manager")
+        );
+        // │  Und diese Zeile einkommentieren ↓                               │
+        // │  List<OffeneLieferung> offeneLieferungen =                       │
+        // │      lieferService.getOffeneLieferungen();                        │
+        // └─────────────────────────────────────────────────────────────────┘
+
+        if (offeneLieferungen.isEmpty()) return;
+
+        // Header
+        HorizontalLayout header = new HorizontalLayout();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setSpacing(false);
+        header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+
+        Span icon = createIcon("local_shipping");
+        icon.getStyle().set("color", "#155724");
+        Span titel = new Span("Lieferungsbescheid");
+        titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+        header.add(icon, titel);
+
+        // Karten-Grid
+        HorizontalLayout grid = new HorizontalLayout();
+        grid.setWidthFull();
+        grid.setSpacing(false);
+        grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+
+        for (DummyLieferung l : offeneLieferungen) {
+            grid.add(buildLieferungsKarte(l.artikelName(), l.menge(), l.datum(), l.bestelltVon()));
+        }
+
+        lieferungBlock.getStyle()
+                .set("background", "#f0fff4").set("border-radius", "1.25rem")
+                .set("overflow", "hidden").set("margin-bottom", "2rem");
+        lieferungBlock.add(header, grid);
+    }
+
+    // TODO: Parameter anpassen sobald echtes Model vorhanden –
+    //       z.B. buildLieferungsKarte(OffeneLieferung lieferung)
+    private HorizontalLayout buildLieferungsKarte(String artikelName, int menge,
+                                                  String datum, String bestelltVon) {
+        HorizontalLayout karte = new HorizontalLayout();
+        karte.setAlignItems(FlexComponent.Alignment.CENTER);
+        karte.setSpacing(false);
+        karte.getStyle()
+                .set("background", "rgba(255,255,255,0.7)").set("border-radius", "0.75rem")
+                .set("padding", "1rem 1.25rem").set("gap", "1rem")
+                .set("flex", "1").set("min-width", "260px");
+
+        // Info links
+        Span name = new Span(artikelName);
+        name.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Span mengeBadge = new Span("+" + menge + " Stk.");
+        mengeBadge.getStyle()
+                .set("background", "#155724").set("color", "white").set("border-radius", "9999px")
+                .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Span meta = new Span("Bestellt am " + datum + " von " + bestelltVon);
+        meta.getStyle().set("font-size", "0.75rem").set("color", "#82746d")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        HorizontalLayout badgeRow = new HorizontalLayout();
+        badgeRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        badgeRow.setSpacing(false);
+        badgeRow.getStyle().set("gap", "0.5rem");
+        badgeRow.add(mengeBadge, meta);
+
+        VerticalLayout info = new VerticalLayout();
+        info.setPadding(false);
+        info.setSpacing(false);
+        info.getStyle().set("flex", "1").set("gap", "0.3rem");
+        info.add(name, badgeRow);
+
+        // Buttons rechts
+        HorizontalLayout btnRow = new HorizontalLayout();
+        btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        btnRow.setSpacing(false);
+        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0");
+
+        Button bestaetigenBtn = new Button("✓  Lieferung bestätigen");
+        bestaetigenBtn.getStyle()
+                .set("background", "#155724").set("color", "white").set("border", "none")
+                .set("border-radius", "0.75rem").set("padding", "0.6rem 1.1rem")
+                .set("font-weight", "700").set("font-size", "0.8rem").set("cursor", "pointer")
+                .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Button ablehnBtn = new Button("✕");
+        ablehnBtn.getStyle()
+                .set("background", "none").set("color", "#ba1a1a")
+                .set("border", "1.5px solid #ba1a1a").set("border-radius", "0.75rem")
+                .set("padding", "0.6rem 0.85rem").set("font-weight", "700")
+                .set("font-size", "0.8rem").set("cursor", "pointer")
+                .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        btnRow.add(bestaetigenBtn, ablehnBtn);
+
+        karte.add(info, btnRow);
+        return karte;
     }
 
     @Override
