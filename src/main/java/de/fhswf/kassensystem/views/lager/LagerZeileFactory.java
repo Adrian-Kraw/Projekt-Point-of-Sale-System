@@ -25,7 +25,7 @@ class LagerZeileFactory {
         int bestand = artikel.getBestand();
         int minimal = artikel.getMinimalbestand();
         String status = bestand < minimal ? "kritisch"
-                : bestand < minimal * 1.2 ? "warn"
+                : bestand < (int) Math.ceil(minimal * 1.25) ? "warn"
                 : "ok";
 
         HorizontalLayout zeile = new HorizontalLayout();

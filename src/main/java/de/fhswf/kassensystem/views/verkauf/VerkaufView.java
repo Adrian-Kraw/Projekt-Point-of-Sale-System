@@ -126,9 +126,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         artikelGridDiv.removeAll();
         kartenMap.clear();
 
-        List<Artikel> alle = aktuelleSuche.isBlank()
+        List<Artikel> alle = (aktuelleSuche.isBlank()
                 ? artikelService.findAllArtikel()
-                : artikelService.findByName(aktuelleSuche);
+                : artikelService.findByName(aktuelleSuche))
+                .stream()
+                .sorted(java.util.Comparator.comparing(Artikel::getName))
+                .collect(java.util.stream.Collectors.toList());
 
         for (Artikel a : alle) {
             if (!aktiveKategorie.equals("Alle") && !a.getKategorie().getName().equals(aktiveKategorie)) continue;

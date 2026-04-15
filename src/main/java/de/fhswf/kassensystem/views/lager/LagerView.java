@@ -138,13 +138,20 @@ public class LagerView extends AbstractTabellenView {
         grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
 
         for (Wareneingang w : offeneLieferungen) {
-            String datum = w.getBestelltAm()
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            String bestelltAm = w.getBestelltAm()
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
             String bestelltVon = w.getBestelltVon() != null
-                    ? w.getBestelltVon().getName() : "Unbekannt";
+                    ? w.getBestelltVon().getBenutzername() : "Unbekannt";
+
+            // Lieferdatum: nächster Tag 06:00
+            String liefertAm = w.getBestelltAm()
+                    .toLocalDate()
+                    .plusDays(1)
+                    .atTime(6, 0)
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm 'Uhr'"));
 
             grid.add(buildLieferungsKarte(w.getId(), w.getArtikel().getName(),
-                    w.getMenge(), datum, bestelltVon));
+                    w.getMenge(), bestelltAm, bestelltVon, liefertAm));
         }
 
         lieferungBlock.getStyle()
@@ -156,7 +163,7 @@ public class LagerView extends AbstractTabellenView {
     // TODO: Parameter anpassen sobald echtes Model vorhanden –
     //       z.B. buildLieferungsKarte(OffeneLieferung lieferung)
     private HorizontalLayout buildLieferungsKarte(Long lieferungId, String artikelName, int menge,
-                                                  String datum, String bestelltVon) {
+                                                  String bestelltAm, String bestelltVon, String liefertAm) {
         HorizontalLayout karte = new HorizontalLayout();
         karte.setAlignItems(FlexComponent.Alignment.CENTER);
         karte.setSpacing(false);
@@ -176,7 +183,8 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        Span meta = new Span("Bestellt am " + datum + " von " + bestelltVon);
+        Span meta = new Span("Bestellt am " + bestelltAm + " von @" + bestelltVon
+                + "  ·  Lieferung erwartet: " + liefertAm);
         meta.getStyle().set("font-size", "0.75rem").set("color", "#82746d")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 

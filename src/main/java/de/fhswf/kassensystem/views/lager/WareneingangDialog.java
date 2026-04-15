@@ -108,7 +108,7 @@ class WareneingangDialog extends BaseDialog {
         lagerService.bestellungAufgeben(eingang);
 
         Notification.show("Bestellung aufgegeben. Warte auf Lieferbestätigung.",
-            4000, Notification.Position.BOTTOM_START);
+                4000, Notification.Position.BOTTOM_START);
 
         onErfolg.run();
         return true;

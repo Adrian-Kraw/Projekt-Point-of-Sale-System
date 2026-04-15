@@ -47,7 +47,7 @@ public class LagerService {
 
         return artikelRepository.findArtikelUnterMinimalbestand()
                 .stream()
-                .filter(a -> !bereitsBestellt.contains(a))
+                .filter(a -> !bereitsBestellt.contains(a.getId()))
                 .toList();
     }
 
