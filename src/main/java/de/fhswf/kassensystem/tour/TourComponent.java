@@ -54,7 +54,9 @@ public class TourComponent extends Div {
                 .set("box-sizing", "border-box")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
                 .set("top", "50%").set("left", "50%")
-                .set("transform", "translate(-50%, -50%)");
+                .set("transform", "translate(-50%, -50%)")
+                .set("opacity", "0").set("visibility", "hidden")
+                .set("transition", "opacity 0.15s ease");
 
         titleEl.getStyle().set("margin", "0 0 8px 0").set("font-size", "1rem")
                 .set("font-weight", "700").set("color", "#1a1a1a")
@@ -240,6 +242,7 @@ public class TourComponent extends Div {
                     if (pos === 'dialog-left') {
                         el.style.transform = 'none';
                         el.style.opacity   = '0';
+                        el.style.visibility = 'hidden';
                         setTimeout(() => {
                             const dlg = document.querySelector('vaadin-dialog-overlay');
                             const dr = dlg ? dlg.getBoundingClientRect() : null;
@@ -247,12 +250,15 @@ public class TourComponent extends Div {
                             const tipW = el.getBoundingClientRect().width || 320;
                             el.style.top  = (dr ? Math.max(16, dr.top + 20) : 200) + 'px';
                             el.style.left = (dr ? Math.max(16, dr.left - tipW - 24) : 200) + 'px';
+                            el.style.visibility = 'visible';
                             el.style.opacity = '1';
                         }, 300);
                     } else {
                         el.style.transform = 'translate(-50%, -50%)';
                         el.style.top  = '50%';
                         el.style.left = '50%';
+                        el.style.visibility = 'visible';
+                        el.style.opacity = '1';
                     }
                     return;
                 }
@@ -262,6 +268,8 @@ public class TourComponent extends Div {
                     spotlight.style.display = 'none';
                     el.style.transform = 'translate(-50%, -50%)';
                     el.style.top = '50%'; el.style.left = '50%';
+                    el.style.visibility = 'visible';
+                    el.style.opacity = '1';
                     return;
                 }
 
@@ -288,7 +296,7 @@ public class TourComponent extends Div {
 
                     const tipH = Math.max(el.getBoundingClientRect().height, 160);
                     let top, left;
-                    if      (tipCentered)    { el.style.transform='translate(-50%,-50%)'; el.style.top='50%'; el.style.left='50%'; return; }
+                    if      (tipCentered)    { el.style.transform='translate(-50%,-50%)'; el.style.top='50%'; el.style.left='50%'; el.style.visibility='visible'; el.style.opacity='1'; return; }
                     else if (pos==='bottom') { top=rect.bottom+MARGIN;             left=rect.left+rect.width/2-TIP_W/2; }
                     else if (pos==='top')    { top=rect.top-tipH-MARGIN;           left=rect.left+rect.width/2-TIP_W/2; }
                     else if (pos==='right')  { top=rect.top+rect.height/2-tipH/2; left=rect.right+MARGIN; }
@@ -298,6 +306,8 @@ public class TourComponent extends Div {
                     el.style.transform = 'none';
                     el.style.top  = Math.max(MARGIN, Math.min(top,  vh-tipH-MARGIN)) + 'px';
                     el.style.left = Math.max(MARGIN, Math.min(left, vw-TIP_W-MARGIN)) + 'px';
+                    el.style.visibility = 'visible';
+                    el.style.opacity = '1';
 
                     target.classList.add('tour-target-highlight');
                     setTimeout(() => target.classList.remove('tour-target-highlight'), 1400);
