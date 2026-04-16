@@ -205,7 +205,7 @@ public class TourService {
                     // 4 – Lager-Aktionen Karte
                     new TourStep("[tour-id='lager-aktionen-karte']",
                             "Wareneingang buchen",
-                            "Kam eine Lieferung an? Hier buchst du den Eingang direkt – der Bestand wird sofort aktualisiert.",
+                            "Merkst du, dass eine Ware knapp werden könnte? Hier kannst du für beliebige Artikel schon im Voraus eine Bestellung aufgeben bevor das System automatisch Alarm schlägt.",
                             "bottom"),
 
                     // 5 – Bestandseingang buchen Dialog
