@@ -536,8 +536,7 @@ public class LagerView extends AbstractTabellenView {
                 headerZelle("Kategorie",     LagerZeileFactory.BREITE_KATEGORIE),
                 headerZelle("Bestand",       LagerZeileFactory.BREITE_BESTAND),
                 headerZelle("Minimalgrenze", LagerZeileFactory.BREITE_MINIMAL),
-                buildStatusHeaderZelle(),
-                headerZelle("",              LagerZeileFactory.BREITE_AKTION)
+                buildStatusHeaderZelle()
         );
         return header;
     }

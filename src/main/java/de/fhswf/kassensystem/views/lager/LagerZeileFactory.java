@@ -1,6 +1,5 @@
 package de.fhswf.kassensystem.views.lager;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -17,7 +16,6 @@ class LagerZeileFactory {
     static final String BREITE_BESTAND   = "15%";
     static final String BREITE_MINIMAL   = "15%";
     static final String BREITE_STATUS    = "10%";
-    static final String BREITE_AKTION    = "10%";
 
     private LagerZeileFactory() {}
 
@@ -45,20 +43,15 @@ class LagerZeileFactory {
                 buildZelle(artikel.getKategorie().getName(), BREITE_KATEGORIE, "#50453e", false),
                 buildZelle(bestand + " Stk.",               BREITE_BESTAND,   kritisch ? "#ba1a1a" : "#50453e", kritisch),
                 buildZelle(minimal + " Stk.",               BREITE_MINIMAL,   "#82746d", false),
-                buildStatusZelle(status),
-                buildAktionZelle()
+                buildStatusZelle(status)
         );
 
         zeile.getElement().executeJs(
                 "this.addEventListener('mouseenter', () => {" +
                         "  this.style.background = '#f0eeff';" +
-                        "  const btn = this.querySelector('.zeilen-aktion');" +
-                        "  if (btn) btn.style.opacity = '1';" +
                         "});" +
                         "this.addEventListener('mouseleave', () => {" +
                         "  this.style.background = '" + normalBg + "';" +
-                        "  const btn = this.querySelector('.zeilen-aktion');" +
-                        "  if (btn) btn.style.opacity = '0';" +
                         "});"
         );
         return zeile;
@@ -92,21 +85,4 @@ class LagerZeileFactory {
         return zelle;
     }
 
-    private static Div buildAktionZelle() {
-        Span icon = new Span("more_vert");
-        icon.addClassName("material-symbols-outlined");
-        icon.getStyle().set("line-height", "1");
-
-        Button btn = new Button();
-        btn.getElement().appendChild(icon.getElement());
-        btn.addClassName("zeilen-aktion");
-        btn.getStyle()
-                .set("background", "none").set("border", "none").set("cursor", "pointer")
-                .set("padding", "0.25rem").set("border-radius", "9999px").set("color", "#82746d")
-                .set("min-width", "unset").set("opacity", "0").set("transition", "opacity 0.15s");
-
-        Div zelle = new Div(btn);
-        zelle.getStyle().set("width", BREITE_AKTION).set("display", "flex").set("justify-content", "flex-end");
-        return zelle;
-    }
 }
