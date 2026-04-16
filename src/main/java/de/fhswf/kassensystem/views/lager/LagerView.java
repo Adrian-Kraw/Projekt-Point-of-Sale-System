@@ -46,10 +46,12 @@ public class LagerView extends AbstractTabellenView {
         nachbestellBlock.setWidthFull();
         nachbestellBlock.setPadding(false);
         nachbestellBlock.setSpacing(false);
+        nachbestellBlock.getElement().setAttribute("tour-id", "nachbestell-block");
 
         lieferungBlock.setWidthFull();
         lieferungBlock.setPadding(false);
         lieferungBlock.setSpacing(false);
+        lieferungBlock.getElement().setAttribute("tour-id", "lieferung-block");
 
         tabellenZeilen.setWidthFull();
         tabellenZeilen.setPadding(false);
@@ -212,10 +214,8 @@ public class LagerView extends AbstractTabellenView {
                 .set("border-radius", "0.75rem").set("padding", "0.6rem 1.1rem")
                 .set("font-weight", "700").set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
-
         bestaetigenBtn.addClickListener(e -> {
-            lagerService.lieferungBestaetigen(lieferungId);
-            ladeAlles();
+            if (lieferungId != null) { lagerService.lieferungBestaetigen(lieferungId); ladeAlles(); }
         });
 
         Button ablehnBtn = new Button("✕");
@@ -225,10 +225,8 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "0.6rem 0.85rem").set("font-weight", "700")
                 .set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
-
         ablehnBtn.addClickListener(e -> {
-            lagerService.lieferungStornieren(lieferungId);
-            ladeAlles();
+            if (lieferungId != null) { lagerService.lieferungStornieren(lieferungId); ladeAlles(); }
         });
 
         btnRow.add(bestaetigenBtn, ablehnBtn);
@@ -395,7 +393,97 @@ public class LagerView extends AbstractTabellenView {
         switch (action) {
             case "open-wareneingang-dialog" ->
                     new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
+            case "demo-nachbestell" -> zeigeDemoNachbestellung();
+            case "demo-lieferung"   -> zeigeDemoLieferung();
             default -> {}
+        }
+    }
+
+    private void zeigeDemoNachbestellung() {
+        // Nur Demo anzeigen wenn Block gerade leer ist
+        if (!nachbestellBlock.getChildren().findAny().isPresent()) {
+            nachbestellBlock.removeAll();
+            HorizontalLayout warnHeader = new HorizontalLayout();
+            warnHeader.setAlignItems(FlexComponent.Alignment.CENTER);
+            warnHeader.setSpacing(false);
+            warnHeader.getStyle().set("background", "#ffdad6").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+            Span wi = createIcon("notification_important");
+            wi.getStyle().set("color", "#ba1a1a");
+            Span wt = new Span("Nachbestellhinweise (Demo)");
+            wt.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#ba1a1a")
+                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            warnHeader.add(wi, wt);
+
+            // Demo-Karte ohne echten Artikel
+            HorizontalLayout demoKarte = new HorizontalLayout();
+            demoKarte.setAlignItems(FlexComponent.Alignment.CENTER);
+            demoKarte.setSpacing(false);
+            demoKarte.getStyle()
+                    .set("background", "rgba(255,255,255,0.6)").set("border-radius", "0.75rem")
+                    .set("padding", "1rem 1.25rem").set("gap", "1rem").set("flex", "1");
+            Span demoName = new Span("Beispielartikel");
+            demoName.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            Span demoBadge = new Span("2 Stk.");
+            demoBadge.getStyle().set("background", "#ba1a1a").set("color", "white").set("border-radius", "9999px")
+                    .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            Span demoMeta = new Span("von 5 Stk. (Min)");
+            demoMeta.getStyle().set("font-size", "0.8rem").set("color", "#82746d")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            HorizontalLayout demoRow = new HorizontalLayout();
+            demoRow.setSpacing(false);
+            demoRow.getStyle().set("gap", "0.4rem");
+            demoRow.setAlignItems(FlexComponent.Alignment.CENTER);
+            demoRow.add(demoBadge, demoMeta);
+            VerticalLayout demoInfo = new VerticalLayout();
+            demoInfo.setPadding(false);
+            demoInfo.setSpacing(false);
+            demoInfo.getStyle().set("flex", "1");
+            demoInfo.add(demoName, demoRow);
+            demoKarte.add(demoInfo);
+
+            HorizontalLayout grid = new HorizontalLayout();
+            grid.setWidthFull();
+            grid.setSpacing(false);
+            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+            grid.add(demoKarte);
+
+            nachbestellBlock.getStyle()
+                    .set("background", "#fff5f2").set("border-radius", "1.25rem")
+                    .set("overflow", "hidden").set("margin-bottom", "2rem");
+            nachbestellBlock.add(warnHeader, grid);
+        }
+    }
+
+    private void zeigeDemoLieferung() {
+        // Nur Demo anzeigen wenn Block gerade leer ist
+        if (!lieferungBlock.getChildren().findAny().isPresent()) {
+            lieferungBlock.removeAll();
+            HorizontalLayout header = new HorizontalLayout();
+            header.setAlignItems(FlexComponent.Alignment.CENTER);
+            header.setSpacing(false);
+            header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+            Span icon = createIcon("local_shipping");
+            icon.getStyle().set("color", "#155724");
+            Span titel = new Span("Lieferungsbescheid (Demo)");
+            titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
+                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            header.add(icon, titel);
+
+            HorizontalLayout grid = new HorizontalLayout();
+            grid.setWidthFull();
+            grid.setSpacing(false);
+            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+            grid.add(buildLieferungsKarte(null, "Beispielartikel", 20,
+                    "15.04.2026 08:00", "@manager", "16.04.2026 um 06:00 Uhr"));
+
+            lieferungBlock.getStyle()
+                    .set("background", "#f0fff4").set("border-radius", "1.25rem")
+                    .set("overflow", "hidden").set("margin-bottom", "2rem");
+            lieferungBlock.add(header, grid);
         }
     }
 

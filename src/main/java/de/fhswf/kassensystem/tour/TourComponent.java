@@ -189,7 +189,8 @@ public class TourComponent extends Div {
         if (sel.contains("statistik-karten") || sel.contains("artikel-minimum")
                 || sel.contains("gesamtartikel")   || sel.contains("bestand-tabelle")
                 || sel.contains("status-spalte")   || sel.contains("lager-aktionen")
-                || sel.contains("bestandseingang")) return "lager";
+                || sel.contains("bestandseingang") || sel.contains("nachbestell-block")
+                || sel.contains("lieferung-block")) return "lager";
         if (sel.contains("artikel-tabelle") || sel.contains("neuer-artikel")
                 || sel.contains("artikel-aktionen") || sel.contains("artikel-suchfeld")
                 || sel.contains("artikel-bearbeiten") || sel.contains("artikel-deaktivieren")
@@ -274,18 +275,81 @@ public class TourComponent extends Div {
                 }
 
                 const r0 = target.getBoundingClientRect();
-                if (r0.top < 0 || r0.bottom > window.innerHeight)
-                    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const needsScroll = !selector.includes('artikel-aktionen')
+                    && !selector.includes('artikel-tabelle')
+                    && (r0.top < 80 || r0.bottom > window.innerHeight - 80);
+                if (needsScroll) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (selector.includes('artikel-aktionen')) {
+                    const gridScroller = document.querySelector('vaadin-grid-scroller, [part="body"], .vaadin-grid-body');
+                    if (gridScroller) gridScroller.scrollTop = 0;
+                    const gridEl = document.querySelector('vaadin-grid');
+                    if (gridEl && typeof gridEl.scrollToIndex === 'function') gridEl.scrollToIndex(0);
+                    const scrollable = document.querySelector('.v-scrollable');
+                    if (scrollable) scrollable.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                }
 
-                setTimeout(() => {
-                    const rect   = target.getBoundingClientRect();
+                const delay = needsScroll ? 500 : selector.includes('artikel-aktionen') ? 400 : 150;
+                const positionTooltip = () => {
+                    const freshTarget = document.querySelector(selector) || target;
+                    const rect = freshTarget.getBoundingClientRect();
+
+                    if (rect.width === 0 && rect.height === 0) {
+                        setTimeout(positionTooltip, 200);
+                        return;
+                    }
+
                     const PAD    = 10, TIP_W = 400, MARGIN = 16;
                     const vw = window.innerWidth, vh = window.innerHeight;
 
                     let spotTop = rect.top, spotHeight = rect.height;
                     if (selector.includes('status-spalte')) {
                         const table = document.querySelector("[tour-id='bestand-tabelle']");
-                        if (table) spotHeight = table.getBoundingClientRect().bottom - rect.top;
+                        if (table) {
+                            spotTop    = rect.top;
+                            spotHeight = Math.min(table.getBoundingClientRect().bottom, vh) - rect.top;
+                        }
+                    } else if (selector.includes('artikel-aktionen')) {
+                        const table = document.querySelector("[tour-id='artikel-tabelle']");
+                        if (table) {
+                            spotTop    = rect.top;
+                            spotHeight = Math.min(table.getBoundingClientRect().bottom, vh) - rect.top;
+                        }
+                    }
+
+                    const updateSpotlight = () => {
+                        if (spotlight.style.display === 'none') return;
+                        if (selector.includes('status-spalte')) {
+                            const r = target.getBoundingClientRect();
+                            const table = document.querySelector("[tour-id='bestand-tabelle']");
+                            const tableBottom = table ? Math.min(table.getBoundingClientRect().bottom, vh) : r.bottom;
+                            spotlight.style.top    = (r.top    - PAD) + 'px';
+                            spotlight.style.left   = (r.left   - PAD) + 'px';
+                            spotlight.style.width  = (r.width  + PAD*2) + 'px';
+                            spotlight.style.height = (tableBottom - r.top + PAD*2) + 'px';
+                        } else if (selector.includes('artikel-aktionen')) {
+                            const r = target.getBoundingClientRect();
+                            const table = document.querySelector("[tour-id='artikel-tabelle']");
+                            const tableBottom = table ? Math.min(table.getBoundingClientRect().bottom, vh) : r.bottom;
+                            spotlight.style.top    = (r.top    - PAD) + 'px';
+                            spotlight.style.left   = (r.left   - PAD) + 'px';
+                            spotlight.style.width  = (r.width  + PAD*2) + 'px';
+                            spotlight.style.height = (tableBottom - r.top + PAD*2) + 'px';
+                        }
+                    };
+
+                    // Scroll-Listener für nachlaufenden Spotlight
+                    if (selector.includes('status-spalte') || selector.includes('artikel-aktionen')) {
+                        const scrollEl = document.querySelector('.v-scrollable') || window;
+                        const onScroll = () => updateSpotlight();
+                        scrollEl.addEventListener('scroll', onScroll);
+                        // Cleanup beim nächsten Step
+                        spotlight._cleanupScroll = () => scrollEl.removeEventListener('scroll', onScroll);
+                    } else if (spotlight._cleanupScroll) {
+                        spotlight._cleanupScroll();
+                        spotlight._cleanupScroll = null;
                     }
 
                     spotlight.style.display = 'block';
@@ -311,7 +375,8 @@ public class TourComponent extends Div {
 
                     target.classList.add('tour-target-highlight');
                     setTimeout(() => target.classList.remove('tour-target-highlight'), 1400);
-                }, 150);
+                };
+                setTimeout(positionTooltip, delay);
             })(this.$server ? this : this.getRootNode().host || this);
             """, selector, step.position(), tipCentered);
     }
@@ -356,8 +421,13 @@ public class TourComponent extends Div {
     }
 
     private void hideSpotlight() {
-        getElement().executeJs(
-                "const s=document.getElementById('__tour_spotlight'); if(s) s.style.display='none';");
+        getElement().executeJs("""
+            const s = document.getElementById('__tour_spotlight');
+            if (s) {
+                if (s._cleanupScroll) { s._cleanupScroll(); s._cleanupScroll = null; }
+                s.style.display = 'none';
+            }
+        """);
     }
 
     private void finish() {

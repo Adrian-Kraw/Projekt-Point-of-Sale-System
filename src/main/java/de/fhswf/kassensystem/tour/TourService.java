@@ -92,25 +92,37 @@ public class TourService {
                             "Hier siehst du auf einen Blick wie viele Artikel unter dem Minimalbestand sind (links) und wie viele Artikel insgesamt im System erfasst sind (rechts).",
                             "bottom"),
 
-                    // 12 – Bestandstabelle: highlight ganzer Container, Tooltip mittig
+                    // 12 – Nachbestellhinweise
+                    new TourStep("[tour-id='nachbestell-block']",
+                            "Nachbestellhinweise",
+                            "Wenn ein Artikel unter den Minimalbestand fällt, erscheint er hier. So siehst du sofort was nachbestellt werden muss.",
+                            "bottom", "demo-nachbestell"),
+
+                    // 13 – Lieferungsbescheid
+                    new TourStep("[tour-id='lieferung-block']",
+                            "Lieferungsbescheid",
+                            "Wurde eine Bestellung aufgegeben, erscheint sie hier. Du kannst bestätigen dass die Lieferung angekommen ist – erst dann wird der Bestand aktualisiert.",
+                            "bottom", "demo-lieferung"),
+
+                    // 14 – Bestandstabelle
                     new TourStep("[tour-id='bestand-tabelle-kopf']",
                             "Bestandsübersicht",
                             "In der Tabelle siehst du alle Artikel mit aktuellem Bestand, Minimalgrenze und Ampelstatus. Über das Suchfeld kannst du gezielt nach Artikeln filtern.",
                             "bottom"),
 
-                    // 13 – Ampelstatus: Spotlight auf Status-Spalte, Tooltip mittig
+                    // 15 – Ampelstatus
                     new TourStep("[tour-id='status-spalte']",
                             "Ampelstatus",
                             "Die farbigen Punkte zeigen den Bestandsstatus:\n🟢 Grün – Bestand ok\n🟠 Orange – Bestand knapp\n🔴 Rot – unter Minimalbestand",
                             "center"),
 
-                    // 14 – Logo → zum Dashboard navigieren, Tooltip bleibt auf Logo
+                    // 16 – Logo → zum Dashboard navigieren
                     new TourStep("[tour-id='logo-row']",
                             "Zurück zum Dashboard",
                             "Klicke jederzeit oben links auf 'Canapé Café' um zum Dashboard zurückzukehren. Wir gehen jetzt dorthin.",
                             "right", "navigate:dashboard"),
 
-                    // 15 – UserCard → Spotlight auf UserCard, Tooltip zentriert
+                    // 17 – UserCard
                     new TourStep("[tour-id='user-card']",
                             "Dein Account – Ende der Einführung",
                             "Links unten findest du deinen Account. Klicke darauf um dich am Ende deiner Schicht auszuloggen.\n\nViel Erfolg! 🎉",
@@ -123,12 +135,62 @@ public class TourService {
                     // 1 – Willkommen
                     new TourStep(null,
                             "Hallo! 👋",
-                            "Schön, dass du dabei bist. Diese kurze Einführung zeigt dir alle Bereiche – vom Lager bis zur Benutzerverwaltung.",
+                            "Schön, dass du dabei bist. Diese Einführung zeigt dir alle Bereiche – Kassieren, Lager, Artikel, Berichte und Benutzerverwaltung.",
                             "center", "navigate:dashboard"),
+
+                    // ── KASSIEREN ──────────────────────────────────────────────────
+
+                    // 2 – Kassieren-Nav
+                    new TourStep("[tour-id='kassieren-nav']",
+                            "Zur Kassenansicht",
+                            "Hier gelangst du zur Kassenansicht um Verkäufe durchzuführen. Wir wechseln jetzt dorthin.",
+                            "right", "navigate:kassieren"),
+
+                    // 3 – Kategorie-Chips
+                    new TourStep("[tour-id='kategorie-chips']",
+                            "Kategorien filtern",
+                            "Mit diesen Chips kannst du das Sortiment filtern – z.B. nur Kuchen oder Getränke.",
+                            "bottom"),
+
+                    // 4 – Artikel-Suche
+                    new TourStep("[tour-id='artikel-suche']",
+                            "Artikel suchen",
+                            "Tippe hier einen Artikelnamen ein um gezielt zu suchen. Die Anzeige filtert sofort während du tippst.",
+                            "bottom"),
+
+                    // 5 – Artikel-Grid
+                    new TourStep("[tour-id='artikel-grid']",
+                            "Artikel in den Warenkorb",
+                            "Klicke auf eine Artikelkarte um sie in den Warenkorb zu legen. Der Bestand wird dabei live aktualisiert.",
+                            "center"),
+
+                    // 6 – Warenkorb
+                    new TourStep("[tour-id='warenkorb-spalte']",
+                            "Der Warenkorb",
+                            "Rechts siehst du den Warenkorb. Mit + und – passt du die Menge an, mit dem Mülleimer-Icon entfernst du Artikel wieder.",
+                            "left", "demo-verkauf"),
+
+                    // 7 – Rabatt & Bezahlen
+                    new TourStep("[tour-id='zusammenfassung']",
+                            "Rabatt & Bezahlen",
+                            "Hier gibst du optional einen Rabatt in Prozent ein. Wenn alles stimmt, klicke auf 'Bezahlen' um die Zahlung abzuschließen.",
+                            "top"),
+
+                    // 8 – Zahlungsart
+                    new TourStep(null,
+                            "Zahlungsart wählen",
+                            "Nach dem Kassieren öffnet sich dieses Fenster. Hier wählst du ob der Kunde bar oder per Karte zahlt. Dies ist nur eine Demo – es wird nichts gebucht.",
+                            "dialog-left", "open-zahlungsdialog"),
+
+                    // 9 – Quittung
+                    new TourStep(null,
+                            "Quittung drucken?",
+                            "Nach der Zahlung kannst du dem Kunden eine Quittung als PDF erstellen. Dies ist nur eine Demo – es wird nichts gedruckt.",
+                            "dialog-left", "open-quittungsdialog"),
 
                     // ── LAGER ──────────────────────────────────────────────────────
 
-                    // 2 – Lager Navigation
+                    // 10 – Lager Navigation
                     new TourStep("[tour-id='lager-nav']",
                             "Lagerverwaltung",
                             "Hier behältst du den Überblick über alle Bestände. Wir schauen kurz rein.",
@@ -152,13 +214,25 @@ public class TourService {
                             "Artikel auswählen, Menge eingeben, speichern – fertig. Dies ist nur eine Demo, es wird nichts gespeichert.",
                             "dialog-left", "open-wareneingang-dialog"),
 
-                    // 6 – Bestandsübersicht Tabelle
+                    // 6 – Nachbestellhinweise
+                    new TourStep("[tour-id='nachbestell-block']",
+                            "Nachbestellhinweise",
+                            "Fällt ein Artikel unter den Minimalbestand, erscheint er hier – solange keine offene Bestellung dafür existiert.",
+                            "bottom", "demo-nachbestell"),
+
+                    // 7 – Lieferungsbescheid
+                    new TourStep("[tour-id='lieferung-block']",
+                            "Lieferungsbescheid",
+                            "Wurde eine Bestellung aufgegeben, erscheint sie hier. Erst nach Bestätigung wird der Bestand aktualisiert – Kassierer und Manager können bestätigen.",
+                            "bottom", "demo-lieferung"),
+
+                    // 8 – Bestandsübersicht Tabelle
                     new TourStep("[tour-id='bestand-tabelle-kopf']",
                             "Bestandsübersicht",
                             "Alle Artikel mit aktuellem Bestand, Minimalgrenze und Ampelstatus. Oben rechts kannst du nach einem Artikel suchen.",
                             "bottom"),
 
-                    // 7 – Ampelstatus
+                    // 9 – Ampelstatus
                     new TourStep("[tour-id='status-spalte']",
                             "Ampelstatus",
                             "Die Punkte zeigen den Bestandsstatus:\n🟢 Grün – alles ok\n🟠 Orange – wird knapp\n🔴 Rot – unter Minimalbestand",
@@ -194,10 +268,10 @@ public class TourService {
                     new TourStep("[tour-id='artikel-tabelle']",
                             "Alle Artikel auf einen Blick",
                             "Hier siehst du ID, Name, Kategorie, Preis, Mehrwertsteuer, Bestand, Minimalgrenze und ob der Artikel gerade aktiv ist.",
-                            "top"),
+                            "center"),
 
                     // 13 – Aktionen Spalte
-                    new TourStep("[tour-id='artikel-aktionen']",
+                    new TourStep("[tour-id='artikel-aktionen-header']",
                             "Artikel bearbeiten & verwalten",
                             "Jede Zeile hat zwei Aktionen:\n✏️ Stift – Artikel bearbeiten\n🚫 Auge – Artikel aus dem Verkauf nehmen\nInaktive Artikel erscheinen nicht mehr im Kassensystem.",
                             "left"),
