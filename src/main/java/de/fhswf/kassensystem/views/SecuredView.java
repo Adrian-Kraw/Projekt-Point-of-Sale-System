@@ -25,7 +25,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *   <li>{@link #createIcon(String)} – erzeugt einen Material-Symbols-Icon-Span</li>
  *   <li>{@link #applyStandardBackground()} – setzt einheitliches Hintergrund-Styling</li>
  *   <li>{@link #istManager()} – prüft ob der aktuelle Benutzer die Rolle MANAGER hat</li>
- *   <li>{@link #getEingeloggterBenutzername()} – gibt den Benutzernamen aus dem SecurityContext zurück</li>
  * </ul>
  *
  * @author Adrian
@@ -45,7 +44,7 @@ public abstract class SecuredView extends VerticalLayout implements BeforeEnterO
     @Override
     public final void beforeEnter(BeforeEnterEvent event) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             event.rerouteTo(LoginView.class);
             return;
         }
@@ -124,8 +123,4 @@ public abstract class SecuredView extends VerticalLayout implements BeforeEnterO
         return hatAuthority(auth, "ROLE_MANAGER");
     }
 
-    protected String getEingeloggterBenutzername() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (auth != null) ? auth.getName() : "";
-    }
 }
