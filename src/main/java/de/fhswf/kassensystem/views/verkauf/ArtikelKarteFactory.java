@@ -76,17 +76,6 @@ class ArtikelKarteFactory {
     }
 
     /**
-     * Erstellt eine Artikelkarte mit dem DB-Bestand des Artikels als Anzeigebestand.
-     *
-     * @param artikel     der darzustellende Artikel
-     * @param ausverkauft {@code true} wenn der Artikel nicht mehr bestellbar ist
-     * @param onKlick     wird beim Klick auf die Karte aufgerufen
-     */
-    static Div create(Artikel artikel, boolean ausverkauft, Consumer<Artikel> onKlick) {
-        return create(artikel, artikel.getBestand(), ausverkauft, onKlick);
-    }
-
-    /**
      * Aktualisiert den Bestandsbadge einer Karte per JavaScript – ohne die Karte neu zu bauen.
      *
      * @param kartenContainer der Container der Karte (aus {@code kartenMap})
