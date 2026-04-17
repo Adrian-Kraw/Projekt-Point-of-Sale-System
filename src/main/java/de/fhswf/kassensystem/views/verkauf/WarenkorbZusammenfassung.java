@@ -94,7 +94,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
             zwischensumme     = zwischensumme.add(pos);
             BigDecimal satz   = e.artikel.getMehrwertsteuer().getSatz();
             BigDecimal netto  = pos.divide(
-                    BigDecimal.ONE.add(satz.divide(BigDecimal.valueOf(100))), 4, RoundingMode.HALF_UP);
+                    BigDecimal.ONE.add(satz.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)),4, RoundingMode.HALF_UP);
             BigDecimal mwstBetrag = pos.subtract(netto);
             if (satz.compareTo(BigDecimal.valueOf(7)) == 0) mwst7total  = mwst7total.add(mwstBetrag);
             else                                             mwst19total = mwst19total.add(mwstBetrag);
