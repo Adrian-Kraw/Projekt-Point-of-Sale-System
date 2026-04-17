@@ -6,6 +6,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
@@ -606,6 +607,7 @@ public class LagerView extends AbstractTabellenView {
         TextField suchfeld = new TextField();
         suchfeld.setPlaceholder("Artikel suchen...");
         suchfeld.setPrefixComponent(createIcon("search"));
+        suchfeld.setValueChangeMode(ValueChangeMode.EAGER);
         suchfeld.getStyle().set("width", "16rem");
         suchfeld.addValueChangeListener(e -> ladeDaten(e.getValue()));
 

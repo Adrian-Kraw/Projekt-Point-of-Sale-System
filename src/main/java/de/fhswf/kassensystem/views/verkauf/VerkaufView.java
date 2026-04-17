@@ -10,6 +10,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
@@ -184,6 +185,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         search.setWidthFull();
         search.setPlaceholder("Artikel suchen...");
         search.setPrefixComponent(createIcon("search"));
+        search.setValueChangeMode(ValueChangeMode.EAGER);
         search.addValueChangeListener(e -> { aktuelleSuche = e.getValue(); ladeArtikelGrid(); });
 
         HorizontalLayout row = new HorizontalLayout();
