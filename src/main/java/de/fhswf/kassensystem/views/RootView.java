@@ -32,7 +32,7 @@ public class RootView extends Div implements BeforeEnterObserver {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.isAuthenticated()
-                && !auth.getPrincipal().equals("anonymousUser")) {
+                && !"anonymousUser".equals(auth.getPrincipal())) {
             event.forwardTo(DashboardView.class);
         } else {
             event.forwardTo(LoginView.class);
