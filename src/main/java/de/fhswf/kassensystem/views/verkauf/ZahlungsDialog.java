@@ -9,17 +9,35 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
 
 import java.util.function.Consumer;
 
+/**
+ * Dialog zur Auswahl der Zahlungsart (Bar oder Karte) nach dem Kassieren.
+ *
+ * <p>Zeigt den Gesamtbetrag und zwei Zahlung-Buttons. Ein Klick auf einen Button
+ * übergibt die gewählte {@link de.fhswf.kassensystem.model.enums.Zahlungsart}
+ * an den {@code onZahlung}-Callback und schließt den Dialog.
+ *
+ * @author Adrian
+ */
 class ZahlungsDialog extends BaseDialog {
 
     private final Consumer<Zahlungsart> onZahlung;
     private final String gesamtBetrag;
 
+    /**
+     * Erstellt den Zahlungsdialog.
+     *
+     * @param gesamtBetrag formatierter Gesamtbetrag (z.B. "12,99 €"), wird im Dialog angezeigt
+     * @param onZahlung    wird mit der gewählten Zahlungsart aufgerufen
+     */
     ZahlungsDialog(String gesamtBetrag, Consumer<Zahlungsart> onZahlung) {
         this.gesamtBetrag = gesamtBetrag;
         this.onZahlung    = onZahlung;
         init("Zahlungsart wählen", null);
     }
 
+    /**
+     * Erstellt den Dialog-Body mit Gesamtbetrags-Anzeige und Zahlung-Buttons.
+     */
     @Override
     protected VerticalLayout buildBody() {
         VerticalLayout body = new VerticalLayout();
@@ -37,6 +55,9 @@ class ZahlungsDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Erstellt die horizontale Zeile mit Bar- und Karte-Button.
+     */
     private HorizontalLayout buildZahlungsButtons() {
         HorizontalLayout buttons = new HorizontalLayout();
         buttons.setWidthFull();
@@ -49,6 +70,15 @@ class ZahlungsDialog extends BaseDialog {
         return buttons;
     }
 
+    /**
+     * Erstellt einen einzelnen Zahlungsart-Button.
+     *
+     * @param iconName Material-Symbols-Icon-Name
+     * @param label    Beschriftungstext (z.B. "Bar")
+     * @param bg       Hintergrundfarbe
+     * @param color    Schriftfarbe
+     * @param art      die zugeordnete Zahlungsart
+     */
     private Button buildZahlungButton(String iconName, String label,
                                       String bg, String color, Zahlungsart art) {
         Span btnIcon = new Span(iconName);

@@ -11,22 +11,22 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 /**
  * Abstrakte Basisklasse für alle Dialoge im Kassensystem.
  *
- * FIX: buildBody() wird NICHT mehr im Konstruktor von BaseDialog aufgerufen.
- * Stattdessen rufen alle Unterklassen am Ende ihres eigenen Konstruktors
- * super.init(titel, untertitel) auf – zu diesem Zeitpunkt sind alle
- * Instanzvariablen der Unterklasse bereits gesetzt.
+ * Stellt ein einheitliches Layout mit Header, Body und Footer bereit.
+ * Unterklassen implementieren {@link #buildBody()} für den Inhalt und
+ * {@link #onSpeichern()} für die Speicherlogik.
+ *
  */
 public abstract class BaseDialog extends Dialog {
 
     /**
-     * Unterklassen rufen diese Methode am ENDE ihres eigenen Konstruktors auf,
-     * NACHDEM alle eigenen Felder initialisiert wurden.
+     * Unterklassen rufen diese Methode am Ende ihres eigenen Konstruktors auf,
+     * nachdem alle eigenen Felder initialisiert wurden.
      *
      * Beispiel:
      *   MeinDialog(List<X> items, ...) {
      *       super();                 // nur Dialog-Grundkonstruktor
      *       this.items = items;      // eigene Felder setzen
-     *       init("Titel", null);     // DANACH UI aufbauen
+     *       init("Titel", null);     // Danach UI aufbauen
      *   }
      */
     protected final void init(String titel, String untertitel) {
@@ -50,16 +50,36 @@ public abstract class BaseDialog extends Dialog {
     // ABSTRAKTE METHODEN
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt den Haupt-Inhaltsbereich des Dialogs (Formularfelder, Hinweise etc.).
+     *
+     * @return vollständig aufgebauter Body-Container
+     */
     protected abstract VerticalLayout buildBody();
 
-    /** true = Erfolg → Dialog schließt. false = Fehler → Dialog bleibt offen. */
+    /**
+     * Wird beim Klick auf den Speichern-Button aufgerufen.
+     * Validierung und Persistierung erfolgen hier.
+     *
+     * @return {@code true} bei Erfolg (Dialog schließt sich automatisch),
+     *         {@code false} bei Fehler (Dialog bleibt geöffnet)
+     */
     protected abstract boolean onSpeichern();
 
     // ═══════════════════════════════════════════════════════════
     // HOOKS (optional überschreibbar)
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Gibt die Beschriftung des Speichern-Buttons zurück.
+     * Standard: {@code "Speichern"} – kann überschrieben werden (z.B. "Erstellen", "Buchen").
+     */
     protected String getSpeichernLabel()  { return "Speichern"; }
+
+    /**
+     * Gibt die CSS-Breite des Dialogs zurück.
+     * Standard: {@code "28rem"} – kann überschrieben werden für breitere Dialoge.
+     */
     protected String getDialogBreite()    { return "28rem"; }
 
     /**
@@ -72,6 +92,12 @@ public abstract class BaseDialog extends Dialog {
     // GEMEINSAME UI-BAUSTEINE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt den Dialog-Header mit Titel, optionalem Untertitel und Schließen-Button.
+     *
+     * @param titel      Haupttitel des Dialogs
+     * @param untertitel optionaler Untertitel (kann {@code null} sein)
+     */
     private HorizontalLayout buildHeader(String titel, String untertitel) {
         HorizontalLayout header = new HorizontalLayout();
         header.setWidthFull();
@@ -109,6 +135,9 @@ public abstract class BaseDialog extends Dialog {
         return header;
     }
 
+    /**
+     * Erstellt den Standard-Footer mit "Abbrechen"- und Speichern-Button.
+     */
     private HorizontalLayout buildStandardFooter() {
         Button abbrechenBtn = new Button("Abbrechen");
         abbrechenBtn.getStyle()
@@ -137,6 +166,10 @@ public abstract class BaseDialog extends Dialog {
         return footer;
     }
 
+    /**
+     * Entfernt das Standard-Padding des Vaadin-Dialog-Overlays und rundet die Ecken ab.
+     * Muss per JavaScript ausgeführt werden da das Overlay-Element Shadow-DOM verwendet.
+     */
     private void styleOverlay() {
         getElement().executeJs(
                 "setTimeout(() => {" +
@@ -148,6 +181,12 @@ public abstract class BaseDialog extends Dialog {
         );
     }
 
+    /**
+     * Erstellt einen Material-Symbols-Icon-Span.
+     *
+     * @param name Icon-Name (z.B. "edit", "close")
+     * @return gestylter {@code Span} mit Material-Symbols-Klasse
+     */
     protected static Span icon(String name) {
         Span s = new Span(name);
         s.addClassName("material-symbols-outlined");
@@ -155,6 +194,14 @@ public abstract class BaseDialog extends Dialog {
         return s;
     }
 
+    /**
+     * Erstellt einen einheitlichen Formularblock aus Beschriftung und Eingabefeld.
+     * Wird von allen Dialog-Unterklassen für konsistentes Formularlayout verwendet.
+     *
+     * @param label Beschriftungstext (wird in Großbuchstaben dargestellt)
+     * @param feld  das zugehörige Vaadin-Eingabefeld
+     * @return Layout mit Label oben und Feld unten
+     */
     protected static VerticalLayout feldMitLabel(String label, Component feld) {
         VerticalLayout block = new VerticalLayout();
         block.setPadding(false);

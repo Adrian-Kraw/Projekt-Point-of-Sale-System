@@ -7,6 +7,14 @@ import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
+/**
+ * Dialog zum Zurücksetzen des Passworts eines bestehenden Benutzers.
+ *
+ * <p>Enthält ein einzelnes Passwortfeld. Nach dem Speichern wird das neue
+ * Passwort via {@link de.fhswf.kassensystem.service.UserService#resetPasswort} gesetzt.
+ *
+ * @author Adrian
+ */
 class PasswortDialog extends BaseDialog {
 
     private final UserService userService;
@@ -14,6 +22,13 @@ class PasswortDialog extends BaseDialog {
     private final Runnable    onErfolg;
     private final PasswordField neuesPasswort = new PasswordField();
 
+    /**
+     * Erstellt den Dialog für den angegebenen Benutzer.
+     *
+     * @param user        der Benutzer dessen Passwort zurückgesetzt wird
+     * @param userService Service für den Passwort-Reset
+     * @param onErfolg    wird nach erfolgreichem Zurücksetzen aufgerufen
+     */
     PasswortDialog(User user, UserService userService, Runnable onErfolg) {
         this.user        = user;
         this.userService = userService;
@@ -21,6 +36,9 @@ class PasswortDialog extends BaseDialog {
         init("Passwort zurücksetzen – " + user.getName(), null);
     }
 
+    /**
+     * Erstellt den Dialog-Body mit dem Passwort-Eingabefeld.
+     */
     @Override
     protected VerticalLayout buildBody() {
         neuesPasswort.setWidthFull();
@@ -36,6 +54,11 @@ class PasswortDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Validiert die Eingabe und setzt das neue Passwort.
+     *
+     * @return {@code true} bei Erfolg, {@code false} wenn das Passwortfeld leer ist
+     */
     @Override
     protected boolean onSpeichern() {
         if (neuesPasswort.isEmpty()) {

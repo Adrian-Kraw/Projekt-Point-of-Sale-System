@@ -2,7 +2,6 @@ package de.fhswf.kassensystem.views;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -14,15 +13,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * DashboardView ist der Willkommen-Screen der Anwendung.
+ * Willkommens-Ansicht des Kassensystems (Dashboard).
  *
- * Sie wird angezeigt wenn der Nutzer die Anwendung öffnet oder
- * auf das Logo bzw. seinen Namen in der Sidebar klickt.
+ * <p>Wird nach dem Login als Startseite angezeigt und ist über das Logo
+ * sowie den Benutzernamen in der Sidebar jederzeit erreichbar.
+ * Nicht eingeloggte Benutzer werden in {@code beforeEnter} zur Login-Seite weitergeleitet.
  *
- * Aufbau:
- * - Zwei dekorative Blur-Blobs im Hintergrund (visuelles Design)
- * - Zentrierter Begrüßungstext mit Café-Name
- * - Kurzer Untertitel mit Hinweis auf die Navigation
+ * <p>Aufbau der View:
+ * <ul>
+ *   <li>Zwei dekorative, animierte Blur-Blobs im Hintergrund (rein visuell,
+ *       {@code pointer-events: none})</li>
+ *   <li>Zentrierter Begrüßungstext mit dem Café-Namen als zweizeilige H1-Überschrift</li>
+ * </ul>
+ *
+ * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ *
+ * @author Adrian
  */
 @RolesAllowed({"KASSIERER", "MANAGER"})
 @Route(value = "dashboard", layout = MainLayout.class)
@@ -98,7 +104,7 @@ public class DashboardView extends Div implements BeforeEnterObserver {
      *
      * Beide Spans sind in einem gemeinsamen H1 verschachtelt.
      * display:block auf dem ersten Span erzeugt den Zeilenumbruch
-     * ohne ein <br>-Tag zu benötigen.
+     * ohne ein br-Tag zu benötigen.
      */
     private VerticalLayout buildContent() {
         VerticalLayout content = new VerticalLayout();
@@ -113,8 +119,7 @@ public class DashboardView extends Div implements BeforeEnterObserver {
                 .set("gap", "0");
 
         content.add(
-                buildHeadline()//,
-                //buildSubtitle()
+                buildHeadline()
         );
         return content;
     }
@@ -158,22 +163,14 @@ public class DashboardView extends Div implements BeforeEnterObserver {
     }
 
     /**
-     * Erstellt den Untertitel unterhalb der Hauptüberschrift.
+     * Prüft vor dem Rendern der Seite ob der Benutzer eingeloggt ist.
+     *
+     * <p>Ist kein gültiger Benutzer im {@code SecurityContext} vorhanden,
+     * entweder weil keine Authentifizierung existiert oder es sich um einen
+     * anonymen Benutzer handelt – wird direkt zur Login-Seite weitergeleitet.
+     *
+     * @param event enthält Informationen zur aktuellen Navigation
      */
-//    private Paragraph buildSubtitle() {
-//        Paragraph subtitle = new Paragraph(
-//                "Wählen Sie einen Bereich aus der Navigation " +
-//                        "oder starten Sie direkt mit einem neuen Beleg."
-//        );
-//        subtitle.getStyle()
-//                .set("font-size", "1.1rem")
-//                .set("color", "#82746d")
-//                .set("line-height", "1.7")
-//                .set("font-family", "'Plus Jakarta Sans', sans-serif")
-//                .set("margin", "0");
-//        return subtitle;
-//    }
-
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

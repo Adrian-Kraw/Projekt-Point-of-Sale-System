@@ -14,13 +14,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Navigationsbereich der Sidebar.
- * Zeigt rollenabhängig die korrekten Links an.
+ * Navigationsbereich der Sidebar mit rollenabhängigen Links.
+ *
+ * <p>Kassierer sehen: Kassieren, Lager.
+ * Manager sehen zusätzlich: Artikel, Berichte, Benutzer.
+ *
+ * <p>Alle Links werden mit einer {@code tour-id} versehen und in der
+ * {@link #getNavLinks()}-Liste gespeichert, damit {@link de.fhswf.kassensystem.views.MainLayout}
+ * den aktiven Link nach jeder Navigation hervorheben kann.
+ *
+ * @author Adrian
  */
 public class SidebarNavigation extends VerticalLayout {
 
     private final List<RouterLink> navLinks = new ArrayList<>();
 
+    /**
+     * Erstellt die Navigation mit rollenabhängigen Links.
+     *
+     * @param istManager {@code true} wenn der eingeloggte Benutzer Manager ist
+     */
     public SidebarNavigation(boolean istManager) {
         setPadding(false);
         setSpacing(false);
@@ -36,10 +49,24 @@ public class SidebarNavigation extends VerticalLayout {
         }
     }
 
+    /**
+     * Gibt alle gerenderten Navigations-Links zurück.
+     *
+     * @return unveränderliche Liste der Links
+     */
     public List<RouterLink> getNavLinks() {
         return navLinks;
     }
 
+    /**
+     * Erstellt einen einzelnen Navigationslink mit Icon, Label, Ziel-View und Tour-ID.
+     *
+     * @param icon   Material-Symbols-Icon-Name
+     * @param label  Anzeigetext des Links
+     * @param view   Ziel-View-Klasse für den RouterLink
+     * @param tourId Tour-ID für den Onboarding-Guide
+     * @return fertig konfigurierter RouterLink
+     */
     private RouterLink buildNavLink(String icon, String label,
                                     Class<? extends Component> view,
                                     String tourId) {

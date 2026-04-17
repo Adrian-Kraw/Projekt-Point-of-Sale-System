@@ -16,10 +16,15 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 /**
  * Login-Seite des Kassensystems.
  *
- * Verwendet Vaadins eingebautes LoginForm-Komponente, die
- * direkt mit Spring Security zusammenarbeitet (POST /login).
+ * <p>Verwendet Vaadins eingebaute {@link com.vaadin.flow.component.login.LoginForm}-Komponente,
+ * die direkt mit Spring Security zusammenarbeitet (HTTP POST {@code /login}).
  *
- * @AnonymousAllowed damit nicht eingeloggte User die Seite sehen können.
+ * <p>Ist der Query-Parameter {@code ?error} gesetzt (gesetzt von Spring Security
+ * bei fehlgeschlagenem Login), wird die Fehleranzeige im Formular aktiviert.
+ *
+ * <p>Zugriff: {@code @AnonymousAllowed} – die Seite ist ohne Login erreichbar.
+ *
+ * @author Adrian
  */
 @Route("login")
 @PageTitle("Login – Kassensystem")
@@ -88,9 +93,17 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         add(iconBox, titel, untertitel, loginForm);
     }
 
+    /**
+     * Prüft vor dem Rendern der Seite, ob ein fehlgeschlagener Login-Versuch vorliegt.
+     *
+     * <p>Spring Security hängt bei einem fehlgeschlagenen Login automatisch den
+     * Query-Parameter {@code ?error} an die Login-URL. Ist dieser Parameter vorhanden,
+     * wird die Fehleranzeige im {@link com.vaadin.flow.component.login.LoginForm} aktiviert.
+     *
+     * @param event enthält Informationen zur aktuellen Navigation und den Query-Parametern
+     */
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        // ?error Parameter setzen wenn Login fehlschlägt
         if (event.getLocation().getQueryParameters()
                 .getParameters().containsKey("error")) {
             loginForm.setError(true);

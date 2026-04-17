@@ -19,7 +19,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Kapselt alle Eingabefelder des Artikel-Dialogs mit Validierung und Befüllung.
+ * Kapselt alle Eingabefelder des Artikel-Dialogs (Name, Kategorie, Preis, MwSt,
+ * Bestand, Minimalbestand) inklusive Validierung und Datenbefüllung.
+ *
+ * <p>Die Klasse stellt drei öffentliche Methoden bereit:
+ * <ul>
+ *   <li>{@link #befuelleFelder(de.fhswf.kassensystem.model.Artikel)} – füllt Felder beim Bearbeiten</li>
+ *   <li>{@link #valide()} – prüft Pflichtfelder und zeigt Fehlermeldungen</li>
+ *   <li>{@link #toArtikel()} – liest Feldwerte in ein neues {@code Artikel}-Objekt</li>
+ * </ul>
+ *
+ * @author Adrian
  */
 class ArtikelFormularFelder extends VerticalLayout {
 
@@ -30,6 +40,11 @@ class ArtikelFormularFelder extends VerticalLayout {
     private final NumberField        bestandFeld    = new NumberField();
     private final NumberField        minBestandFeld = new NumberField();
 
+    /**
+     * Erstellt alle Eingabefelder und baut das zweispaltige Formularlayout auf.
+     *
+     * @param service wird für das Laden von Kategorien und MwSt-Sätzen benötigt
+     */
     ArtikelFormularFelder(ArtikelService service) {
         this.kategorieSelect = buildKategorieSelect(service);
         this.mwstSelect      = buildMwstSelect(service);
@@ -70,6 +85,12 @@ class ArtikelFormularFelder extends VerticalLayout {
     // ÖFFENTLICHE API
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Befüllt alle Formularfelder mit den Werten des übergebenen Artikels.
+     * Wird beim Öffnen des Bearbeiten-Dialogs aufgerufen.
+     *
+     * @param artikel der zu bearbeitende Artikel
+     */
     void befuelleFelder(Artikel artikel) {
         nameFeld.setValue(artikel.getName());
         preisFeld.setValue(artikel.getPreis().doubleValue());
@@ -87,6 +108,12 @@ class ArtikelFormularFelder extends VerticalLayout {
         }
     }
 
+    /**
+     * Prüft ob alle Pflichtfelder ausgefüllt sind.
+     * Zeigt bei fehlenden Eingaben eine Notification in der Mitte des Bildschirms.
+     *
+     * @return {@code true} wenn alle Pflichtfelder valide sind, sonst {@code false}
+     */
     boolean valide() {
         if (nameFeld.isEmpty()) {
             Notification.show("Bitte einen Namen eingeben.", 3000, Notification.Position.MIDDLE);
@@ -107,6 +134,12 @@ class ArtikelFormularFelder extends VerticalLayout {
         return true;
     }
 
+    /**
+     * Liest die aktuellen Feldwerte aus und erstellt daraus ein neues {@link de.fhswf.kassensystem.model.Artikel}-Objekt.
+     * Fehlende optionale Felder (Bestand, Minimalbestand) werden mit Standardwerten befüllt.
+     *
+     * @return neues {@code Artikel}-Objekt mit den eingegebenen Werten
+     */
     Artikel toArtikel() {
         Artikel a = new Artikel();
         a.setName(nameFeld.getValue().trim());
@@ -125,6 +158,12 @@ class ArtikelFormularFelder extends VerticalLayout {
     // PRIVATE BUILDER
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt das Kategorie-Auswahlfeld und befüllt es mit allen im System vorhandenen Kategorien.
+     *
+     * @param service Quelle der Kategorien
+     * @return konfiguriertes {@code Select}-Element
+     */
     private Select<Kategorie> buildKategorieSelect(ArtikelService service) {
         Set<Kategorie> kategorien = new LinkedHashSet<>();
         service.findAllArtikel().forEach(a -> kategorien.add(a.getKategorie()));
@@ -137,6 +176,13 @@ class ArtikelFormularFelder extends VerticalLayout {
         return select;
     }
 
+    /**
+     * Erstellt das MwSt-Auswahlfeld mit allen im System vorhandenen Steuersätzen.
+     * Das Label zeigt Satz und Bezeichnung, z.B. "7% (Ermäßigt)".
+     *
+     * @param service Quelle der Steuersätze
+     * @return konfiguriertes {@code Select}-Element
+     */
     private Select<Mehrwertsteuer> buildMwstSelect(ArtikelService service) {
         Set<Mehrwertsteuer> saetze = new LinkedHashSet<>();
         service.findAllArtikel().forEach(a -> saetze.add(a.getMehrwertsteuer()));
@@ -150,6 +196,11 @@ class ArtikelFormularFelder extends VerticalLayout {
         return select;
     }
 
+    /**
+     * Erstellt das Minimalbestand-Feld mit einem erklärenden Hinweistext darunter.
+     *
+     * @return Layout mit Eingabefeld und Hinweis
+     */
     private VerticalLayout buildMinBestandBlock() {
         VerticalLayout block = new VerticalLayout();
         block.setPadding(false);
@@ -165,6 +216,13 @@ class ArtikelFormularFelder extends VerticalLayout {
         return block;
     }
 
+    /**
+     * Erstellt einen einheitlichen Formularblock aus Label und Eingabefeld.
+     *
+     * @param label       der Beschriftungstext (wird in Großbuchstaben dargestellt)
+     * @param eingabefeld das zugehörige Vaadin-Eingabefeld
+     * @return Layout mit Label oben und Feld unten
+     */
     private static VerticalLayout feld(String label, Component eingabefeld) {
         VerticalLayout block = new VerticalLayout();
         block.setPadding(false);
@@ -179,6 +237,13 @@ class ArtikelFormularFelder extends VerticalLayout {
         return block;
     }
 
+    /**
+     * Ordnet zwei Formularblöcke nebeneinander in einem zweispaltigen Layout an.
+     *
+     * @param links  linker Formularblock
+     * @param rechts rechter Formularblock
+     * @return horizontales Layout mit gleichmäßiger Aufteilung
+     */
     private static HorizontalLayout zweispaltig(VerticalLayout links, VerticalLayout rechts) {
         HorizontalLayout zeile = new HorizontalLayout();
         zeile.setWidthFull();

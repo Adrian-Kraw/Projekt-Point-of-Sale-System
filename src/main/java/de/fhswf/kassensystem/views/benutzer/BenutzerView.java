@@ -6,24 +6,32 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
-
 import java.util.List;
 
 /**
- * Benutzerverwaltungs-View. Nur für Manager sichtbar.
+ * Benutzerverwaltungs-View – zeigt alle Benutzer-Accounts in einer Tabelle
+ * und erlaubt Anlegen, Bearbeiten, Passwort-Reset und Sperren/Entsperren.
+ *
+ * <p>Nur für Benutzer mit der Rolle {@code MANAGER} zugänglich.
+ *
+ * @author Adrian
  */
 @Route(value = "benutzer", layout = MainLayout.class)
 public class BenutzerView extends AbstractTabellenView {
 
     private final UserService userService;
 
+    /**
+     * Erstellt die View und lädt alle Benutzer.
+     *
+     * @param userService Service für alle Benutzer-Operationen
+     */
     public BenutzerView(UserService userService) {
         super(Rolle.MANAGER);
         this.userService = userService;
@@ -31,6 +39,9 @@ public class BenutzerView extends AbstractTabellenView {
         ladeDaten();
     }
 
+    /**
+     * Baut den Seitenkopf mit Titel und "Neuer Benutzer"-Button.
+     */
     @Override
     protected HorizontalLayout buildHeader() {
         HorizontalLayout header = new HorizontalLayout();
@@ -43,6 +54,9 @@ public class BenutzerView extends AbstractTabellenView {
         return header;
     }
 
+    /**
+     * Lädt alle Benutzer aus der Datenbank und befüllt die Tabelle mit Zebra-Streifen.
+     */
     @Override
     public void ladeDaten() {
         tabelle.removeAll();
@@ -56,11 +70,19 @@ public class BenutzerView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Öffnet den {@link PasswortDialog} für den angegebenen Benutzer.
+     *
+     * @param user der Benutzer dessen Passwort zurückgesetzt werden soll
+     */
     private void oeffnePasswortDialog(User user) {
         PasswortDialog dialog = new PasswortDialog(user, userService, this::ladeDaten);
         dialog.open();
     }
 
+    /**
+     * Erstellt die Titelgruppe (Icon-Box + Überschrift "Benutzerverwaltung").
+     */
     private HorizontalLayout buildTitel() {
         HorizontalLayout titelGruppe = new HorizontalLayout();
         titelGruppe.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -85,6 +107,9 @@ public class BenutzerView extends AbstractTabellenView {
         return titelGruppe;
     }
 
+    /**
+     * Erstellt den "Neuer Benutzer"-Button, der den {@link NeuerBenutzerDialog} öffnet.
+     */
     private com.vaadin.flow.component.button.Button buildNeuerBenutzerButton() {
         Span plusIcon = createIcon("add");
         plusIcon.getStyle().set("font-size", "1.1rem");
@@ -105,7 +130,12 @@ public class BenutzerView extends AbstractTabellenView {
         return btn;
     }
 
-    /** Tour-Aktionen für den TourManager. */
+    /**
+     * Verarbeitet Tour-Aktionen aus dem {@link de.fhswf.kassensystem.tour.TourManager}.
+     * Aktuell unterstützt: {@code "open-neuer-benutzer-dialog"}.
+     *
+     * @param action Aktions-String aus dem Tour-Step
+     */
     public void tourAktion(String action) {
         switch (action) {
             case "open-neuer-benutzer-dialog" -> new NeuerBenutzerDialog(userService, this::ladeDaten).open();
@@ -113,6 +143,9 @@ public class BenutzerView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Umhüllt die Tabelle in einem styled Container.
+     */
     private VerticalLayout buildTabellenBereich() {
         VerticalLayout bereich = new VerticalLayout();
         bereich.setWidthFull();
@@ -125,6 +158,9 @@ public class BenutzerView extends AbstractTabellenView {
         return bereich;
     }
 
+    /**
+     * Erstellt die Kopfzeile der Tabelle mit allen Spaltenüberschriften.
+     */
     private HorizontalLayout buildTabellenHeader() {
         HorizontalLayout header = new HorizontalLayout();
         header.setWidthFull();

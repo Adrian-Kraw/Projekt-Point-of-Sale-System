@@ -9,10 +9,21 @@ import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import java.util.List;
 
 /**
- * Tab-Inhalt: Artikelstatistik mit Verkaufsranking.
+ * Panel für den "Artikelstatistik"-Tab in der Berichte-View.
+ *
+ * <p>Zeigt ein Verkaufsranking der letzten 30 Tage als Liste mit
+ * horizontalen Fortschrittsbalken. Der Artikel mit der höchsten Verkaufszahl
+ * dient als Referenzwert (100 %) für alle anderen Balken.
+ *
+ * @author Adrian
  */
 class ArtikelstatistikPanel extends VerticalLayout {
 
+    /**
+     * Erstellt das Panel und rendert das Verkaufsranking.
+     *
+     * @param statistiken Liste der Artikel-Statistiken, absteigend nach Verkaufsmenge sortiert
+     */
     ArtikelstatistikPanel(List<ArtikelStatistikDTO> statistiken) {
         setWidthFull();
         setPadding(false);
@@ -49,6 +60,15 @@ class ArtikelstatistikPanel extends VerticalLayout {
         add(karte);
     }
 
+    /**
+     * Erstellt eine einzelne Ranking-Zeile mit Artikelname, Kategorie, Anzahl und Fortschrittsbalken.
+     *
+     * @param name      Artikelname
+     * @param kat       Kategoriename
+     * @param anzahl    formatierte Verkaufsanzahl (z.B. "42x")
+     * @param anzahlInt numerischer Wert für die Balkenbreite
+     * @param maxAnzahl Maximalwert (= 100 % Balkenbreite)
+     */
     private VerticalLayout buildStatistikZeile(String name, String kat,
                                                String anzahl, int anzahlInt, int maxAnzahl) {
         HorizontalLayout kopf = new HorizontalLayout();

@@ -19,8 +19,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Lager-Übersicht mit Bestandstabelle, Statistik-Karten und Nachbestellhinweisen.
- * FIX: Ampel-Symbole stehen jetzt unter der Kartenüberschrift (nicht rechts neben dem Wert).
+ * Lagerverwaltungs-View mit Bestandstabelle, Statistikkarten,
+ * Nachbestellhinweisen und Lieferungsbestätigungen.
+ *
+ * <p>Aufbau:
+ * <ul>
+ *   <li>Statistikkarten: Artikel unter Minimalbestand, Gesamtartikel,
+ *       Lager-Aktionen-Karte (nur Manager)</li>
+ *   <li>Nachbestellhinweise: alle Artikel unter Minimalbestand</li>
+ *   <li>Lieferungsbescheid: alle ausstehenden Wareneingänge</li>
+ *   <li>Bestandstabelle: alle Artikel mit Ampelstatus</li>
+ * </ul>
+ *
+ * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ *
+ * @author Adrian
  */
 @Route(value = "lager", layout = MainLayout.class)
 public class LagerView extends AbstractTabellenView {
@@ -33,6 +46,12 @@ public class LagerView extends AbstractTabellenView {
     private final VerticalLayout   lieferungBlock        = new VerticalLayout();
     private final VerticalLayout   tabellenZeilen        = new VerticalLayout();
 
+    /**
+     * Erstellt die View und lädt alle Daten.
+     *
+     * @param lagerService   Service für Bestand, Nachbestellungen und Lieferungen
+     * @param artikelService Service für Artikeldaten
+     */
     public LagerView(LagerService lagerService, ArtikelService artikelService) {
         super(Rolle.KASSIERER);
         this.lagerService   = lagerService;
@@ -66,6 +85,9 @@ public class LagerView extends AbstractTabellenView {
     // DATEN LADEN
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Lädt alle Sektionen der View neu (Statistiken, Nachbestellungen, Lieferungen, Tabelle).
+     */
     private void ladeAlles() {
         ladeStatistikKarten();
         ladeNachbestellHinweise();
@@ -73,6 +95,10 @@ public class LagerView extends AbstractTabellenView {
         ladeDaten();
     }
 
+    /**
+     * Lädt und rendert die Statistikkarten neu.
+     * Manager erhalten zusätzlich die Lager-Aktionen-Karte.
+     */
     private void ladeStatistikKarten() {
         statistikKartenLayout.removeAll();
         int warnAnzahl   = lagerService.getMinimalbestandWarnliste().size();
@@ -81,6 +107,10 @@ public class LagerView extends AbstractTabellenView {
         if (istManager()) statistikKartenLayout.add(buildAktionenKarte());
     }
 
+    /**
+     * Lädt die Artikel unter Minimalbestand und rendert die Nachbestellhinweis-Karten.
+     * Zeigt nichts wenn alle Bestände ausreichend sind.
+     */
     private void ladeNachbestellHinweise() {
         nachbestellBlock.removeAll();
         List<Artikel> warnliste = lagerService.getMinimalbestandWarnliste();
@@ -112,6 +142,10 @@ public class LagerView extends AbstractTabellenView {
         nachbestellBlock.add(warnHeader, grid);
     }
 
+    /**
+     * Lädt alle ausstehenden Lieferungen und rendert die Lieferungskarten.
+     * Zeigt nichts wenn keine offenen Lieferungen vorhanden sind.
+     */
     private void ladeLieferungshinweise() {
         lieferungBlock.removeAll();
 
@@ -162,8 +196,16 @@ public class LagerView extends AbstractTabellenView {
         lieferungBlock.add(header, grid);
     }
 
-    // TODO: Parameter anpassen sobald echtes Model vorhanden –
-    //       z.B. buildLieferungsKarte(OffeneLieferung lieferung)
+    /**
+     * Erstellt eine einzelne Lieferungskarte mit Artikelname, Menge, Bestelldaten und Aktions-Buttons.
+     *
+     * @param lieferungId  ID der Lieferung für Bestätigen/Stornieren ({@code null} im Demo-Modus)
+     * @param artikelName  Name des bestellten Artikels
+     * @param menge        bestellte Menge
+     * @param bestelltAm   formatiertes Bestelldatum
+     * @param bestelltVon  Benutzername des Bestellers
+     * @param liefertAm    erwartetes Lieferdatum als Text
+     */
     private HorizontalLayout buildLieferungsKarte(Long lieferungId, String artikelName, int menge,
                                                   String bestelltAm, String bestelltVon, String liefertAm) {
         HorizontalLayout karte = new HorizontalLayout();
@@ -235,11 +277,19 @@ public class LagerView extends AbstractTabellenView {
         return karte;
     }
 
+    /**
+     * Lädt die Bestandstabelle ohne Suchfilter.
+     */
     @Override
     public void ladeDaten() {
         ladeDaten(null);
     }
 
+    /**
+     * Lädt die Bestandstabelle, optional gefiltert nach einem Suchbegriff.
+     *
+     * @param suchBegriff Suchtext oder {@code null} für alle Artikel
+     */
     private void ladeDaten(String suchBegriff) {
         tabellenZeilen.removeAll();
         tabellenZeilen.add(buildTabellenHeader());
@@ -255,6 +305,11 @@ public class LagerView extends AbstractTabellenView {
         for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
     }
 
+    /**
+     * Öffnet den {@link WareneingangDialog} für einen bestimmten Artikel (aus Nachbestellhinweis).
+     *
+     * @param artikel der vorausgewählte Artikel
+     */
     private void oeffneWareneingangFuerArtikel(Artikel artikel) {
         new WareneingangDialog(artikelService.findAllArtikel(), artikel, lagerService, this::ladeAlles).open();
     }
@@ -263,6 +318,9 @@ public class LagerView extends AbstractTabellenView {
     // HEADER
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt den Seitenkopf mit Inventory-Icon und Titel "Lagerverwaltung".
+     */
     @Override
     protected HorizontalLayout buildHeader() {
         HorizontalLayout header = new HorizontalLayout();
@@ -297,6 +355,11 @@ public class LagerView extends AbstractTabellenView {
     // STATISTIK-KARTEN
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt die Warn-Statistikkarte für Artikel unter Minimalbestand.
+     *
+     * @param anzahl Anzahl der Artikel unter Minimalbestand
+     */
     private VerticalLayout buildKritischKarte(int anzahl) {
         VerticalLayout karte = buildStatistikKarte("Artikel unter Minimalbestand", String.valueOf(anzahl),
                 "warning", "#ba1a1a", "#ffdad6", "Nachbestellen empfohlen");
@@ -304,6 +367,11 @@ public class LagerView extends AbstractTabellenView {
         return karte;
     }
 
+    /**
+     * Erstellt die Statistikkarte für die Gesamtartikelanzahl.
+     *
+     * @param anzahl Gesamtanzahl der Artikel im System
+     */
     private VerticalLayout buildGesamtKarte(int anzahl) {
         VerticalLayout karte = buildStatistikKarte("Gesamtartikel", String.valueOf(anzahl),
                 "inventory", "#553722", "#ffdcc6", "Aktive Artikel im System");
@@ -312,8 +380,15 @@ public class LagerView extends AbstractTabellenView {
     }
 
     /**
-     * FIX: Icon-Box steht jetzt DIREKT unter dem Label (Überschrift),
-     * nicht mehr rechts neben dem Zahlenwert.
+     * Erstellt eine allgemeine Statistikkarte mit Label, Icon-Box, Zahlenwert und Hinweistext.
+     * Die Icon-Box steht direkt unter der Überschrift (nicht neben dem Wert).
+     *
+     * @param label    Kartenüberschrift
+     * @param wert     Hauptzahlenwert
+     * @param iconName Material-Symbols-Icon-Name
+     * @param farbe    Farbe für Wert und Icon
+     * @param iconBg   Hintergrundfarbe der Icon-Box
+     * @param hinweis  Hinweistext unterhalb des Werts
      */
     private VerticalLayout buildStatistikKarte(String label, String wert, String iconName,
                                                String farbe, String iconBg, String hinweis) {
@@ -327,7 +402,6 @@ public class LagerView extends AbstractTabellenView {
         lbl.getStyle().set("font-size", "0.65rem").set("font-weight", "800").set("letter-spacing", "0.1em")
                 .set("color", "#82746d").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        // FIX: Icon-Box direkt unter dem Label
         Div iconBox = new Div();
         iconBox.getStyle().set("width", "3rem").set("height", "3rem").set("border-radius", "1rem")
                 .set("background", iconBg).set("display", "flex").set("align-items", "center")
@@ -349,6 +423,9 @@ public class LagerView extends AbstractTabellenView {
         return karte;
     }
 
+    /**
+     * Erstellt die Lager-Aktionen-Karte (nur für Manager) mit dem "Bestandseingang buchen"-Button.
+     */
     private VerticalLayout buildAktionenKarte() {
         VerticalLayout karte = new VerticalLayout();
         karte.setPadding(false);
@@ -388,7 +465,12 @@ public class LagerView extends AbstractTabellenView {
         return karte;
     }
 
-    /** Tour-Aktionen für den TourManager. */
+    /**
+     * Verarbeitet Tour-Aktionen aus dem {@link de.fhswf.kassensystem.tour.TourManager}.
+     * Unterstützt: {@code "open-wareneingang-dialog"}, {@code "demo-nachbestell"}, {@code "demo-lieferung"}.
+     *
+     * @param action Aktions-String aus dem Tour-Step
+     */
     public void tourAktion(String action) {
         switch (action) {
             case "open-wareneingang-dialog" ->
@@ -399,6 +481,10 @@ public class LagerView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Zeigt eine Demo-Nachbestellkarte für die Onboarding-Tour.
+     * Nur aktiv wenn der Nachbestellblock aktuell leer ist.
+     */
     private void zeigeDemoNachbestellung() {
         // Nur Demo anzeigen wenn Block gerade leer ist
         if (!nachbestellBlock.getChildren().findAny().isPresent()) {
@@ -457,6 +543,10 @@ public class LagerView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Zeigt eine Demo-Lieferungskarte für die Onboarding-Tour.
+     * Nur aktiv wenn der Lieferungsblock aktuell leer ist.
+     */
     private void zeigeDemoLieferung() {
         // Nur Demo anzeigen wenn Block gerade leer ist
         if (!lieferungBlock.getChildren().findAny().isPresent()) {
@@ -491,6 +581,9 @@ public class LagerView extends AbstractTabellenView {
     // BESTANDSTABELLE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt den äußeren Container der Bestandstabelle mit Kopfzeile und Zeilen-Bereich.
+     */
     private VerticalLayout buildBestandsTabelle() {
         VerticalLayout container = new VerticalLayout();
         container.setWidthFull();
@@ -502,6 +595,9 @@ public class LagerView extends AbstractTabellenView {
         return container;
     }
 
+    /**
+     * Erstellt den Tabellenkopf mit Titel "Bestandsübersicht" und Suchfeld.
+     */
     private HorizontalLayout buildTabellenKopf() {
         H3 titel = new H3("Bestandsübersicht");
         titel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
@@ -524,6 +620,9 @@ public class LagerView extends AbstractTabellenView {
         return kopf;
     }
 
+    /**
+     * Erstellt die Spaltenüberschriftenzeile der Bestandstabelle.
+     */
     private HorizontalLayout buildTabellenHeader() {
         HorizontalLayout header = new HorizontalLayout();
         header.setWidthFull();
@@ -540,6 +639,9 @@ public class LagerView extends AbstractTabellenView {
         );
         return header;
     }
+    /**
+     * Erstellt die Status-Spaltenüberschrift und setzt die Tour-ID für den Onboarding-Guide.
+     */
     private Span buildStatusHeaderZelle() {
         Span zelle = headerZelle("Status", LagerZeileFactory.BREITE_STATUS);
         zelle.getElement().setAttribute("tour-id", "status-spalte");

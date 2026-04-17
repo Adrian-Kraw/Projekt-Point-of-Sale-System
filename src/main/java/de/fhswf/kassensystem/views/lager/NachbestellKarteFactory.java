@@ -10,12 +10,25 @@ import de.fhswf.kassensystem.model.Artikel;
 import java.util.function.Consumer;
 
 /**
- * Baut eine einzelne Nachbestellhinweis-Karte.
+ * Fabrikklasse für einzelne Nachbestellhinweis-Karten in der Lagerverwaltung.
+ *
+ * <p>Zeigt Artikelname und aktuellen Bestand im Vergleich zur Minimalgrenze.
+ * Manager erhalten zusätzlich einen "Wareneingang buchen"-Button.
+ *
+ * @author Adrian
  */
 class NachbestellKarteFactory {
 
     private NachbestellKarteFactory() {}
 
+    /**
+     * Erstellt eine Nachbestellhinweis-Karte für den übergebenen Artikel.
+     *
+     * @param artikel               der zu nachzubestellende Artikel
+     * @param istManager            {@code true} wenn der Benutzer Manager ist (zeigt Bestell-Button)
+     * @param onWareneingangOeffnen Callback der den WareneingangDialog für diesen Artikel öffnet
+     * @return fertige Karte
+     */
     static HorizontalLayout create(Artikel artikel, boolean istManager,
                                    Consumer<Artikel> onWareneingangOeffnen) {
         HorizontalLayout karte = new HorizontalLayout();

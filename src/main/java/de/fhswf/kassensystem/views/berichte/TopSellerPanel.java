@@ -14,10 +14,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Top-Seller-Karte im Tagesabschluss.
+ * Panel für die Top-3-Seller des aktuellen Tages im Tagesabschluss.
+ *
+ * <p>Aggregiert alle Verkaufspositionen des Tages nach Artikel,
+ * sortiert absteigend nach Menge und zeigt die drei meistverkauften Artikel.
+ *
+ * @author Adrian
  */
 class TopSellerPanel extends VerticalLayout {
 
+    /**
+     * Erstellt das Panel und berechnet die Top-Seller aus den Tagesverkäufen.
+     *
+     * @param dto Tagesabschlussdaten mit allen Verkäufen und Positionen
+     */
     TopSellerPanel(TagesabschlussDTO dto) {
         setPadding(false);
         setSpacing(false);
@@ -29,6 +39,9 @@ class TopSellerPanel extends VerticalLayout {
         add(buildKopf(), buildListe(dto));
     }
 
+    /**
+     * Erstellt den Kartenkopf mit Titel, Untertitel und Stern-Icon-Box.
+     */
     private HorizontalLayout buildKopf() {
         H3 titel = new H3("Top Seller Heute");
         titel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "900")
@@ -60,6 +73,12 @@ class TopSellerPanel extends VerticalLayout {
         return kopf;
     }
 
+    /**
+     * Aggregiert die Verkaufsmengen je Artikel und rendert die Top-3-Liste.
+     *
+     * @param dto Tagesabschlussdaten
+     * @return Layout mit bis zu drei Einträgen
+     */
     private VerticalLayout buildListe(TagesabschlussDTO dto) {
         VerticalLayout liste = new VerticalLayout();
         liste.setWidthFull();
@@ -85,6 +104,13 @@ class TopSellerPanel extends VerticalLayout {
         return liste;
     }
 
+    /**
+     * Erstellt einen einzelnen Top-Seller-Eintrag mit Avatar, Name/Kategorie und Anzahl.
+     *
+     * @param name      Artikelname
+     * @param kategorie Kategoriename
+     * @param anzahl    verkaufte Menge als Text (z.B. "8x")
+     */
     private HorizontalLayout buildEintrag(String name, String kategorie, String anzahl) {
         Div avatar = new Div();
         avatar.getStyle().set("width", "2.5rem").set("height", "2.5rem")

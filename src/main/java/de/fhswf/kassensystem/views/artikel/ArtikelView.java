@@ -19,7 +19,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Artikelverwaltungs-View.
+ * Artikelverwaltungs-View – zeigt alle Artikel in einer Tabelle
+ * und erlaubt Suche, Anlage, Bearbeitung und Deaktivierung.
+ *
+ * <p>Unterhalb der Tabelle werden vier {@link de.fhswf.kassensystem.views.components.StatistikKarte Statistikkarten}
+ * angezeigt: Gesamtartikel, aktive Artikel, Artikel mit niedrigem Bestand und Kategorienanzahl.
+ *
+ * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ *
+ * @author Adrian
  */
 @Route(value = "artikel", layout = MainLayout.class)
 public class ArtikelView extends AbstractTabellenView {
@@ -28,6 +36,11 @@ public class ArtikelView extends AbstractTabellenView {
     private final HorizontalLayout statistikKartenLayout = new HorizontalLayout();
     private String aktuelleSuche = "";
 
+    /**
+     * Erstellt die View, lädt Daten und Statistikkarten.
+     *
+     * @param artikelService Service für alle Artikel-Operationen
+     */
     public ArtikelView(ArtikelService artikelService) {
         super(Rolle.KASSIERER);
         this.artikelService = artikelService;
@@ -41,6 +54,9 @@ public class ArtikelView extends AbstractTabellenView {
         ladeStatistikKarten();
     }
 
+    /**
+     * Baut den Seitenkopf mit Titel-Icon, Suche und "Neuer Artikel"-Button.
+     */
     @Override
     protected HorizontalLayout buildHeader() {
         HorizontalLayout header = new HorizontalLayout();
@@ -53,6 +69,9 @@ public class ArtikelView extends AbstractTabellenView {
         return header;
     }
 
+    /**
+     * Lädt alle Artikel (ggf. gefiltert nach Suchbegriff) und befüllt die Tabelle.
+     */
     @Override
     public void ladeDaten() {
         tabelle.removeAll();
@@ -66,11 +85,17 @@ public class ArtikelView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Aktualisiert Tabelle und Statistikkarten nach einer Änderung.
+     */
     private void refresh() {
         ladeDaten();
         ladeStatistikKarten();
     }
 
+    /**
+     * Berechnet und rendert die vier Statistikkarten unter der Tabelle.
+     */
     private void ladeStatistikKarten() {
         statistikKartenLayout.removeAll();
         List<Artikel> alle      = artikelService.findAllArtikel();
@@ -87,6 +112,11 @@ public class ArtikelView extends AbstractTabellenView {
         );
     }
 
+    /**
+     * Erstellt die Titelgruppe (Icon-Box + Überschrift "Artikelverwaltung").
+     *
+     * @return fertig gestylte Titelgruppe
+     */
     private HorizontalLayout buildTitel() {
         HorizontalLayout titelGruppe = new HorizontalLayout();
         titelGruppe.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -111,6 +141,11 @@ public class ArtikelView extends AbstractTabellenView {
         return titelGruppe;
     }
 
+    /**
+     * Erstellt den rechten Teil des Headers mit Suchfeld und "Neuer Artikel"-Button.
+     *
+     * @return Layout mit Suchfeld und Button
+     */
     private HorizontalLayout buildHeaderAktionen() {
         HorizontalLayout aktionen = new HorizontalLayout();
         aktionen.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -129,6 +164,11 @@ public class ArtikelView extends AbstractTabellenView {
         return aktionen;
     }
 
+    /**
+     * Erstellt den "Neuer Artikel"-Button, der beim Klick den {@link NeuerArtikelDialog} öffnet.
+     *
+     * @return konfigurierter Button
+     */
     private com.vaadin.flow.component.button.Button buildNeuerArtikelButton() {
         Span plusIcon = createIcon("add");
         plusIcon.getStyle().set("font-size", "1.1rem");
@@ -153,7 +193,12 @@ public class ArtikelView extends AbstractTabellenView {
         return btn;
     }
 
-    /** Tour-Aktionen für den TourManager. */
+    /**
+     * Verarbeitet Tour-Aktionen aus dem {@link de.fhswf.kassensystem.tour.TourManager}.
+     * Aktuell unterstützt: {@code "open-neuer-artikel-dialog"}.
+     *
+     * @param action Aktions-String aus dem Tour-Step
+     */
     public void tourAktion(String action) {
         switch (action) {
             case "open-neuer-artikel-dialog" -> {
@@ -165,6 +210,11 @@ public class ArtikelView extends AbstractTabellenView {
         }
     }
 
+    /**
+     * Umhüllt die Tabelle in einem styled Container und setzt die Tour-ID.
+     *
+     * @return Container mit der Artikeltabelle
+     */
     private VerticalLayout buildTabellenBereich() {
         VerticalLayout bereich = new VerticalLayout();
         bereich.setWidthFull();
@@ -177,6 +227,12 @@ public class ArtikelView extends AbstractTabellenView {
         return bereich;
     }
 
+    /**
+     * Erstellt die Kopfzeile der Tabelle mit allen Spaltenüberschriften.
+     * Die Aktionen-Spalte erhält zusätzlich die Tour-ID {@code "artikel-aktionen-header"}.
+     *
+     * @return horizontales Layout mit Spaltenüberschriften
+     */
     private HorizontalLayout buildTabellenHeader() {
         HorizontalLayout header = new HorizontalLayout();
         header.setWidthFull();

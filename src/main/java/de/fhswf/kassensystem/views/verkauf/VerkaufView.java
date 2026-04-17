@@ -30,11 +30,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Kassier-View (Point of Sale).
+ * Kassier-View (Point of Sale) – Hauptansicht für den Verkaufsvorgang.
  *
- * FIX: Bestand-Badge wird live aktualisiert wenn ein Artikel in den
- *      Warenkorb gelegt oder daraus entfernt wird.
- *      Karten-Map merkt sich welche Div-Instanz zu welchem Artikel gehört.
+ * <p>Aufbau: linke Spalte mit Artikelgrid (Suche, Kategoriefilter, Karten),
+ * rechte Spalte mit Warenkorb (Positionen, Rabatt, Bezahlen).
+ *
+ * <p>Der Bestandsbadge jeder Artikelkarte wird live per JavaScript aktualisiert
+ * wenn ein Artikel in den Warenkorb gelegt oder daraus entfernt wird.
+ * Eine {@code kartenMap} (artikelId → Div) ermöglicht gezieltes Badge-Update
+ * ohne die gesamte Karte neu zu rendern.
+ *
+ * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ *
+ * @author Adrian
  */
 @RolesAllowed({"KASSIERER", "MANAGER"})
 @Route(value = "kassieren", layout = MainLayout.class)
@@ -46,13 +54,20 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     private final WarenkorbZusammenfassung zusammenfassung;
 
     private final List<WarenkorbEintrag>  warenkorbListe  = new ArrayList<>();
-    private final Map<Long, Div>          kartenMap       = new HashMap<>(); // artikelId → Karte
+    private final Map<Long, Div>          kartenMap       = new HashMap<>(); // artikelId für Karte
     private String aktiveKategorie = "Alle";
     private String aktuelleSuche   = "";
 
     private final VerticalLayout warenkorbPositionenLayout = new VerticalLayout();
     private final Div            artikelGridDiv            = new Div();
 
+    /**
+     * Erstellt die View mit linker Artikel-Spalte und rechter Warenkorb-Spalte.
+     *
+     * @param artikelService  Service für Artikel-Abfragen
+     * @param verkaufService  Service für das Abschließen von Verkäufen
+     * @param pdfExportService Service für den Kassenbon-PDF-Export
+     */
     public VerkaufView(ArtikelService artikelService, VerkaufService verkaufService,
                        PdfExportService pdfExportService) {
         this.artikelService   = artikelService;
@@ -90,6 +105,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     // LINKE SPALTE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt die linke Spalte mit Suchfeld, Kategorie-Chips und Artikel-Grid.
+     * Das Grid passt sich via ResizeObserver auf 2 oder 3 Spalten an.
+     */
     private VerticalLayout buildArtikelSpalte() {
         VerticalLayout spalte = new VerticalLayout();
         spalte.setPadding(false);
@@ -122,6 +141,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         return spalte;
     }
 
+    /**
+     * Baut das Artikel-Grid neu auf – gefiltert nach aktiver Kategorie und Suchbegriff.
+     * Berechnet für jede Karte den aktuellen Anzeigebestand (DB-Bestand minus Warenkorbmenge).
+     */
     private void ladeArtikelGrid() {
         artikelGridDiv.removeAll();
         kartenMap.clear();
@@ -152,6 +175,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         }
     }
 
+    /**
+     * Erstellt die Suchfeld-Zeile über dem Artikel-Grid.
+     * Jede Eingabe filtert das Grid live.
+     */
     private HorizontalLayout buildSuchfeld() {
         TextField search = new TextField();
         search.setWidthFull();
@@ -168,6 +195,9 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         return row;
     }
 
+    /**
+     * Erstellt die Kategorie-Chip-Gruppe aus allen aktiven Artikelkategorien.
+     */
     private KategorieChipGroup buildKategorieFilter() {
         List<String> kategorien = artikelService.findAllArtikel().stream()
                 .filter(Artikel::isAktiv)
@@ -186,6 +216,9 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     // RECHTE SPALTE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt die rechte Warenkorb-Spalte mit Header, Positionen und Zusammenfassung.
+     */
     private VerticalLayout buildWarenkorbSpalte() {
         VerticalLayout spalte = new VerticalLayout();
         spalte.setPadding(false);
@@ -203,6 +236,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     // WARENKORB STATE
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Legt einen Artikel in den Warenkorb oder erhöht dessen Menge.
+     * Prüft ob der Bestand ausreicht und zeigt eine Notification wenn nicht.
+     *
+     * @param artikel der hinzuzufügende Artikel
+     */
     private void artikelZumKorbHinzufuegen(Artikel artikel) {
         if (artikel.getBestand() == 0) {
             Notification.show("\"" + artikel.getName() + "\" ist nicht mehr auf Lager.",
@@ -226,10 +265,13 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         aktualisiereWarenkorbUI();
     }
 
+    /**
+     * Zeichnet die Warenkorb-Positionen neu, aktualisiert die Preise
+     * und aktualisiert die Bestandsbadges aller Artikelkarten.
+     */
     private void aktualisiereWarenkorbUI() {
         warenkorbListe.removeIf(e -> e.menge <= 0);
 
-        // Warenkorb-Positionen neu zeichnen
         warenkorbPositionenLayout.removeAll();
         boolean zebra = false;
         for (WarenkorbEintrag e : new ArrayList<>(warenkorbListe)) {
@@ -243,7 +285,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         }
         zusammenfassung.aktualisierePreise(warenkorbListe);
 
-        // FIX: Bestand-Badges in allen sichtbaren Karten live aktualisieren
         aktualisiereBestandBadges();
     }
 
@@ -290,6 +331,9 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         }
     }
 
+    /**
+     * Leert den Warenkorb, setzt den Rabatt zurück und aktualisiert die UI.
+     */
     private void warenkorbLeeren() {
         warenkorbListe.clear();
         zusammenfassung.resetRabatt();
@@ -300,6 +344,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     // GESCHÄFTSLOGIK
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Schließt den Verkauf ab: berechnet Rabatt und Gesamtsumme, persistiert alle
+     * Verkaufspositionen, aktualisiert den Bestand und öffnet den Quittungsdialog.
+     *
+     * @param zahlungsart die gewählte Zahlungsart (BAR oder KARTE)
+     */
     private void verkaufAbschliessen(Zahlungsart zahlungsart) {
         try {
             BigDecimal zwischensumme = warenkorbListe.stream()
@@ -348,6 +398,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         }
     }
 
+    /**
+     * Generiert den Kassenbon als PDF und löst den Browser-Download aus.
+     *
+     * @param positionen  die Verkaufspositionen des abgeschlossenen Verkaufs
+     * @param rabatt      der angewendete Rabatt in Prozent
+     */
     private void druckeKassenbon(List<Verkaufsposition> positionen, BigDecimal rabatt) {
         try {
             byte[] pdfBytes = pdfExportService.exportiereKassenbon(positionen, rabatt);
@@ -368,6 +424,11 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         }
     }
 
+    /**
+     * Erstellt einen Material-Symbols-Icon-Span.
+     *
+     * @param iconName Icon-Name (z.B. "search")
+     */
     private Span createIcon(String iconName) {
         Span icon = new Span(iconName);
         icon.addClassName("material-symbols-outlined");
@@ -375,10 +436,13 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         return icon;
     }
 
+    /**
+     * Prüft vor dem Rendern ob der Benutzer eingeloggt ist und leitet sonst zur Login-Seite weiter.
+     */
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             event.rerouteTo("login");
         }
     }

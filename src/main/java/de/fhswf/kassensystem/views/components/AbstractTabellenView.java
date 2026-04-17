@@ -7,18 +7,28 @@ import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.views.SecuredView;
 
 /**
- * Zwischenschicht für Views mit Tabellen-Layout.
+ * Abstrakte Zwischenschicht für alle Views mit tabellarischem Layout.
  *
- * Liefert:
- *  - tabelle-Instanzfeld (in ArtikelView, BenutzerView, LagerView identisch initialisiert)
- *  - headerZelle()       (war wörtlich identisch in ArtikelView und BenutzerView)
- *  - buildHeader() / ladeDaten() als abstrakte Pflicht für Unterklassen
+ * <p>Stellt den gemeinsamen {@code tabelle}-Container sowie die
+ * {@link #headerZelle(String, String)}-Hilfsmethode bereit, die in
+ * {@link de.fhswf.kassensystem.views.artikel.ArtikelView},
+ * {@link de.fhswf.kassensystem.views.benutzer.BenutzerView} und
+ * {@link de.fhswf.kassensystem.views.lager.LagerView} identisch benötigt werden.
+ *
+ * <p>Unterklassen müssen {@link #buildHeader()} und {@link #ladeDaten()} implementieren.
+ *
+ * @author Adrian
  */
 public abstract class AbstractTabellenView extends SecuredView {
 
     /** Gemeinsamer Tabellen-Container – alle Unterklassen befüllen ihn via ladeDaten(). */
     protected final VerticalLayout tabelle = new VerticalLayout();
 
+    /**
+     * Initialisiert den Tabellen-Container und wendet den Standard-Hintergrund an.
+     *
+     * @param mindestRolle die für den Zugriff erforderliche Mindestrolle
+     */
     protected AbstractTabellenView(Rolle mindestRolle) {
         super(mindestRolle);
         applyStandardBackground();
@@ -30,8 +40,11 @@ public abstract class AbstractTabellenView extends SecuredView {
     }
 
     /**
-     * Baut eine einheitliche Tabellen-Kopfzelle.
-     * War wörtlich identisch in ArtikelView (Z. 346) und BenutzerView (Z. 155).
+     * Erstellt eine einheitlich gestylte Tabellen-Kopfzelle.
+     *
+     * @param text   der Spaltenüberschriften-Text
+     * @param breite CSS-Breite der Zelle (z.B. "20%")
+     * @return gestylter {@code Span}
      */
     protected Span headerZelle(String text, String breite) {
         Span zelle = new Span(text);
@@ -46,9 +59,16 @@ public abstract class AbstractTabellenView extends SecuredView {
         return zelle;
     }
 
-    /** Jede Unterklasse definiert ihren View-spezifischen Header. */
+    /**
+     * Erstellt den View-spezifischen Seitenkopf (Titel, Buttons, Suche).
+     *
+     * @return fertig konfiguriertes Header-Layout
+     */
     protected abstract HorizontalLayout buildHeader();
 
-    /** Jede Unterklasse lädt ihre Daten in tabelle. */
+    /**
+     * Lädt die Daten neu und befüllt den {@link #tabelle}-Container.
+     * Wird nach jeder Änderung (Anlegen, Bearbeiten, Löschen) aufgerufen.
+     */
     protected abstract void ladeDaten();
 }

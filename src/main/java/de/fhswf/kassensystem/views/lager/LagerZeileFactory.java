@@ -7,7 +7,13 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.fhswf.kassensystem.model.Artikel;
 
 /**
- * Baut eine einzelne Zeile der Bestandstabelle.
+ * Fabrikklasse für einzelne Zeilen der Bestandstabelle in der Lagerverwaltung.
+ *
+ * <p>Jede Zeile enthält: Artikelname (rot bei kritischem Bestand), Kategorie,
+ * Bestand, Minimalgrenze und einen farbigen Ampelpunkt (grün/orange/rot).
+ * Zeilen-Hover-Effekt wird per JavaScript gesetzt.
+ *
+ * @author Adrian
  */
 class LagerZeileFactory {
 
@@ -19,6 +25,13 @@ class LagerZeileFactory {
 
     private LagerZeileFactory() {}
 
+    /**
+     * Erstellt eine vollständig gestylte Bestandszeile für den übergebenen Artikel.
+     *
+     * @param artikel der darzustellende Artikel
+     * @param zebra   {@code true} für abwechselnden Zeilenhintergrund
+     * @return fertiges Zeilen-Layout
+     */
     static HorizontalLayout create(Artikel artikel, boolean zebra) {
         int bestand = artikel.getBestand();
         int minimal = artikel.getMinimalbestand();
@@ -57,6 +70,9 @@ class LagerZeileFactory {
         return zeile;
     }
 
+    /**
+     * Erstellt eine einfache Text-Zelle mit definierter Breite und Farbe.
+     */
     private static Span buildZelle(String text, String breite, String color, boolean bold) {
         Span span = new Span(text);
         span.getStyle()
@@ -66,6 +82,11 @@ class LagerZeileFactory {
         return span;
     }
 
+    /**
+     * Erstellt die farbige Ampelpunkt-Zelle.
+     *
+     * @param status "ok", "warn" oder "kritisch"
+     */
     private static Div buildStatusZelle(String status) {
         String farbe = switch (status) {
             case "ok"       -> "#22c55e";

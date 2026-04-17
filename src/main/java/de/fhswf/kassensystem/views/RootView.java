@@ -1,6 +1,5 @@
 package de.fhswf.kassensystem.views;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -10,8 +9,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * Root-Route "/" – leitet eingeloggte User zum Dashboard,
- * nicht eingeloggte User zur Login-Seite.
+ * Einstiegs-Route {@code "/"} der Anwendung.
+ *
+ * <p>Leitet Besucher vor dem Rendern der Seite weiter:
+ * <ul>
+ *   <li>Eingeloggte Benutzer → {@link DashboardView}</li>
+ *   <li>Nicht eingeloggte Benutzer → {@link LoginView}</li>
+ * </ul>
+ *
+ * <p>Da die View selbst nie angezeigt wird, ist sie ein leeres {@code Div}.
+ * {@code @AnonymousAllowed} stellt sicher, dass auch nicht authentifizierte
+ * Benutzer die Root-URL aufrufen können, ohne von Spring Security blockiert zu werden.
+ *
+ * @author Adrian
  */
 @Route("")
 @AnonymousAllowed

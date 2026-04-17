@@ -6,17 +6,35 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
+/**
+ * Dialog, der nach einem Verkauf fragt, ob eine Quittung gedruckt werden soll.
+ *
+ * <p>Verwendet einen benutzerdefinierten Footer (Ja/Nein statt Speichern/Abbrechen).
+ * Je nach Antwort wird der {@code onJa}- oder {@code onNein}-Callback aufgerufen,
+ * der den Kassenbon-Druck bzw. das Leeren des Warenkorbs auslöst.
+ *
+ * @author Adrian
+ */
 public class QuittungsDialog extends BaseDialog {
 
     private final Runnable onJa;
     private final Runnable onNein;
 
+    /**
+     * Erstellt den Quittungsdialog.
+     *
+     * @param onJa   wird aufgerufen, wenn "Ja" geklickt wird (Kassenbon drucken + Warenkorb leeren)
+     * @param onNein wird aufgerufen, wenn "Nein" geklickt wird (nur Warenkorb leeren)
+     */
     public QuittungsDialog(Runnable onJa, Runnable onNein) {
         this.onJa   = onJa;
         this.onNein = onNein;
         init("Quittung drucken?", null);
     }
 
+    /**
+     * Erstellt den Dialog-Body mit dem Hinweistext.
+     */
     @Override
     protected VerticalLayout buildBody() {
         Span hinweis = new Span("Möchten Sie eine Quittung für diesen Verkauf drucken?");
@@ -33,6 +51,9 @@ public class QuittungsDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Erstellt den Ja/Nein-Footer als Ersatz für den Standard-Footer.
+     */
     @Override
     protected HorizontalLayout buildCustomFooter() {
         Button jaBtn = new Button("Ja");

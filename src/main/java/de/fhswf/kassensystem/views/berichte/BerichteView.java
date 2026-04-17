@@ -8,7 +8,6 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
@@ -24,9 +23,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Berichte-View.
- * FIX: Bon-Zielwert wird jetzt in der DB gespeichert (EinstellungService)
- *      und überlebt Seitenreloads und Neustarts.
+ * Berichte-View mit drei Tabs: Tagesabschluss, Umsatzübersicht und Artikelstatistik.
+ *
+ * <p>Der Bon-Zielwert wird persistent über den {@link de.fhswf.kassensystem.service.EinstellungService}
+ * in der Datenbank gespeichert.
+ *
+ * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ * Nur Manager können den Bon-Zielwert bearbeiten.
+ *
+ * @author Adrian
  */
 @Route(value = "berichte", layout = MainLayout.class)
 public class BerichteView extends SecuredView {
@@ -43,6 +48,13 @@ public class BerichteView extends SecuredView {
     private Span umsatzTab;
     private Span artikelTab;
 
+    /**
+     * Erstellt die View und lädt den initialen Tab-Inhalt (Tagesabschluss).
+     *
+     * @param berichteService    Service für Umsatz- und Statistikdaten
+     * @param pdfExportService   Service für den PDF-Export
+     * @param einstellungService Service für den persistenten Bon-Zielwert
+     */
     public BerichteView(BerichteService berichteService,
                         PdfExportService pdfExportService,
                         EinstellungService einstellungService) {
@@ -58,7 +70,12 @@ public class BerichteView extends SecuredView {
         ladeTabInhalt();
     }
 
-    /** Tour-Aktionen für den TourManager. */
+    /**
+     * Verarbeitet Tour-Aktionen aus dem {@link de.fhswf.kassensystem.tour.TourManager}.
+     * Unterstützt: {@code "navigate-tab-umsatz"} und {@code "navigate-tab-artikel"}.
+     *
+     * @param action Aktions-String aus dem Tour-Step
+     */
     public void tourAktion(String action) {
         switch (action) {
             case "navigate-tab-umsatz"  -> wechsleTab("umsatz",  umsatzTab,  new Span[]{tagesTab, artikelTab});
@@ -67,11 +84,15 @@ public class BerichteView extends SecuredView {
         }
     }
 
+    /**
+     * Lädt den Inhalt des aktuell aktiven Tabs neu.
+     * Wird bei Tab-Wechsel und Datums-Änderung aufgerufen.
+     */
     private void ladeTabInhalt() {
         tabInhalt.removeAll();
         switch (aktiverTab) {
             case "tagesabschluss" -> {
-                // Zielwert frisch aus DB laden
+                // Zielwert aus DB laden
                 BigDecimal bonZielwert = einstellungService.getBonZielwert();
                 TagesabschlussDTO dto  = berichteService.getTagesabschluss(aktivDatum);
                 tabInhalt.add(new TagesabschlussPanel(dto, bonZielwert, istManager(),
@@ -89,6 +110,11 @@ public class BerichteView extends SecuredView {
         }
     }
 
+    /**
+     * Erstellt den Seitenkopf mit Titel, Icon und PDF-Export-Button.
+     *
+     * @return fertig gestylter Header
+     */
     private HorizontalLayout buildHeader() {
         HorizontalLayout header = new HorizontalLayout();
         header.setWidthFull();
@@ -135,6 +161,11 @@ public class BerichteView extends SecuredView {
         return header;
     }
 
+    /**
+     * Erstellt die Tab-Navigationsleiste mit den drei Tabs und setzt deren Tour-IDs.
+     *
+     * @return horizontales Tab-Layout
+     */
     private HorizontalLayout buildTabNavigation() {
         HorizontalLayout tabs = new HorizontalLayout();
         tabs.setWidthFull();
@@ -158,6 +189,13 @@ public class BerichteView extends SecuredView {
         return tabs;
     }
 
+    /**
+     * Wechselt den aktiven Tab, aktualisiert die visuellen Zustände und lädt den Tab-Inhalt.
+     *
+     * @param tab      ID des neuen aktiven Tabs ("tagesabschluss", "umsatz" oder "artikel")
+     * @param aktiv    der Span des nun aktiven Tabs
+     * @param inaktive die Spans der inaktiven Tabs
+     */
     private void wechsleTab(String tab, Span aktiv, Span[] inaktive) {
         aktiverTab = tab;
         aktiv.getStyle().set("color", "#553722").set("border-bottom", "3px solid #6f4e37");
@@ -166,6 +204,13 @@ public class BerichteView extends SecuredView {
         ladeTabInhalt();
     }
 
+    /**
+     * Erstellt einen einzelnen Tab-Span mit aktivem oder inaktivem Styling.
+     *
+     * @param label der angezeigte Tab-Text
+     * @param aktiv {@code true} für aktiv-Styling (braun, Unterstrich)
+     * @return gestylter Tab-Span
+     */
     private Span buildTab(String label, boolean aktiv) {
         Span tab = new Span(label);
         tab.getStyle()
@@ -178,6 +223,12 @@ public class BerichteView extends SecuredView {
         return tab;
     }
 
+    /**
+     * Erstellt die Zeile mit dem Datums-Picker und dem Echtzeit-Hinweis.
+     * Eine Datumsänderung lädt den Tab-Inhalt automatisch neu.
+     *
+     * @return horizontales Layout mit Datepicker und Hinweis
+     */
     private HorizontalLayout buildDatumZeile() {
         HorizontalLayout zeile = new HorizontalLayout();
         zeile.setWidthFull();
@@ -200,6 +251,10 @@ public class BerichteView extends SecuredView {
         return zeile;
     }
 
+    /**
+     * Exportiert den aktuellen Tagesbericht inklusive Artikelstatistik als PDF
+     * und löst den Browser-Download aus.
+     */
     private void exportiereAlsPdf() {
         try {
             TagesabschlussDTO tagesabschluss = berichteService.getTagesabschluss(aktivDatum);

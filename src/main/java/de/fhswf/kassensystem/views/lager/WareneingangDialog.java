@@ -6,19 +6,23 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.Artikel;
-import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.service.LagerService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Dialog zum Buchen eines Wareneingangs.
+ * Dialog zum Aufgeben einer Warenbestellung (Wareneingang buchen).
  *
- * FIX: Felder werden vor init() gesetzt, da BaseDialog.init() buildBody() aufruft.
+ * <p>Alle Instanzvariablen werden vor dem Aufruf von {@link #init} gesetzt,
+ * da {@code BaseDialog.init()} intern {@link #buildBody()} aufruft und
+ * die Felder zu diesem Zeitpunkt bereits befüllt sein müssen.
+ *
+ * <p>Nach dem Speichern wird die Bestellung über
+ * {@link de.fhswf.kassensystem.service.LagerService#bestellungAufgeben} persistiert
+ * und der {@code onErfolg}-Callback aufgerufen.
+ *
+ * @author Adrian
  */
 class WareneingangDialog extends BaseDialog {
 
@@ -32,13 +36,27 @@ class WareneingangDialog extends BaseDialog {
     private TextField       lieferantFeld;
     private TextField       kommentarFeld;
 
+    /**
+     * Erstellt den Dialog ohne vorausgewählten Artikel.
+     *
+     * @param alleArtikel  alle verfügbaren Artikel für das Auswahlfeld
+     * @param lagerService Service zum Aufgeben der Bestellung
+     * @param onErfolg     wird nach dem Buchen aufgerufen
+     */
     WareneingangDialog(List<Artikel> alleArtikel, LagerService lagerService, Runnable onErfolg) {
         this(alleArtikel, null, lagerService, onErfolg);
     }
 
+    /**
+     * Erstellt den Dialog mit einem vorausgewählten Artikel (aus Nachbestellhinweis).
+     *
+     * @param alleArtikel    alle verfügbaren Artikel für das Auswahlfeld
+     * @param vorausgewaehlt der im Dialog vorausgewählte Artikel
+     * @param lagerService   Service zum Aufgeben der Bestellung
+     * @param onErfolg       wird nach dem Buchen aufgerufen
+     */
     WareneingangDialog(List<Artikel> alleArtikel, Artikel vorausgewaehlt,
                        LagerService lagerService, Runnable onErfolg) {
-        // Felder ZUERST setzen, dann init() – buildBody() liest sie
         this.alleArtikel    = alleArtikel;
         this.vorausgewaehlt = vorausgewaehlt;
         this.lagerService   = lagerService;
@@ -46,6 +64,10 @@ class WareneingangDialog extends BaseDialog {
         init("Wareneingang buchen", null);
     }
 
+    /**
+     * Erstellt den Dialog-Body mit Artikel-Select, Mengeneingabe, Lieferant und Kommentar.
+     * Der vorausgewählte Artikel (falls vorhanden) wird automatisch selektiert.
+     */
     @Override
     protected VerticalLayout buildBody() {
         artikelSelect = new Select<>();
@@ -91,6 +113,11 @@ class WareneingangDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Validiert Artikel und Menge und gibt die Bestellung auf.
+     *
+     * @return {@code true} bei Erfolg, {@code false} wenn Artikel oder Menge fehlt
+     */
     @Override
     protected boolean onSpeichern() {
         if (artikelSelect.isEmpty() || mengeFeld.isEmpty()) {
@@ -100,7 +127,6 @@ class WareneingangDialog extends BaseDialog {
         Wareneingang eingang = new Wareneingang();
         eingang.setArtikel(artikelSelect.getValue());
         eingang.setMenge(mengeFeld.getValue());
-        // eingang.setDatum(LocalDate.now());
         if (!lieferantFeld.isEmpty()) eingang.setLieferant(lieferantFeld.getValue());
         if (!kommentarFeld.isEmpty()) eingang.setKommentar(kommentarFeld.getValue());
 
@@ -112,11 +138,6 @@ class WareneingangDialog extends BaseDialog {
 
         onErfolg.run();
         return true;
-        // lagerService.wareneingangBuchen(eingang);
-        // Notification.show("Wareneingang für \"" + artikelSelect.getValue().getName() + "\" gebucht.",
-        //        3000, Notification.Position.BOTTOM_START);
-        // onErfolg.run();
-        // return true;
     }
 
     @Override protected String getSpeichernLabel() { return "Buchen"; }

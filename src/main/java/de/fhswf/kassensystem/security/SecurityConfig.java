@@ -10,14 +10,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Spring Security lässt alle HTTP-Requests durch –
- * die Zugriffskontrolle übernimmt Vaadin selbst via
- * @AnonymousAllowed / @RolesAllowed / @PermitAll auf den Views.
+ * Konfigurationsklasse für Spring Security.
  *
- * Spring Security stellt dabei nur bereit:
- * - BCrypt PasswordEncoder (für UserDetailsService)
- * - Session-Management / Login-Formular
- * - Logout
+ * <p>Die HTTP-Zugriffskontrolle wird vollständig an Vaadin delegiert.
+ * Vaadin wertet die Annotations {@code @AnonymousAllowed}, {@code @RolesAllowed}
+ * und {@code @PermitAll} auf den Views selbst aus – Spring Security erlaubt
+ * daher alle Requests durch ({@code anyRequest().permitAll()}).
+ *
+ * <p>Spring Security stellt folgende Funktionalität bereit:
+ * <ul>
+ *   <li>Login-Formular unter {@code /login} mit Weiterleitung zum Dashboard</li>
+ *   <li>Logout unter {@code /logout} mit Session-Invalidierung und Cookie-Löschung</li>
+ *   <li>{@link org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder}
+ *       mit Stärke 12 für die Passwort-Verarbeitung im {@code UserDetailsService}</li>
+ * </ul>
+ *
+ * <p>CSRF ist deaktiviert, da Vaadin einen eigenen CSRF-Schutz mitbringt.
+ *
+ * @author Adrian
  */
 @Configuration
 @EnableWebSecurity

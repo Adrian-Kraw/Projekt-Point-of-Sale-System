@@ -11,8 +11,12 @@ import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
 /**
- * Dialog zum Bearbeiten eines bestehenden Benutzers (Name, Benutzername, Rolle).
- * Das Passwort wird separat über den PasswortDialog geändert.
+ * Dialog zum Bearbeiten eines bestehenden Benutzers (Benutzername, Name, Rolle).
+ *
+ * <p>Nach erfolgreichem Speichern wird der übergebene
+ * {@code onErfolg}-Callback aufgerufen, um die Tabelle neu zu laden.
+ *
+ * @author Adrian
  */
 class BenutzerBearbeitenDialog extends BaseDialog {
 
@@ -24,6 +28,13 @@ class BenutzerBearbeitenDialog extends BaseDialog {
     private final TextField     nameFeld      = new TextField();
     private final Select<Rolle> rolleSelect   = new Select<>();
 
+    /**
+     * Erstellt den Dialog und befüllt alle Felder mit den aktuellen Benutzerdaten.
+     *
+     * @param user        der zu bearbeitende Benutzer
+     * @param userService Service für das Speichern der Änderungen
+     * @param onErfolg    wird nach erfolgreichem Speichern aufgerufen
+     */
     BenutzerBearbeitenDialog(User user, UserService userService, Runnable onErfolg) {
         this.user        = user;
         this.userService = userService;
@@ -31,6 +42,9 @@ class BenutzerBearbeitenDialog extends BaseDialog {
         init("Benutzer bearbeiten", user.getBenutzername());
     }
 
+    /**
+     * Erstellt den Dialog-Body mit Benutzername, Rolle (zweispaltig) und vollständigem Namen.
+     */
     @Override
     protected VerticalLayout buildBody() {
         usernameFeld.setWidthFull();
@@ -68,6 +82,11 @@ class BenutzerBearbeitenDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Validiert die Eingaben und aktualisiert den Benutzer in der Datenbank.
+     *
+     * @return {@code true} bei Erfolg, {@code false} wenn der Name fehlt
+     */
     @Override
     protected boolean onSpeichern() {
         if (nameFeld.isEmpty()) {

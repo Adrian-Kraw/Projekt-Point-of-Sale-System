@@ -6,23 +6,26 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Einstiegspunkt der Kassensystem-Anwendung.
+ * Einstiegspunkt der Spring Boot Anwendung für das Canapé Café Kassensystem.
  *
- * @SpringBootApplication kombiniert drei Annotations:
- *   - @Configuration: diese Klasse kann Spring Beans definieren
- *   - @EnableAutoConfiguration: Spring konfiguriert sich automatisch
- *     anhand der vorhandenen Dependencies (z.B. Vaadin, JPA, Security)
- *   - @ComponentScan: Spring sucht alle @Component, @Service,
- *     @Repository etc. im Package de.fhswf.kassensystem
+ * <p>{@code @SpringBootApplication} kombiniert drei Annotations:
+ * <ul>
+ *   <li>{@code @Configuration} – diese Klasse kann Spring Beans definieren</li>
+ *   <li>{@code @EnableAutoConfiguration} – Spring konfiguriert sich automatisch
+ *       anhand der vorhandenen Dependencies (z.B. Vaadin, JPA, Security)</li>
+ *   <li>{@code @ComponentScan} – Spring sucht alle {@code @Component}, {@code @Service},
+ *       {@code @Repository} etc. im Package {@code de.fhswf.kassensystem}</li>
+ * </ul>
  *
- * AppShellConfigurator ist ein Vaadin-Interface das diese Klasse als
- * Konfigurationsklasse für den HTML-Shell markiert – das äußerste
- * HTML-Gerüst der Anwendung. Nur eine Klasse pro Projekt darf
- * dieses Interface implementieren.
+ * <p>{@code AppShellConfigurator} ist ein Vaadin-Interface, das diese Klasse als
+ * Konfigurationsquelle für den HTML-Shell markiert – das äußerste HTML-Gerüst
+ * der Anwendung. Nur eine Klasse pro Projekt darf dieses Interface implementieren.
  *
- * @Theme("kassensystem") weist Vaadin an das Theme "kassensystem" zu laden.
+ * <p>{@code @Theme("kassensystem")} weist Vaadin an, das Theme "kassensystem" zu laden.
  * Vaadin sucht dafür automatisch die Datei:
- * src/main/frontend/themes/kassensystem/styles.css
+ * {@code src/main/frontend/themes/kassensystem/styles.css}
+ *
+ * @author Adrian & Paula
  */
 @SpringBootApplication
 @Theme("kassensystem")

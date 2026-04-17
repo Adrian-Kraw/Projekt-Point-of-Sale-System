@@ -6,8 +6,23 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
+/**
+ * Benutzerkarte am unteren Rand der Sidebar mit Avatar, Name, Rolle und Logout-Popup.
+ *
+ * <p>Ein Klick auf die Karte toggelt ein kleines Popup-Menü mit dem "Ausloggen"-Link.
+ * Der Logout-Callback wird von {@link de.fhswf.kassensystem.views.MainLayout} übergeben.
+ *
+ * @author Adrian
+ */
 public class UserCard extends HorizontalLayout {
 
+    /**
+     * Erstellt die Benutzerkarte.
+     *
+     * @param name     Benutzername des eingeloggten Benutzers
+     * @param rolle    Rollenbezeichnung (z.B. "Manager", "Kassierer")
+     * @param onLogout Callback der den Logout-Vorgang einleitet
+     */
     public UserCard(String name, String rolle, Runnable onLogout) {
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
@@ -17,13 +32,16 @@ public class UserCard extends HorizontalLayout {
                 .set("padding", "0.75rem 1rem").set("gap", "0.75rem")
                 .set("box-shadow", "0 1px 3px rgba(0,0,0,0.06)")
                 .set("cursor", "pointer").set("position", "relative");
-        getElement().setAttribute("tour-id", "user-card"); // ← NEU
+        getElement().setAttribute("tour-id", "user-card");
 
         Div popup = buildPopup(onLogout);
         addClickListener(e -> togglePopup(popup));
         add(buildAvatar(), buildUserInfo(name, rolle), popup);
     }
 
+    /**
+     * Erstellt den runden Avatar-Platzhalter mit Person-Icon.
+     */
     private Div buildAvatar() {
         Div avatar = new Div();
         avatar.getStyle()
@@ -39,6 +57,12 @@ public class UserCard extends HorizontalLayout {
         return avatar;
     }
 
+    /**
+     * Erstellt den Infoblock mit Name und Rolle.
+     *
+     * @param name  Benutzername
+     * @param rolle Rollenbezeichnung
+     */
     private VerticalLayout buildUserInfo(String name, String rolle) {
         VerticalLayout info = new VerticalLayout();
         info.setPadding(false);
@@ -61,6 +85,11 @@ public class UserCard extends HorizontalLayout {
         return info;
     }
 
+    /**
+     * Erstellt das Logout-Popup-Menü, das beim Klick auf die Karte ein-/ausgeblendet wird.
+     *
+     * @param onLogout Callback für den Logout-Klick
+     */
     private Div buildPopup(Runnable onLogout) {
         Div popup = new Div();
         popup.getStyle()
@@ -82,6 +111,11 @@ public class UserCard extends HorizontalLayout {
         return popup;
     }
 
+    /**
+     * Blendet das Popup ein oder aus (toggle).
+     *
+     * @param popup der umzuschaltende Popup-Container
+     */
     private void togglePopup(Div popup) {
         String current = popup.getStyle().get("display");
         popup.getStyle().set("display", "none".equals(current) ? "block" : "none");

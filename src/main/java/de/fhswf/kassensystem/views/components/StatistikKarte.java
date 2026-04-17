@@ -5,11 +5,24 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /**
- * Wiederverwendbare Statistik-Karte mit Label, Zahlenwert und Icon.
- * Wird in ArtikelView und LagerView verwendet.
+ * Wiederverwendbare Statistik-Karte mit Label, Zahlenwert und Icon-Box.
+ *
+ * <p>Wird in {@link de.fhswf.kassensystem.views.artikel.ArtikelView}
+ * und implizit über {@link de.fhswf.kassensystem.views.lager.LagerView} eingesetzt.
+ * Im Warnmodus ({@code warnung = true}) werden Schrift und Icon-Hintergrund rot dargestellt.
+ *
+ * @author Adrian
  */
 public class StatistikKarte extends VerticalLayout {
 
+    /**
+     * Erstellt eine Statistik-Karte.
+     *
+     * @param label    Beschriftung der Karte (z.B. "Gesamtartikel")
+     * @param wert     anzuzeigender Zahlenwert als String (z.B. "42")
+     * @param iconName Material-Symbols-Icon-Name (z.B. "inventory_2")
+     * @param warnung  {@code true} für rote Warndarstellung (z.B. bei niedrigem Bestand)
+     */
     public StatistikKarte(String label, String wert, String iconName, boolean warnung) {
         setPadding(false);
         setSpacing(false);
@@ -20,6 +33,12 @@ public class StatistikKarte extends VerticalLayout {
         add(buildLabel(label, warnung), buildWertZeile(wert, iconName, warnung));
     }
 
+    /**
+     * Erstellt den Beschriftungs-Span in Großbuchstaben.
+     *
+     * @param label   der Beschriftungstext
+     * @param warnung {@code true} für rote Farbe
+     */
     private Span buildLabel(String label, boolean warnung) {
         Span lbl = new Span(label);
         lbl.getStyle()
@@ -30,6 +49,13 @@ public class StatistikKarte extends VerticalLayout {
         return lbl;
     }
 
+    /**
+     * Erstellt die untere Zeile mit dem großen Zahlenwert links und der Icon-Box rechts.
+     *
+     * @param wert     der anzuzeigende Wert
+     * @param iconName Icon-Name
+     * @param warnung  {@code true} für rote Schriftfarbe
+     */
     private HorizontalLayout buildWertZeile(String wert, String iconName, boolean warnung) {
         HorizontalLayout zeile = new HorizontalLayout();
         zeile.setPadding(false);
@@ -49,6 +75,12 @@ public class StatistikKarte extends VerticalLayout {
         return zeile;
     }
 
+    /**
+     * Erstellt die runde Icon-Box rechts unten in der Karte.
+     *
+     * @param iconName Icon-Name
+     * @param warnung  {@code true} für roten Hintergrund und rote Icon-Farbe
+     */
     private com.vaadin.flow.component.html.Div buildIconBox(String iconName, boolean warnung) {
         com.vaadin.flow.component.html.Div box = new com.vaadin.flow.component.html.Div();
         box.getStyle()

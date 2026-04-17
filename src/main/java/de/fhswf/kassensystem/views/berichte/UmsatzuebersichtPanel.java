@@ -21,7 +21,13 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 /**
- * Tab-Inhalt: Umsatzübersicht mit Tag/Woche-Toggle.
+ * Panel für den "Umsatzübersicht"-Tab in der Berichte-View.
+ *
+ * <p>Zeigt wahlweise die Tages- oder Wochenansicht. Die Tagesansicht enthält
+ * ein Stundendiagramm (8–18 Uhr, Bar/Karte) und eine Produktliste.
+ * Die Wochenansicht zeigt ein Wochendiagramm (Mo–Sa) und eine Zusammenfassung.
+ *
+ * @author Adrian
  */
 class UmsatzuebersichtPanel extends VerticalLayout {
 
@@ -29,6 +35,12 @@ class UmsatzuebersichtPanel extends VerticalLayout {
     private final LocalDate       aktivDatum;
     private final Div             umsatzContainer = new Div();
 
+    /**
+     * Erstellt das Panel mit Tagesansicht als Standard.
+     *
+     * @param service     Service zum Laden der Verkaufsdaten
+     * @param aktivDatum  das aktuell gewählte Datum in der Berichte-View
+     */
     UmsatzuebersichtPanel(BerichteService service, LocalDate aktivDatum) {
         this.service    = service;
         this.aktivDatum = aktivDatum;
@@ -41,6 +53,10 @@ class UmsatzuebersichtPanel extends VerticalLayout {
         add(buildKopfZeile(), umsatzContainer);
     }
 
+    /**
+     * Erstellt den Kopfbereich mit Titel und Tag/Woche-Toggle-Buttons.
+     * Ein Klick auf einen Toggle-Button lädt den entsprechenden Inhalt neu.
+     */
     private HorizontalLayout buildKopfZeile() {
         Button tagBtn   = DiagrammFactory.buildToggleButton("Tag",   true);
         Button wocheBtn = DiagrammFactory.buildToggleButton("Woche", false);
@@ -76,6 +92,10 @@ class UmsatzuebersichtPanel extends VerticalLayout {
         return kopf;
     }
 
+    /**
+     * Erstellt die Tagesansicht mit Stundendiagramm und Produktliste.
+     * Lädt alle Verkäufe des aktiven Datums und aggregiert sie nach Stunde und Zahlungsart.
+     */
     private VerticalLayout buildTagesansicht() {
         List<Verkauf> verkaeufe = service.findByTimestampBetween(
                 aktivDatum.atStartOfDay(), aktivDatum.atTime(23, 59, 59));
@@ -130,6 +150,12 @@ class UmsatzuebersichtPanel extends VerticalLayout {
         return layout;
     }
 
+    /**
+     * Aggregiert alle Verkaufspositionen des Tages nach Artikel und rendert die Liste.
+     *
+     * @param verkaeufe alle Verkäufe des aktiven Datums
+     * @return Karte mit Produktliste
+     */
     private VerticalLayout buildProduktListe(List<Verkauf> verkaeufe) {
         Map<Artikel, int[]> stats = new LinkedHashMap<>();
         for (Verkauf v : verkaeufe) {
@@ -174,6 +200,10 @@ class UmsatzuebersichtPanel extends VerticalLayout {
         return karte;
     }
 
+    /**
+     * Erstellt die Wochenansicht mit tageweisem Balkendiagramm (Mo–Sa)
+     * und einer Zusammenfassung (Wochenumsatz, Transaktionen, stärkster Tag).
+     */
     private VerticalLayout buildWochenansicht() {
         LocalDate wochenStart = aktivDatum.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         String[]   tagLabels  = {"MO","DI","MI","DO","FR","SA"};
@@ -239,6 +269,13 @@ class UmsatzuebersichtPanel extends VerticalLayout {
         return layout;
     }
 
+    /**
+     * Erstellt die drei Zusammenfassungs-Kacheln unterhalb des Wochendiagramms.
+     *
+     * @param wUmsatz  Gesamtumsatz der Woche
+     * @param wTrans   Anzahl Transaktionen der Woche
+     * @param starkTag Kürzel des umsatzstärksten Tags (z.B. "FR")
+     */
     private HorizontalLayout buildWochenSummary(BigDecimal wUmsatz, int wTrans, String starkTag) {
         HorizontalLayout summary = new HorizontalLayout();
         summary.setWidthFull();

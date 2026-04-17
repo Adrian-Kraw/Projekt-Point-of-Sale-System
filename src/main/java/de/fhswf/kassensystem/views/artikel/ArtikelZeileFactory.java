@@ -9,8 +9,13 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.service.ArtikelService;
 
 /**
- * Baut eine einzelne Tabellenzeile für die Artikelverwaltung.
- * FIX: Aktionen-Buttons sind immer sichtbar (opacity 1, kein hover-hide).
+ * Fabrikklasse für einzelne Tabellenzeilen in der Artikelverwaltung.
+ *
+ * <p>Jede Zeile enthält: ID, Name, Kategorie, Preis, MwSt, Bestand,
+ * Minimalgrenze, Status-Badge sowie Aktions-Buttons (Bearbeiten / Deaktivieren).
+ * Die Aktions-Buttons sind dauerhaft sichtbar (kein Hover-Hide).
+ *
+ * @author Adrian
  */
 class ArtikelZeileFactory {
 
@@ -26,6 +31,14 @@ class ArtikelZeileFactory {
 
     private ArtikelZeileFactory() {}
 
+    /**
+     * Erstellt eine vollständig gestylte Tabellenzeile für den übergebenen Artikel.
+     *
+     * @param artikel        der darzustellende Artikel
+     * @param artikelService Service für Bearbeiten- und Deaktivieren-Aktionen
+     * @param onAenderung    wird nach jeder Änderung aufgerufen um die Tabelle neu zu laden
+     * @return fertiges Zeilen-Layout
+     */
     static HorizontalLayout create(Artikel artikel, ArtikelService artikelService,
                                    Runnable onAenderung) {
         boolean warnBestand = artikel.getBestand() < artikel.getMinimalbestand();
@@ -68,6 +81,9 @@ class ArtikelZeileFactory {
         return zeile;
     }
 
+    /**
+     * Erstellt eine einfache Text-Zelle mit definierter Breite und Farbe.
+     */
     private static Span buildZelle(String text, String breite, String fontSize,
                                    String color, boolean bold) {
         Span span = new Span(text);
@@ -78,6 +94,12 @@ class ArtikelZeileFactory {
         return span;
     }
 
+    /**
+     * Erstellt die Bestand-Zelle – bei Warnung mit rotem Text und Warn-Icon.
+     *
+     * @param bestandText formatierter Bestandstext (z.B. "6 Stk.")
+     * @param warn        {@code true} wenn Bestand unter Minimalgrenze liegt
+     */
     private static HorizontalLayout buildBestandZelle(String bestandText, boolean warn) {
         HorizontalLayout zelle = new HorizontalLayout();
         zelle.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -102,6 +124,11 @@ class ArtikelZeileFactory {
         return zelle;
     }
 
+    /**
+     * Erstellt den Status-Badge ("Aktiv" / "Inaktiv") für die Statusspalte.
+     *
+     * @param aktiv {@code true} für aktiven, {@code false} für inaktiven Artikel
+     */
     private static Span buildStatusBadge(boolean aktiv) {
         Span badge = new Span(aktiv ? "Aktiv" : "Inaktiv");
         badge.getStyle()
@@ -113,6 +140,13 @@ class ArtikelZeileFactory {
         return badge;
     }
 
+    /**
+     * Erstellt die Aktionen-Zelle mit Bearbeiten- und Sichtbarkeits-Button.
+     *
+     * @param artikel        Artikel dessen Daten bearbeitet oder deaktiviert werden
+     * @param artikelService Service für Update- und Delete-Operationen
+     * @param onAenderung    Callback nach erfolgreicher Aktion
+     */
     private static Div buildAktionenZelle(Artikel artikel, ArtikelService artikelService,
                                           Runnable onAenderung) {
         Div zelle = new Div();
@@ -149,6 +183,13 @@ class ArtikelZeileFactory {
         return zelle;
     }
 
+    /**
+     * Erstellt einen Icon-Button für die Aktionsspalte mit Hover-Hintergrund.
+     *
+     * @param iconName   Material-Symbols-Icon-Name (z.B. "edit")
+     * @param iconFarbe  Standardfarbe des Icons
+     * @param hoverFarbe Hintergrundfarbe beim Hover
+     */
     private static Button buildAktionsButton(String iconName, String iconFarbe, String hoverFarbe) {
         Span icon = new Span(iconName);
         icon.addClassName("material-symbols-outlined");

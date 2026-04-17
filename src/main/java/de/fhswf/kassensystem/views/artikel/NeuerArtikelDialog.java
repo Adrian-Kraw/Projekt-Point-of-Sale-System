@@ -6,6 +6,18 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
+/**
+ * Dialog zum Anlegen und Bearbeiten von Artikeln.
+ *
+ * <p>Wird im Anlegen-Modus ohne Artikel-Parameter geöffnet.
+ * Im Bearbeiten-Modus wird ein bestehender {@link de.fhswf.kassensystem.model.Artikel}
+ * übergeben und die Felder werden vorausgefüllt.
+ *
+ * <p>Enthält {@link ArtikelFormularFelder} für die Eingabefelder
+ * und {@link ArtikelBildUpload} für das optionale Artikelbild.
+ *
+ * @author Adrian
+ */
 public class NeuerArtikelDialog extends BaseDialog {
 
     private final ArtikelService        artikelService;
@@ -13,6 +25,11 @@ public class NeuerArtikelDialog extends BaseDialog {
     private final ArtikelBildUpload     bildUpload;
     private       Artikel               zuBearbeitenderArtikel = null;
 
+    /**
+     * Öffnet den Dialog im Anlegen-Modus (leere Felder).
+     *
+     * @param artikelService Service für das Speichern des neuen Artikels
+     */
     public NeuerArtikelDialog(ArtikelService artikelService) {
         this.artikelService = artikelService;
         this.felder         = new ArtikelFormularFelder(artikelService);
@@ -20,6 +37,12 @@ public class NeuerArtikelDialog extends BaseDialog {
         init("Neuer Artikel", null);
     }
 
+    /**
+     * Öffnet den Dialog im Bearbeiten-Modus mit vorausgefüllten Feldern.
+     *
+     * @param artikelService         Service für das Aktualisieren des Artikels
+     * @param artikel                der zu bearbeitende Artikel
+     */
     public NeuerArtikelDialog(ArtikelService artikelService, Artikel artikel) {
         this.artikelService         = artikelService;
         this.felder                 = new ArtikelFormularFelder(artikelService);
@@ -30,6 +53,9 @@ public class NeuerArtikelDialog extends BaseDialog {
         init("Artikel bearbeiten", null);
     }
 
+    /**
+     * Baut den Dialog-Body mit Formularfeldern und Bild-Upload.
+     */
     @Override
     protected VerticalLayout buildBody() {
         VerticalLayout body = new VerticalLayout();
@@ -41,6 +67,11 @@ public class NeuerArtikelDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Validiert die Eingaben und speichert den Artikel (Anlegen oder Aktualisieren).
+     *
+     * @return {@code true} bei Erfolg (Dialog schließt), {@code false} bei Validierungsfehlern
+     */
     @Override
     protected boolean onSpeichern() {
         if (!felder.valide()) return false;

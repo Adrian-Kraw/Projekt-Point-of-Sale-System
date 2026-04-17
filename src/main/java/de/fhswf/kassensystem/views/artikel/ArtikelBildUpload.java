@@ -10,13 +10,22 @@ import com.vaadin.flow.server.streams.UploadHandler;
 import java.util.Base64;
 
 /**
- * Bild-Upload-Komponente mit Vorschau für den Artikel-Dialog.
- * Vaadin 25 kompatibel – nutzt UploadHandler.inMemory() statt MemoryBuffer.
+ * Bild-Upload-Komponente mit Live-Vorschau für den Artikel-Dialog.
+ *
+ * <p>Nutzt {@code UploadHandler.inMemory()}. Das hochgeladene Bild wird als {@code byte[]} gespeichert
+ * und kann über {@link #getBildBytes()} abgerufen werden.
+ *
+ * <p>Unterstützte Formate: JPEG, PNG, WebP – maximal 5 MB pro Datei.
+ *
+ * @author Adrian
  */
 class ArtikelBildUpload extends VerticalLayout {
 
     private byte[] bildBytes = null;
 
+    /**
+     * Erstellt die Upload-Komponente mit Label, Upload-Button und Vorschaubild.
+     */
     ArtikelBildUpload() {
         setPadding(false);
         setSpacing(false);
@@ -58,10 +67,21 @@ class ArtikelBildUpload extends VerticalLayout {
         add(label, upload, vorschau);
     }
 
+    /**
+     * Gibt die rohen Bild-Bytes des zuletzt hochgeladenen Bildes zurück.
+     *
+     * @return Bild-Bytes oder {@code null} wenn noch kein Bild hochgeladen wurde
+     */
     byte[] getBildBytes() {
         return bildBytes;
     }
 
+    /**
+     * Setzt ein vorhandenes Bild (z.B. beim Bearbeiten eines bestehenden Artikels).
+     * Zeigt keine Vorschau – nur die Bytes werden intern gespeichert.
+     *
+     * @param bild Bild-Bytes aus der Datenbank, oder {@code null} zum Ignorieren
+     */
     void setBild(byte[] bild) {
         if (bild == null || bild.length == 0) return;
         bildBytes = bild;

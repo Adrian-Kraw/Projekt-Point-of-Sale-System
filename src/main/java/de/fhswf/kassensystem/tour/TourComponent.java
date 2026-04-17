@@ -16,8 +16,28 @@ import com.vaadin.flow.shared.Registration;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Vaadin-Komponente die eine Onboarding-Tour visuell durchführt.
+ *
+ * <p>Rendert einen schwebenden Tooltip mit Titel, Beschreibung, Fortschritts-Dots
+ * und Zurück/Weiter-Buttons. Pro Step wird ein Spotlight-Overlay über das
+ * Ziel-Element gelegt, das den Rest des Bildschirms abdunkelt.
+ *
+ * <p>Navigationen zwischen Views werden automatisch ausgeführt.
+ * View-spezifische Aktionen (z.B. Demo-Verkauf, Dialog öffnen) werden über
+ * den {@code actionHandler}-Callback an die jeweilige View delegiert.
+ *
+ * <p>Wird von {@link TourManager} instanziiert und der aktuellen UI hinzugefügt.
+ * Nach Abschluss der Tour wird die Seite neu geladen.
+ *
+ * @author Adrian
+ */
 public class TourComponent extends Div {
 
+    /**
+     * Event das gefeuert wird wenn die Tour abgeschlossen wurde.
+     * Wird von {@link TourManager} genutzt um die Komponente aus der UI zu entfernen.
+     */
     public static class TourFinishedEvent extends ComponentEvent<TourComponent> {
         public TourFinishedEvent(TourComponent source) { super(source, false); }
     }
@@ -35,6 +55,12 @@ public class TourComponent extends Div {
     private final Button    nextBtn    = new Button("Weiter");
     private final Button    actionBtn  = new Button();
 
+    /**
+     * Erstellt die Tour-Komponente.
+     *
+     * @param steps          geordnete Liste der Tour-Schritte
+     * @param actionHandler  Callback der View-spezifische Aktionen (z.B. "demo-verkauf") ausführt
+     */
     public TourComponent(List<TourStep> steps, Consumer<String> actionHandler) {
         this.steps         = steps;
         this.actionHandler = actionHandler;
@@ -44,6 +70,10 @@ public class TourComponent extends Div {
         buildActionBtn();
     }
 
+    /**
+     * Erstellt den Tooltip-Container mit Titel, Beschreibung, Dots-Navigation und Buttons.
+     * Der Tooltip ist initial unsichtbar und wird per {@link #showStep(int)} positioniert.
+     */
     private void buildTooltip() {
         tooltipDiv.getStyle()
                 .set("position", "fixed").set("z-index", "2147483647")
@@ -100,6 +130,11 @@ public class TourComponent extends Div {
         tooltipDiv.add(content);
     }
 
+    /**
+     * Erstellt den versteckten Aktions-Button ({@code id="__tour_action_btn"}).
+     * Er wird per JavaScript geklickt um View-Aktionen serverseitig auszulösen,
+     * ohne einen sichtbaren Button rendern zu müssen.
+     */
     private void buildActionBtn() {
         actionBtn.setId("__tour_action_btn");
         actionBtn.getStyle().set("position", "absolute").set("opacity", "0")
@@ -112,17 +147,28 @@ public class TourComponent extends Div {
         add(actionBtn);
     }
 
+    /**
+     * Wechselt zum nächsten Step oder beendet die Tour wenn der letzte Step erreicht ist.
+     * Offene Dialoge werden vor dem Wechsel automatisch geschlossen.
+     */
     private void onNext() {
         closeOpenDialogs();
         if (currentIndex < steps.size() - 1) { currentIndex++; executeAndShow(currentIndex); }
         else finish();
     }
 
+    /**
+     * Wechselt zum vorherigen Step. Offene Dialoge werden vorher geschlossen.
+     */
     private void onBack() {
         closeOpenDialogs();
         if (currentIndex > 0) { currentIndex--; executeAndShow(currentIndex); }
     }
 
+    /**
+     * Startet die Tour ab dem ersten Step.
+     * Injiziert den Spotlight-Overlay und fügt den Tooltip zur UI hinzu.
+     */
     public void start() {
         currentIndex    = 0;
         pendingCallback = null;
@@ -131,10 +177,22 @@ public class TourComponent extends Div {
         executeAndShow(0);
     }
 
+    /**
+     * Registriert einen Listener der aufgerufen wird wenn die Tour beendet ist.
+     *
+     * @param listener der zu registrierende Listener
+     * @return {@link Registration} zum späteren Entfernen des Listeners
+     */
     public Registration addTourFinishedListener(ComponentEventListener<TourFinishedEvent> listener) {
         return addListener(TourFinishedEvent.class, listener);
     }
 
+    /**
+     * Führt den Step mit dem angegebenen Index aus:
+     * navigiert bei Bedarf zur richtigen View, führt Aktionen aus und zeigt den Tooltip.
+     *
+     * @param index Index des auszuführenden Steps in der {@code steps}-Liste
+     */
     private void executeAndShow(int index) {
         TourStep step = steps.get(index);
 
@@ -157,6 +215,13 @@ public class TourComponent extends Div {
         });
     }
 
+    /**
+     * Navigiert zur passenden View wenn der Step-Selektor es erfordert,
+     * und führt danach den {@code after}-Callback aus.
+     *
+     * @param step  der aktuelle Tour-Step
+     * @param after wird ausgeführt sobald die Navigation abgeschlossen ist
+     */
     private void navigateIfNeeded(TourStep step, Runnable after) {
         String route = routeForSelector(step.targetSelector());
         if (route == null) { after.run(); return; }
@@ -165,6 +230,13 @@ public class TourComponent extends Div {
         else { hideSpotlight(); UI.getCurrent().navigate(route); scheduleNav(after); }
     }
 
+    /**
+     * Plant die Ausführung eines Callbacks nach einer abgeschlossenen Navigation.
+     * Verwendet einen unsichtbaren Button als Brücke zwischen JavaScript und Java,
+     * da Vaadin-Navigationen asynchron ablaufen.
+     *
+     * @param cb der Callback der nach der Navigation ausgeführt wird
+     */
     private void scheduleNav(Runnable cb) {
         pendingCallback = cb;
         Button navBtn = new Button();
@@ -180,6 +252,13 @@ public class TourComponent extends Div {
                 "setTimeout(() => document.getElementById('__tour_nav_ready_btn')?.click(), 650);");
     }
 
+    /**
+     * Leitet aus einem CSS-Selektor die zugehörige Vaadin-Route ab.
+     * Wird verwendet um bei Bedarf automatisch zur richtigen View zu navigieren.
+     *
+     * @param sel der CSS-Selektor des Step-Zielelements
+     * @return die Route als String (z.B. "kassieren", "lager"), oder {@code null} wenn keine passt
+     */
     private String routeForSelector(String sel) {
         if (sel == null) return null;
         if (sel.contains("kategorie-chips") || sel.contains("artikel-suche")
@@ -203,6 +282,16 @@ public class TourComponent extends Div {
         return null;
     }
 
+    /**
+     * Blendet den Tooltip für den angegebenen Step ein und positioniert Spotlight und Tooltip
+     * relativ zum Ziel-Element per JavaScript.
+     *
+     * <p>Für Spalten-Highlights (status-spalte, artikel-aktionen) wird der Spotlight
+     * auf die gesamte sichtbare Spalte ausgedehnt. Bei Steps ohne Ziel-Element
+     * erscheint der Tooltip zentriert oder links neben einem offenen Dialog.
+     *
+     * @param index Index des anzuzeigenden Steps
+     */
     private void showStep(int index) {
         TourStep step  = steps.get(index);
         int      total = steps.size();
@@ -381,6 +470,10 @@ public class TourComponent extends Div {
             """, selector, step.position(), tipCentered);
     }
 
+    /**
+     * Schließt alle aktuell geöffneten Vaadin-Dialoge per JavaScript.
+     * Wird vor jedem Step-Wechsel aufgerufen um einen sauberen Zustand sicherzustellen.
+     */
     private void closeOpenDialogs() {
         getElement().executeJs("""
             document.querySelectorAll('vaadin-dialog-overlay').forEach(d => {
@@ -391,6 +484,10 @@ public class TourComponent extends Div {
         """);
     }
 
+    /**
+     * Injiziert den Spotlight-Overlay und die zugehörigen CSS-Animationen in den DOM.
+     * Bestehende Instanzen werden vorher entfernt um Doppelungen zu vermeiden.
+     */
     private void injectSpotlight() {
         getElement().executeJs("""
             document.getElementById('__tour_spotlight')?.remove();
@@ -420,6 +517,10 @@ public class TourComponent extends Div {
         """);
     }
 
+    /**
+     * Blendet den Spotlight-Overlay aus und räumt den Scroll-Listener auf.
+     * Wird vor Navigationen aufgerufen damit kein veralteter Spotlight sichtbar bleibt.
+     */
     private void hideSpotlight() {
         getElement().executeJs("""
             const s = document.getElementById('__tour_spotlight');
@@ -430,6 +531,9 @@ public class TourComponent extends Div {
         """);
     }
 
+    /**
+     * Beendet die Tour und lädt die Seite neu um alle Tour-Elemente aus dem DOM zu entfernen.
+     */
     private void finish() {
         pendingCallback = null;
         UI.getCurrent().getPage().reload();

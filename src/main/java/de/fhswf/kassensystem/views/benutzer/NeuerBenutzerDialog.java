@@ -11,6 +11,14 @@ import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
+/**
+ * Dialog zum Anlegen eines neuen Benutzers mit Benutzername, Name, Rolle und Startpasswort.
+ *
+ * <p>Nach erfolgreichem Anlegen wird der {@code onErfolg}-Callback aufgerufen,
+ * damit die Benutzertabelle aktualisiert wird.
+ *
+ * @author Adrian
+ */
 class NeuerBenutzerDialog extends BaseDialog {
 
     private final UserService userService;
@@ -21,12 +29,21 @@ class NeuerBenutzerDialog extends BaseDialog {
     private final PasswordField passwortFeld  = new PasswordField();
     private final Select<Rolle> rolleSelect   = new Select<>();
 
+    /**
+     * Erstellt den Dialog mit leeren Formularfeldern.
+     *
+     * @param userService Service zum Erstellen des neuen Benutzers
+     * @param onErfolg    wird nach erfolgreichem Anlegen aufgerufen
+     */
     NeuerBenutzerDialog(UserService userService, Runnable onErfolg) {
         this.userService = userService;
         this.onErfolg    = onErfolg;
         init("Neuer Benutzer", "Erstellen Sie ein neues Profil für Ihr Team.");
     }
 
+    /**
+     * Erstellt den Dialog-Body mit Benutzername, Rolle (zweispaltig), Name und Passwort.
+     */
     @Override
     protected VerticalLayout buildBody() {
         usernameFeld.setWidthFull();
@@ -67,6 +84,11 @@ class NeuerBenutzerDialog extends BaseDialog {
         return body;
     }
 
+    /**
+     * Validiert die Eingaben und legt den neuen Benutzer in der Datenbank an.
+     *
+     * @return {@code true} bei Erfolg, {@code false} wenn Name oder Passwort fehlt
+     */
     @Override
     protected boolean onSpeichern() {
         if (nameFeld.isEmpty() || passwortFeld.isEmpty()) {

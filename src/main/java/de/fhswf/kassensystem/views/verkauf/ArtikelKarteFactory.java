@@ -11,20 +11,31 @@ import java.util.Base64;
 import java.util.function.Consumer;
 
 /**
- * Baut eine einzelne Artikel-Karte für das Kassier-Grid.
+ * Fabrikklasse für Artikel-Karten im Kassier-Grid der {@link VerkaufView}.
  *
- * Icons aus Tabler Icons (https://tabler.io/icons) – entsprechend PDF:
- *  Brot und Brötchen       → ti-bread
- *  Kuchen                  → ti-cake
- *  Teilchen                → ti-cookie
- *  Sandwiches/Brötchen     → ti-sandwich
- *  Heiße Getränke          → ti-coffee
- *  Kalte Getränke          → ti-bottle
+ * <p>Jede Karte zeigt ein Kategorie-Icon (Tabler Icons), den Artikelnamen,
+ * den Preis und einen Live-Bestandsbadge. Ausverkaufte Artikel werden
+ * ausgegraut und mit einem "Ausverkauft"-Badge versehen.
+ *
+ * <p>Icon-Zuordnung nach Kategorienamen (Tabler Icons):
+ * Brot/Brötchen → ti-bread, Kuchen → ti-cake, Teilchen → ti-cookie,
+ * Sandwiches → ti-baguette, Heiße Getränke → ti-coffee, Kalte Getränke → ti-bottle.
+ *
+ * @author Adrian
  */
 class ArtikelKarteFactory {
 
     private ArtikelKarteFactory() {}
 
+    /**
+     * Erstellt eine Artikelkarte mit angegebenem Anzeigebestand.
+     *
+     * @param artikel          der darzustellende Artikel
+     * @param aktuellerBestand der anzuzeigende Bestand (ggf. schon um Warenkorbmenge reduziert)
+     * @param ausverkauft      {@code true} wenn der Artikel nicht mehr bestellbar ist
+     * @param onKlick          wird beim Klick auf die Karte aufgerufen
+     * @return fertige Artikelkarte
+     */
     static Div create(Artikel artikel, int aktuellerBestand,
                       boolean ausverkauft, Consumer<Artikel> onKlick) {
 
@@ -64,10 +75,24 @@ class ArtikelKarteFactory {
         return karte;
     }
 
+    /**
+     * Erstellt eine Artikelkarte mit dem DB-Bestand des Artikels als Anzeigebestand.
+     *
+     * @param artikel     der darzustellende Artikel
+     * @param ausverkauft {@code true} wenn der Artikel nicht mehr bestellbar ist
+     * @param onKlick     wird beim Klick auf die Karte aufgerufen
+     */
     static Div create(Artikel artikel, boolean ausverkauft, Consumer<Artikel> onKlick) {
         return create(artikel, artikel.getBestand(), ausverkauft, onKlick);
     }
 
+    /**
+     * Aktualisiert den Bestandsbadge einer Karte per JavaScript – ohne die Karte neu zu bauen.
+     *
+     * @param kartenContainer der Container der Karte (aus {@code kartenMap})
+     * @param artikelId       ID des Artikels (für den Badge-Selektor)
+     * @param neuerBestand    der neu anzuzeigende Bestand
+     */
     static void aktualisiereBestand(Div kartenContainer, long artikelId, int neuerBestand) {
         kartenContainer.getElement().executeJs(
                 "const span = this.querySelector('#bestand-badge-" + artikelId + "');" +
@@ -78,6 +103,10 @@ class ArtikelKarteFactory {
 
     // ── Private Hilfsmethoden ───────────────────────────────────────────────
 
+    /**
+     * Erstellt den Icon-Bereich der Karte – entweder mit Artikelbild oder Kategorie-Icon.
+     * Im ausverkauften Zustand wird zusätzlich ein "Ausverkauft"-Badge eingeblendet.
+     */
     private static Div buildIconWrapper(Artikel artikel, boolean ausverkauft) {
         Div wrapper = new Div();
         wrapper.getStyle()
@@ -102,6 +131,11 @@ class ArtikelKarteFactory {
         return wrapper;
     }
 
+    /**
+     * Erstellt einen Tabler-Icon-Span für den Kategorie-Platzhalter.
+     *
+     * @param iconName Tabler-Icon-Klasse (z.B. "ti-bread")
+     */
     private static Span buildTablerIcon(String iconName) {
         Span icon = new Span();
         icon.addClassName("ti");
@@ -112,6 +146,9 @@ class ArtikelKarteFactory {
         return icon;
     }
 
+    /**
+     * Erstellt den "Ausverkauft"-Badge der oben links über das Bild gelegt wird.
+     */
     private static Div buildAusverkauftBadge() {
         Span text = new Span("Ausverkauft");
         text.getStyle()
@@ -125,6 +162,9 @@ class ArtikelKarteFactory {
         return badge;
     }
 
+    /**
+     * Erstellt den Artikelnamen als H3-Überschrift.
+     */
     private static H3 buildName(Artikel artikel) {
         H3 name = new H3(artikel.getName());
         name.getStyle()
@@ -133,6 +173,11 @@ class ArtikelKarteFactory {
         return name;
     }
 
+    /**
+     * Erstellt den Bestandsbadge.
+     *
+     * @param bestand aktueller Bestand (999 oder höher = unendlich)
+     */
     private static Span buildBestandBadge(int bestand) {
         String text = bestand >= 999 ? "∞" : "Bestand: " + bestand;
         Span badge = new Span(text);
@@ -143,6 +188,13 @@ class ArtikelKarteFactory {
         return badge;
     }
 
+    /**
+     * Erstellt die untere Preiszeile mit Preis links und Bestandsbadge rechts.
+     *
+     * @param artikel      Artikel dessen Preis angezeigt wird
+     * @param ausverkauft  {@code true} für grau-dargestellten Preis
+     * @param bestandBadge der Live-Bestandsbadge
+     */
     private static HorizontalLayout buildPreisZeile(Artikel artikel,
                                                     boolean ausverkauft,
                                                     Span bestandBadge) {
@@ -168,13 +220,9 @@ class ArtikelKarteFactory {
 
     /**
      * Ordnet Kategorienamen den Tabler-Icon-Klassen zu.
-     * Entspricht den Icons aus der Artikelübersicht-PDF:
-     *  Brot und Brötchen       → ti-bread
-     *  Kuchen                  → ti-cake
-     *  Teilchen                → ti-cookie
-     *  Sandwiches/Brötchen     → ti-baguette
-     *  Heiße Getränke          → ti-coffee
-     *  Kalte Getränke          → ti-bottle
+     *
+     * @param kategorie Kategorienname des Artikels (case-insensitiv)
+     * @return Tabler-Icon-Klasse (z.B. "ti-bread"), Fallback "ti-tag"
      */
     static String iconFuerKategorie(String kategorie) {
         if (kategorie == null) return "ti-tag";

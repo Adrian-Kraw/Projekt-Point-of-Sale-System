@@ -11,11 +11,24 @@ import java.math.RoundingMode;
 import java.util.function.Consumer;
 
 /**
- * Tab-Inhalt: Tagesabschluss.
- * FIX: TopSeller bekommt margin-left: auto, damit er rechtsbündig in der Zeile steht.
+ * Panel für den "Tagesabschluss"-Tab in der Berichte-View.
+ *
+ * <p>Zeigt drei Metric-Karten (Gesamtumsatz, Transaktionen, ø Bon-Wert) sowie
+ * darunter das {@link ZahlungsartenPanel} und das {@link TopSellerPanel}.
+ * Manager können zusätzlich den Bon-Zielwert über das {@link BonZielwertPanel} setzen.
+ *
+ * @author Adrian
  */
 class TagesabschlussPanel extends VerticalLayout {
 
+    /**
+     * Erstellt das Panel mit allen Metric-Karten und dem unteren Bereich.
+     *
+     * @param dto                  Tagesabschlussdaten
+     * @param bonZielwert          aktuell gesetzter Bon-Zielwert
+     * @param istManager           {@code true} wenn der Benutzer Manager ist (zeigt Zielwert-Editor)
+     * @param onZielwertSpeichern  Callback zum Speichern des Zielwerts
+     */
     TagesabschlussPanel(TagesabschlussDTO dto, BigDecimal bonZielwert,
                         boolean istManager, Consumer<BigDecimal> onZielwertSpeichern) {
         setWidthFull();
@@ -35,6 +48,9 @@ class TagesabschlussPanel extends VerticalLayout {
                 buildUntererBereich(umsatzBar, umsatzKarte, dto));
     }
 
+    /**
+     * Erstellt die Zeile mit den drei Metric-Karten (Umsatz, Transaktionen, Bon-Wert).
+     */
     private HorizontalLayout buildMetricKarten(BigDecimal gesamtumsatz, int trans, BigDecimal bonWert,
                                                BigDecimal bonZielwert, boolean istManager,
                                                Consumer<BigDecimal> onZielwertSpeichern) {
@@ -50,6 +66,15 @@ class TagesabschlussPanel extends VerticalLayout {
         return karten;
     }
 
+    /**
+     * Erstellt eine einzelne Metric-Karte mit Label, Wert, Icon und optionalem Subtext.
+     *
+     * @param label    Kartenüberschrift
+     * @param wert     Hauptwert (groß dargestellt)
+     * @param iconName Material-Symbols-Icon-Name für den Hintergrund
+     * @param subtext  optionaler Hinweistext unterhalb des Werts (kann {@code null} sein)
+     * @param positiv  {@code true} für grüne Subtext-Farbe
+     */
     private VerticalLayout buildMetricKarte(String label, String wert, String iconName,
                                             String subtext, boolean positiv) {
         VerticalLayout karte = new VerticalLayout();
@@ -87,6 +112,9 @@ class TagesabschlussPanel extends VerticalLayout {
         return karte;
     }
 
+    /**
+     * Erstellt die Bon-Wert-Karte mit integriertem {@link BonZielwertPanel}.
+     */
     private VerticalLayout buildBonWertKarte(BigDecimal bonWert, BigDecimal bonZielwert,
                                              boolean istManager, Consumer<BigDecimal> onZielwertSpeichern) {
         VerticalLayout karte = buildMetricKarte("ø Bon-Wert", BerichteUtils.fp(bonWert), "coffee", null, false);
@@ -94,6 +122,10 @@ class TagesabschlussPanel extends VerticalLayout {
         return karte;
     }
 
+    /**
+     * Erstellt den unteren Bereich mit {@link ZahlungsartenPanel} (links/wachsend)
+     * und {@link TopSellerPanel} (rechts/fixe Breite).
+     */
     private HorizontalLayout buildUntererBereich(BigDecimal umsatzBar, BigDecimal umsatzKarte,
                                                  TagesabschlussDTO dto) {
         HorizontalLayout bereich = new HorizontalLayout();
@@ -114,6 +146,11 @@ class TagesabschlussPanel extends VerticalLayout {
         return bereich;
     }
 
+    /**
+     * Erstellt einen Material-Symbols-Icon-Span.
+     *
+     * @param name Icon-Name
+     */
     private static Span icon(String name) {
         Span s = new Span(name);
         s.addClassName("material-symbols-outlined");

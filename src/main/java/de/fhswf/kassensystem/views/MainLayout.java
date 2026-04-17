@@ -19,14 +19,39 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
 
+/**
+ * Haupt-Layout der Anwendung, das alle geschützten Views umrahmt.
+ *
+ * <p>Erweitert Vaadins {@link com.vaadin.flow.component.applayout.AppLayout} und
+ * stellt die linke Sidebar bereit, die auf allen Seiten (außer Login) sichtbar ist.
+ *
+ * <p>Aufbau der Sidebar:
+ * <ul>
+ *   <li><b>Oben:</b> Logo-Zeile ({@link de.fhswf.kassensystem.views.sidebar.LogoRow}),
+ *       Trennlinie, Navigationslinks ({@link de.fhswf.kassensystem.views.sidebar.SidebarNavigation})</li>
+ *   <li><b>Unten:</b> "Software Einführung"-Button zum Starten der Onboarding-Tour
+ *       sowie die Benutzer-Karte ({@link de.fhswf.kassensystem.views.sidebar.UserCard})
+ *       mit Logout-Funktion</li>
+ * </ul>
+ *
+ * <p>Nach jeder Navigation wird der aktive Navigationslink farblich hervorgehoben
+ * ({@code afterNavigation}). Die Onboarding-Tour wird rollenabhängig gestartet –
+ * Manager erhalten eine erweiterte Tour mit allen Verwaltungsbereichen.
+ *
+ * @author Adrian & Paula
+ */
 @PermitAll
 public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
     private final SidebarNavigation sidebarNavigation;
     private final TourManager tourManager;
 
+    /**
+     * Erstellt das Haupt-Layout und baut die Sidebar auf.
+     *
+     * @param tourManager verwaltet den Start der rollenabhängigen Onboarding-Tour
+     */
     public MainLayout(TourManager tourManager) {
         this.tourManager       = tourManager;
         this.sidebarNavigation = new SidebarNavigation(istManager());
@@ -37,6 +62,12 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
                 .set("min-height", "100vh");
     }
 
+    /**
+     * Erstellt die linke Sidebar und fügt sie dem Drawer hinzu.
+     *
+     * <p>Die Sidebar gliedert sich in zwei Bereiche:
+     * oben Logo, Trennlinie und Navigation – unten Einführungs-Button und Benutzer-Karte.
+     */
     private void buildSidebar() {
         VerticalLayout sidebar = new VerticalLayout();
         sidebar.setPadding(false);
@@ -70,6 +101,14 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         setDrawerOpened(true);
     }
 
+    /**
+     * Erstellt den unteren Bereich der Sidebar mit Einführungs-Button und Benutzer-Karte.
+     *
+     * <p>Name und Rolle des eingeloggten Benutzers werden aus dem {@code SecurityContext}
+     * gelesen und an die {@link UserCard} übergeben.
+     *
+     * @return fertiges Layout mit Einführungs-Button und Benutzer-Karte
+     */
     private VerticalLayout buildBottomSection() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String name  = (auth != null && auth.isAuthenticated()) ? auth.getName() : "Unbekannt";
@@ -83,6 +122,15 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         return section;
     }
 
+    /**
+     * Erstellt den "Software Einführung"-Button in der Sidebar.
+     *
+     * <p>Ein Klick startet die rollenabhängige Onboarding-Tour über den {@link TourManager}.
+     * Tour-Aktionen (z.B. Demo-Verkauf, Dialog öffnen) werden an die aktuell angezeigte
+     * View delegiert, sofern diese {@code tourAktion(String)} implementiert.
+     *
+     * @return der fertig konfigurierte Einführungs-Button
+     */
     private Button buildIntroButton() {
         Span bookIcon = new Span("menu_book");
         bookIcon.addClassName("material-symbols-outlined");
@@ -126,6 +174,15 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         return btn;
     }
 
+    /**
+     * Hebt nach jeder Navigation den aktuell aktiven Navigationslink farblich hervor.
+     *
+     * <p>Der Pfad der aktuellen Route wird mit den {@code href}-Attributen aller
+     * Navigationslinks verglichen. Der passende Link erhält eine Hintergrundfarbe
+     * und fette Schrift, alle anderen werden zurückgesetzt.
+     *
+     * @param event enthält die aktuelle Route nach abgeschlossener Navigation
+     */
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         String aktuellerPfad = event.getLocation().getPath();
@@ -144,10 +201,22 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         }
     }
 
+    /**
+     * Leitet den Browser zur Spring Security Logout-URL weiter.
+     *
+     * <p>Spring Security invalidiert dabei die Session und löscht das
+     * {@code JSESSIONID}-Cookie, bevor zur Login-Seite weitergeleitet wird.
+     */
     private void logout() {
         UI.getCurrent().getPage().setLocation("/logout");
     }
 
+    /**
+     * Prüft ob der aktuell eingeloggte Benutzer die Rolle Manager besitzt.
+     *
+     * @return {@code true} wenn der Benutzer die Rolle {@code ROLE_MANAGER} hat,
+     *         sonst {@code false}
+     */
     private boolean istManager() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return false;

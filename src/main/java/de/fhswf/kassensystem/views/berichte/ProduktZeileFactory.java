@@ -7,12 +7,26 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /**
- * Baut eine einzelne Produkt-Zeile in der Umsatzübersicht.
+ * Fabrikklasse für einzelne Produkt-Zeilen in der Umsatzübersicht.
+ *
+ * <p>Jede Zeile zeigt Avatar-Platzhalter, Artikelname, Kategorie,
+ * verkaufte Menge und den Gesamtumsatz des Artikels.
+ *
+ * @author Adrian
  */
 class ProduktZeileFactory {
 
     private ProduktZeileFactory() {}
 
+    /**
+     * Erstellt eine Produktzeile mit Avatar, Name/Kategorie, Menge und Umsatz.
+     *
+     * @param name   Artikelname
+     * @param kat    Kategoriename
+     * @param menge  formatierte Menge (z.B. "12x")
+     * @param umsatz formatierter Umsatzbetrag (z.B. "14,88€")
+     * @return fertig gestyltes Zeilen-Layout
+     */
     static HorizontalLayout create(String name, String kat, String menge, String umsatz) {
         Div av = new Div();
         av.getStyle().set("width", "2rem").set("height", "2rem").set("border-radius", "9999px")

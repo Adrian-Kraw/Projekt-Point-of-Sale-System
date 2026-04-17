@@ -11,17 +11,26 @@ import java.math.BigDecimal;
 import java.util.function.Consumer;
 
 /**
- * Kleines Inline-Panel in der Bon-Wert-Karte (nur für Manager sichtbar).
+ * Inline-Panel für den Bon-Zielwert in der Tagesabschluss-Karte.
  *
- * Zeigt aktuellen Zielwert an und erlaubt dem Manager ihn zu bearbeiten.
- * Kein Service, kein Repository – der Wert lebt nur in der Session
- * (BigDecimal-Feld in BerichteView).
+ * <p>Kassierer sehen nur die aktuelle Zielwert-Anzeige.
+ * Manager erhalten zusätzlich einen Bearbeiten-Button, der ein Eingabefeld
+ * und einen Bestätigen-Button einblendet.
  *
- * Verwendung in buildTagesabschlussInhalt():
- *   if (istManager()) karteLayout.add(new BonZielwertPanel(zielwert, this::setZielwert));
+ * <p>Beim Bestätigen wird der Wert über den {@code onSpeichern}-Callback
+ * an die {@link BerichteView} übergeben, die ihn persistent via
+ * {@link de.fhswf.kassensystem.service.EinstellungService} speichert.
+ *
+ * @author Adrian
  */
 public class BonZielwertPanel extends HorizontalLayout {
 
+    /**
+     * Erstellt das Panel.
+     *
+     * @param aktuellerZielwert der aktuell gespeicherte Zielwert (kann {@code null} oder 0 sein)
+     * @param onSpeichern       Callback zum Speichern des neuen Werts; {@code null} für Kassierer (nur Anzeige)
+     */
     public BonZielwertPanel(BigDecimal aktuellerZielwert, Consumer<BigDecimal> onSpeichern) {
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
@@ -105,6 +114,13 @@ public class BonZielwertPanel extends HorizontalLayout {
         add(anzeige, editBtn, eingabe, okBtn);
     }
 
+    /**
+     * Formatiert den Zielwert als deutschen Währungsstring, z.B. {@code "Zielwert: 50,00€"}.
+     * Gibt {@code "Zielwert: –"} zurück wenn der Wert null oder 0 ist.
+     *
+     * @param wert der zu formatierende Betrag
+     * @return formatierter Anzeigetext
+     */
     private String formatZielwert(BigDecimal wert) {
         if (wert == null || wert.compareTo(BigDecimal.ZERO) == 0) return "Zielwert: –";
         return String.format("Zielwert: %,.2f€", wert)

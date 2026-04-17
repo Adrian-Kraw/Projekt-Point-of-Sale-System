@@ -8,12 +8,25 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /**
- * Baut Canvas-Diagramme (Balken/Torte) und zugehörige UI-Hilfselemente.
+ * Fabrikklasse für Canvas-basierte Diagramme und zugehörige UI-Elemente.
+ *
+ * <p>Erzeugt Balken- und Tortendiagramme über das HTML-{@code <canvas>}-Element
+ * mit inline JavaScript. Wird in {@link ZahlungsartenPanel} und
+ * {@link UmsatzuebersichtPanel} verwendet.
+ *
+ * @author Adrian
  */
 class DiagrammFactory {
 
     private DiagrammFactory() {}
 
+    /**
+     * Erstellt ein Diagramm (Balken oder Torte) mit Legende.
+     *
+     * @param daten   2D-Array mit [Name, Wert, Farbe] pro Eintrag
+     * @param balken  {@code true} für Balkendiagramm, {@code false} für Tortendiagramm
+     * @return Container mit Legende und Canvas-Widget
+     */
     static Div buildDiagramm(String[][] daten, boolean balken) {
         Div container = new Div();
         container.getStyle()
@@ -30,6 +43,13 @@ class DiagrammFactory {
         return container;
     }
 
+    /**
+     * Erstellt einen Toggle-Button für den Tag/Woche- oder Torte/Balken-Schalter.
+     *
+     * @param label der Beschriftungstext
+     * @param aktiv {@code true} für aktiv-Styling (dunkler Hintergrund)
+     * @return gestylter Button
+     */
     static Button buildToggleButton(String label, boolean aktiv) {
         Button btn = new Button(label);
         btn.getStyle()
@@ -42,6 +62,11 @@ class DiagrammFactory {
         return btn;
     }
 
+    /**
+     * Erstellt die fixe Zahlungsarten-Legende mit Bar- und Kartenfarbe.
+     *
+     * @return horizontales Legenden-Layout
+     */
     static HorizontalLayout buildLegende() {
         HorizontalLayout legende = new HorizontalLayout();
         legende.setSpacing(false);
@@ -63,6 +88,14 @@ class DiagrammFactory {
         return legende;
     }
 
+    /**
+     * Erstellt einen einzelnen gruppierten Balken (Bar + Karte) für das Stundendiagramm.
+     *
+     * @param label  Stunden-Label (z.B. "8", "9", ...)
+     * @param barH   CSS-Höhe des Barzahlungs-Balkens (z.B. "60%")
+     * @param karteH CSS-Höhe des Kartenzahlungs-Balkens
+     * @return vertikales Layout mit zwei Balken und Label
+     */
     static VerticalLayout buildBalken(String label, String barH, String karteH) {
         VerticalLayout wrapper = new VerticalLayout();
         wrapper.setPadding(false);
@@ -92,6 +125,9 @@ class DiagrammFactory {
         return wrapper;
     }
 
+    /**
+     * Erstellt den dynamischen Legenden-Block mit Punkt, Name, Betrag und Prozentanteil.
+     */
     private static Div buildLegendeBlock(String[][] daten, double summe) {
         Div legende = new Div();
         legende.getStyle()
@@ -124,6 +160,9 @@ class DiagrammFactory {
         return legende;
     }
 
+    /**
+     * Erstellt das Canvas-Element und führt das Zeichenskript per JavaScript aus.
+     */
     private static Div buildCanvasWidget(String[][] daten, boolean balken) {
         Div cw = new Div();
         cw.getStyle().set("flex", "1").set("display", "flex").set("justify-content", "center");
@@ -135,6 +174,13 @@ class DiagrammFactory {
         return cw;
     }
 
+    /**
+     * Generiert den JavaScript-Code zum Zeichnen eines Balkendiagramms auf dem Canvas.
+     *
+     * @param cid   Canvas-Element-ID
+     * @param daten Diagrammdaten
+     * @return JavaScript als String
+     */
     private static String buildBalkenJs(String cid, String[][] daten) {
         StringBuilder js = new StringBuilder();
         js.append("var c=document.getElementById('").append(cid).append("');if(!c)return;");
@@ -158,6 +204,13 @@ class DiagrammFactory {
         return js.toString();
     }
 
+    /**
+     * Generiert den JavaScript-Code zum Zeichnen eines Tortendiagramms auf dem Canvas.
+     *
+     * @param cid   Canvas-Element-ID
+     * @param daten Diagrammdaten
+     * @return JavaScript als String
+     */
     private static String buildTorteJs(String cid, String[][] daten) {
         StringBuilder js = new StringBuilder();
         js.append("var c=document.getElementById('").append(cid).append("');if(!c)return;");

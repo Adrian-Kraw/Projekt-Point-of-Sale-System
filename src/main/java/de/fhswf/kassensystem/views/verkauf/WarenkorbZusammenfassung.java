@@ -15,8 +15,15 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Unterer Bereich der Warenkorb-Spalte:
- * Rabattzeile, Preisübersicht und Aktionsbuttons.
+ * Unterer Bereich der Warenkorb-Spalte mit Rabattzeile, Preisübersicht und Bezahlen-Button.
+ *
+ * <p>Zeigt Zwischensumme, MwSt 7%, MwSt 19%, optionale Rabattzeile und Gesamtbetrag.
+ * Der Rabatt wird als Prozentsatz eingegeben und auf die Zwischensumme angewendet.
+ *
+ * <p>Über {@link #aktualisierePreise(java.util.List)} wird die Preisanzeige
+ * nach jeder Warenkorb-Änderung aktualisiert.
+ *
+ * @author Adrian
  */
 class WarenkorbZusammenfassung extends VerticalLayout {
 
@@ -31,6 +38,13 @@ class WarenkorbZusammenfassung extends VerticalLayout {
     private BigDecimal aktuellerRabattProzent = BigDecimal.ZERO;
     private final Runnable onRabattGeaendert;
 
+    /**
+     * Erstellt die Warenkorb-Zusammenfassung.
+     *
+     * @param onAbbrechen       wird beim Klick auf "Abbrechen" aufgerufen (Warenkorb leeren)
+     * @param onBezahlen        wird beim Klick auf "Bezahlen" mit dem Gesamtbetragtext aufgerufen
+     * @param onRabattGeaendert wird nach jeder Rabattänderung aufgerufen (Warenkorb-UI neu zeichnen)
+     */
     WarenkorbZusammenfassung(Runnable onAbbrechen, Consumer<String> onBezahlen,
                              Runnable onRabattGeaendert) {
         this.onRabattGeaendert = onRabattGeaendert;
@@ -64,6 +78,12 @@ class WarenkorbZusammenfassung extends VerticalLayout {
     // ÖFFENTLICHE API
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Aktualisiert alle Preisanzeigen anhand der aktuellen Warenkorb-Einträge.
+     * Berechnet MwSt 7%/19%, Rabattbetrag und Gesamtsumme.
+     *
+     * @param warenkorbListe aktuelle Warenkorb-Einträge
+     */
     void aktualisierePreise(List<WarenkorbEintrag> warenkorbListe) {
         BigDecimal zwischensumme = BigDecimal.ZERO;
         BigDecimal mwst7total    = BigDecimal.ZERO;
@@ -101,18 +121,37 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         }
     }
 
+    /**
+     * Setzt den Rabatt auf 0% zurück und blendet die Rabattzeile aus.
+     * Wird beim Leeren des Warenkorbs aufgerufen.
+     */
     void resetRabatt() {
         aktuellerRabattProzent = BigDecimal.ZERO;
         rabattAnzeigeZeile.setVisible(false);
     }
 
+    /**
+     * Gibt den aktuell eingestellten Rabattprozentsatz zurück.
+     *
+     * @return Rabatt in Prozent, oder {@link java.math.BigDecimal#ZERO} wenn kein Rabatt aktiv
+     */
     BigDecimal getAktuellerRabattProzent() { return aktuellerRabattProzent; }
+
+    /**
+     * Gibt den aktuell angezeigten Gesamtbetrag als formatierten String zurück.
+     *
+     * @return Gesamtbetrag-Text (z.B. "12,99€")
+     */
     String getGesamtBetragText()           { return gesamtBetragSpan.getText(); }
 
     // ═══════════════════════════════════════════════════════════
     // UI-BUILDER
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * Erstellt die Rabatteingabe-Zeile mit Textfeld und "Anwenden"-Button.
+     * Validiert den eingegebenen Wert (0–100%) und zeigt Fehlermeldungen bei ungültiger Eingabe.
+     */
     private HorizontalLayout buildRabattZeile() {
         TextField rabattFeld = new TextField();
         rabattFeld.setPlaceholder("Rabatt in %");
@@ -159,6 +198,9 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         return row;
     }
 
+    /**
+     * Erstellt den Preisblock mit Zwischensumme, MwSt-Zeilen, Rabattzeile und Gesamtbetrag.
+     */
     private VerticalLayout buildPreisZeilen() {
         VerticalLayout zeilen = new VerticalLayout();
         zeilen.setPadding(false);
@@ -194,6 +236,12 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         return zeilen;
     }
 
+    /**
+     * Erstellt eine einzelne Preiszeile mit Label und Betrag-Span.
+     *
+     * @param label      Beschriftungstext (z.B. "Zwischensumme")
+     * @param betragSpan Span der den Betrag enthält und live aktualisiert wird
+     */
     private HorizontalLayout preisZeile(String label, Span betragSpan) {
         HorizontalLayout zeile = new HorizontalLayout();
         zeile.setWidthFull();
@@ -209,6 +257,12 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         return zeile;
     }
 
+    /**
+     * Erstellt die Zeile mit "Abbrechen"- und "Bezahlen"-Button.
+     *
+     * @param onAbbrechen Callback für den Abbrechen-Button
+     * @param onBezahlen  Callback für den Bezahlen-Button (erhält den Gesamtbetragtext)
+     */
     private HorizontalLayout buildAktionsButtons(Runnable onAbbrechen, Consumer<String> onBezahlen) {
         Button abbrechenBtn = new Button("Abbrechen");
         abbrechenBtn.getStyle()
@@ -248,6 +302,12 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         return buttons;
     }
 
+    /**
+     * Formatiert einen Betrag als deutschen Währungsstring (z.B. "12,99€").
+     *
+     * @param betrag der zu formatierende Betrag
+     * @return formatierter String
+     */
     static String format(BigDecimal betrag) {
         return String.format("%,.2f€", betrag).replace(",", "X").replace(".", ",").replace("X", ".");
     }

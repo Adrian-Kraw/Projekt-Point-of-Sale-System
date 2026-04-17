@@ -6,16 +6,19 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.service.UserService;
 
 import java.util.function.Consumer;
 
 /**
- * Baut eine einzelne Tabellenzeile für die Benutzerverwaltung.
- * FIX: Stift-Button öffnet jetzt den BenutzerBearbeitenDialog.
- * FIX: Alle Aktionen-Buttons sind dauerhaft sichtbar (opacity: 1).
+ * Fabrikklasse für einzelne Tabellenzeilen in der Benutzerverwaltung.
+ *
+ * <p>Jede Zeile enthält: ID, Benutzername, Name, Rollenbadge, Statusanzeige
+ * sowie drei Aktions-Buttons (Bearbeiten, Sperren/Entsperren, Passwort-Reset).
+ * Alle Buttons sind dauerhaft sichtbar.
+ *
+ * @author Adrian
  */
 class BenutzerZeileFactory {
 
@@ -28,6 +31,16 @@ class BenutzerZeileFactory {
 
     private BenutzerZeileFactory() {}
 
+    /**
+     * Erstellt eine vollständig gestylte Tabellenzeile für den übergebenen Benutzer.
+     *
+     * @param user             der darzustellende Benutzer
+     * @param zebra            {@code true} für abwechselnden Zeilenhintergrund
+     * @param userService      Service für Sperren/Entsperren und Aktualisieren
+     * @param onAenderung      wird nach jeder Änderung aufgerufen
+     * @param onPasswortReset  wird aufgerufen wenn der Passwort-Button geklickt wird
+     * @return fertiges Zeilen-Layout
+     */
     static HorizontalLayout create(User user, boolean zebra,
                                    UserService userService,
                                    Runnable onAenderung,
@@ -72,6 +85,9 @@ class BenutzerZeileFactory {
         return zeile;
     }
 
+    /**
+     * Erstellt eine einfache Text-Zelle mit definierter Breite und Farbe.
+     */
     private static Span buildTextZelle(String text, String breite,
                                        String fontSize, String color, boolean bold) {
         Span span = new Span(text);
@@ -82,6 +98,11 @@ class BenutzerZeileFactory {
         return span;
     }
 
+    /**
+     * Erstellt den Rollen-Badge ("Kassierer" oder "Manager") mit passender Farbe.
+     *
+     * @param rolle Rollenname als String
+     */
     private static Span buildRolleBadge(String rolle) {
         boolean istManager = "Manager".equals(rolle);
         Span badge = new Span(rolle);
@@ -94,6 +115,11 @@ class BenutzerZeileFactory {
         return badge;
     }
 
+    /**
+     * Erstellt die Status-Zelle mit farbigem Punkt und Text ("Aktiv" / "Inaktiv").
+     *
+     * @param aktiv {@code true} für aktiven, {@code false} für gesperrten Benutzer
+     */
     private static HorizontalLayout buildStatusZelle(boolean aktiv) {
         HorizontalLayout status = new HorizontalLayout();
         status.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -115,6 +141,14 @@ class BenutzerZeileFactory {
         return status;
     }
 
+    /**
+     * Erstellt die Aktionen-Zelle mit drei Buttons: Bearbeiten, Sperren/Entsperren, Passwort-Reset.
+     *
+     * @param user            betroffener Benutzer
+     * @param userService     Service für Deaktivierung und Update
+     * @param onAenderung     Callback nach jeder Änderung
+     * @param onPasswortReset Callback für den Passwort-Reset-Button
+     */
     private static HorizontalLayout buildAktionenZelle(User user, UserService userService,
                                                        Runnable onAenderung,
                                                        Consumer<User> onPasswortReset) {
@@ -123,7 +157,6 @@ class BenutzerZeileFactory {
         zelle.setSpacing(false);
         zelle.getStyle().set("gap", "0.25rem").set("opacity", "1");
 
-        // FIX: Stift öffnet jetzt echten Bearbeiten-Dialog
         Button editBtn = buildAktionsButton("edit", "#553722", "#ffdcc6");
         editBtn.getElement().setAttribute("tour-id", "benutzer-bearbeiten-btn");
         editBtn.addClickListener(e -> {
@@ -157,6 +190,13 @@ class BenutzerZeileFactory {
         return zelle;
     }
 
+    /**
+     * Erstellt einen Icon-Button mit Hover-Hintergrundfarbe.
+     *
+     * @param iconName   Material-Symbols-Icon-Name
+     * @param iconFarbe  Standardfarbe des Icons
+     * @param hoverFarbe Hintergrundfarbe beim Hover
+     */
     private static Button buildAktionsButton(String iconName, String iconFarbe, String hoverFarbe) {
         Span icon = new Span(iconName);
         icon.addClassName("material-symbols-outlined");

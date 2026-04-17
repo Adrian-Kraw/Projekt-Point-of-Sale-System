@@ -11,8 +11,18 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Lädt Benutzer aus der Datenbank für Spring Security.
- * Wird von SecurityConfig als AuthenticationProvider verwendet.
+ * Implementierung des Spring Security {@link org.springframework.security.core.userdetails.UserDetailsService}.
+ *
+ * <p>Lädt einen Benutzer anhand seines Benutzernamens aus der Datenbank
+ * und wandelt ihn in ein Spring-Security-konformes {@code UserDetails}-Objekt um.
+ * Die Rolle wird als {@code GrantedAuthority} in der Form {@code ROLE_KASSIERER}
+ * bzw. {@code ROLE_MANAGER} übergeben.
+ *
+ * <p>Ist der Benutzer nicht vorhanden oder deaktiviert, wird eine
+ * {@link org.springframework.security.core.userdetails.UsernameNotFoundException}
+ * geworfen, die Spring Security als fehlgeschlagenen Login-Versuch wertet.
+ *
+ * @author Adrian
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -23,6 +33,22 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+
+    /**
+     * Lädt einen Benutzer anhand seines Benutzernamens für Spring Security.
+     *
+     * <p>Wird automatisch von Spring Security während des Login-Vorgangs aufgerufen.
+     * Der zurückgegebene {@code UserDetails}-Objekt wird anschließend von Spring Security
+     * zur Passwortprüfung und Rollen-Zuweisung verwendet.
+     *
+     * <p>Die Rolle wird als {@code GrantedAuthority} im Format {@code ROLE_KASSIERER}
+     * bzw. {@code ROLE_MANAGER} übergeben, damit Spring Security sie per
+     * {@code @RolesAllowed} auf den Views auswerten kann.
+     *
+     * @param benutzername der eingegebene Benutzername aus dem Login-Formular
+     * @return ein {@code UserDetails}-Objekt mit Benutzername, Passwort-Hash und Rolle
+     * @throws UsernameNotFoundException wenn kein Benutzer mit dem Namen existiert oder der Account deaktiviert ist
+     */
     @Override
     public UserDetails loadUserByUsername(String benutzername)
             throws UsernameNotFoundException {

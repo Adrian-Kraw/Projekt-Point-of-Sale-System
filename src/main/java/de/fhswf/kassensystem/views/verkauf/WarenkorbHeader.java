@@ -8,10 +8,20 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 /**
- * Header der Warenkorb-Spalte mit Titel und Löschen-Button.
+ * Header der Warenkorb-Spalte mit Titel ("Warenkorb") und Komplett-Löschen-Button.
+ *
+ * <p>Ein Klick auf den Löschen-Button ruft den {@code onLoeschen}-Callback auf,
+ * der in {@link VerkaufView} den gesamten Warenkorb leert.
+ *
+ * @author Adrian
  */
 class WarenkorbHeader extends HorizontalLayout {
 
+    /**
+     * Erstellt den Warenkorb-Header.
+     *
+     * @param onLoeschen wird aufgerufen wenn der Löschen-Button geklickt wird
+     */
     WarenkorbHeader(Runnable onLoeschen) {
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
@@ -22,6 +32,9 @@ class WarenkorbHeader extends HorizontalLayout {
         add(buildTitelGruppe(), buildLoeschenButton(onLoeschen));
     }
 
+    /**
+     * Erstellt die linke Titelgruppe mit Icon-Box und "Warenkorb"-Überschrift.
+     */
     private HorizontalLayout buildTitelGruppe() {
         Div iconBox = new Div();
         iconBox.getStyle()
@@ -45,6 +58,11 @@ class WarenkorbHeader extends HorizontalLayout {
         return gruppe;
     }
 
+    /**
+     * Erstellt den Löschen-Button mit Mülleimer-Icon.
+     *
+     * @param onLoeschen Callback für den Klick
+     */
     private Button buildLoeschenButton(Runnable onLoeschen) {
         Button btn = new Button();
         btn.getElement().appendChild(icon("delete_sweep").getElement());
@@ -56,6 +74,9 @@ class WarenkorbHeader extends HorizontalLayout {
         return btn;
     }
 
+    /**
+     * Erstellt einen Material-Symbols-Icon-Span.
+     */
     private static Span icon(String name) {
         Span s = new Span(name);
         s.addClassName("material-symbols-outlined");

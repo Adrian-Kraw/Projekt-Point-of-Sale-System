@@ -7,15 +7,28 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Startet Onboarding-Touren.
- * Aktionen wie Demo-Verkauf oder Dialog-Öffnen werden über einen
- * ActionHandler-Callback an die jeweilige View delegiert.
+ * Spring-Service zum Starten von Onboarding-Touren.
+ *
+ * <p>Lädt die Steps einer Tour aus dem {@link TourService}, erstellt eine
+ * {@link TourComponent} und fügt sie der aktuellen Vaadin-UI hinzu.
+ *
+ * <p>View-spezifische Aktionen (Demo-Verkauf, Dialoge öffnen etc.) werden
+ * über den {@code actionHandler}-Callback an die aufrufende View delegiert.
+ * Das ermöglicht eine saubere Trennung: {@code TourManager} kennt keine Views,
+ * und die Views kennen keine Tour-Logik.
+ *
+ * @author Adrian
  */
 @Service
 public class TourManager {
 
     private final TourService tourService;
 
+    /**
+     * Erstellt den TourManager.
+     *
+     * @param tourService Service der die Tour-Definitionen liefert
+     */
     public TourManager(TourService tourService) {
         this.tourService = tourService;
     }
@@ -41,7 +54,12 @@ public class TourManager {
         ui.access(tour::start);
     }
 
-    /** Kurzform ohne ActionHandler (für einfache Touren ohne Dialoge). */
+    /**
+     * Startet eine Tour ohne View-spezifische Aktionen.
+     * Kurzform für Touren die nur navigieren und Texte anzeigen.
+     *
+     * @param tourId ID der Tour (z.B. "kassierer", "manager")
+     */
     public void start(String tourId) {
         start(tourId, action -> {});
     }

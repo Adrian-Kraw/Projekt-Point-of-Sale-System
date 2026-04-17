@@ -10,10 +10,21 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Zahlungsarten-Diagramm + Karten im Tagesabschluss.
+ * Panel für die Zahlungsarten-Aufteilung im Tagesabschluss.
+ *
+ * <p>Zeigt zwei Zahlungskarten (Bar/Karte) und ein umschaltbares
+ * Diagramm (Torte oder Balken). Das Diagramm wird über {@link DiagrammFactory} gerendert.
+ *
+ * @author Adrian
  */
 class ZahlungsartenPanel extends VerticalLayout {
 
+    /**
+     * Erstellt das Panel mit Zahlungskarten und Balkendiagramm als Standard.
+     *
+     * @param umsatzBar   Tagesumsatz per Barzahlung
+     * @param umsatzKarte Tagesumsatz per Kartenzahlung
+     */
     ZahlungsartenPanel(BigDecimal umsatzBar, BigDecimal umsatzKarte) {
         setPadding(false);
         setSpacing(false);
@@ -83,6 +94,13 @@ class ZahlungsartenPanel extends VerticalLayout {
         add(titelZeile, kartenZeile, diagrammContainer);
     }
 
+    /**
+     * Erstellt eine einzelne Zahlungsart-Karte mit Label, Betrag und Icon.
+     *
+     * @param label    Zahlungsartbezeichnung (z.B. "Bar")
+     * @param betrag   formatierter Betrag (z.B. "42,50€")
+     * @param iconName Material-Symbols-Icon-Name
+     */
     private HorizontalLayout buildZahlungsKarte(String label, String betrag, String iconName) {
         HorizontalLayout karte = new HorizontalLayout();
         karte.setAlignItems(FlexComponent.Alignment.CENTER);

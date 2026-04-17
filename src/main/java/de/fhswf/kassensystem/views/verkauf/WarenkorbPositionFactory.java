@@ -10,14 +10,25 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /**
- * Baut eine einzelne Position im Warenkorb.
- * FIX: Löschen-Button setzt eintrag.menge = 0, damit VerkaufView den
- *      Eintrag korrekt aus der Liste entfernt.
+ * Fabrikklasse für einzelne Positionen im Warenkorb der Kassier-View.
+ *
+ * <p>Jede Position zeigt Artikelname, Einzelpreis, Mengenkontrolle (−/+),
+ * Gesamtpreis und Löschen-Button.
+ *
+ * @author Adrian & Paula
  */
 class WarenkorbPositionFactory {
 
     private WarenkorbPositionFactory() {}
 
+    /**
+     * Erstellt eine vollständig gestylte Warenkorb-Zeile.
+     *
+     * @param eintrag     der darzustellende Warenkorb-Eintrag
+     * @param zebra       {@code true} für abwechselnden Zeilenhintergrund
+     * @param onAenderung wird nach jeder Mengenänderung oder Löschung aufgerufen
+     * @return fertig gestyltes Positions-Layout
+     */
     static HorizontalLayout create(WarenkorbEintrag eintrag, boolean zebra, Runnable onAenderung) {
         String gesamtText = formatPreis(eintrag.artikel.getPreis()
                 .multiply(java.math.BigDecimal.valueOf(eintrag.menge)));
@@ -40,6 +51,9 @@ class WarenkorbPositionFactory {
         return position;
     }
 
+    /**
+     * Erstellt den Infoblock mit Artikelname und Einzelpreis.
+     */
     private static VerticalLayout buildInfo(String name, String einzelPreis) {
         VerticalLayout info = new VerticalLayout();
         info.setPadding(false);
@@ -60,6 +74,13 @@ class WarenkorbPositionFactory {
         return info;
     }
 
+    /**
+     * Erstellt die Mengenkontrolle mit Minus-, Anzeige- und Plus-Element.
+     * Plus prüft ob der Bestand ausreicht; Minus stoppt bei 1.
+     *
+     * @param eintrag     Eintrag dessen Menge verändert wird
+     * @param onAenderung Callback nach jeder Mengenänderung
+     */
     private static HorizontalLayout buildMengeKontrolle(WarenkorbEintrag eintrag, Runnable onAenderung) {
         Span mengeSpan = new Span(String.valueOf(eintrag.menge));
         mengeSpan.getStyle()
@@ -96,6 +117,11 @@ class WarenkorbPositionFactory {
         return kontrolle;
     }
 
+    /**
+     * Erstellt einen runden Mengen-Button (+ oder −) mit Material-Icon.
+     *
+     * @param iconName "add" oder "remove"
+     */
     private static Button buildMengeButton(String iconName) {
         Span icon = new Span(iconName);
         icon.addClassName("material-symbols-outlined");
@@ -112,6 +138,11 @@ class WarenkorbPositionFactory {
         return btn;
     }
 
+    /**
+     * Erstellt den rechtsbündigen Gesamtpreis-Span.
+     *
+     * @param gesamt formatierter Gesamtbetrag (z.B. "2,97€")
+     */
     private static Span buildGesamtSpan(String gesamt) {
         Span span = new Span(gesamt);
         span.getStyle()
@@ -121,6 +152,10 @@ class WarenkorbPositionFactory {
         return span;
     }
 
+    /**
+     * Erstellt den Löschen-Button. Setzt {@code eintrag.menge = 0} statt {@code remove()},
+     * damit {@link VerkaufView} den Eintrag via {@code removeIf(e -> e.menge <= 0)} entfernt.
+     */
     private static Button buildLoeschenButton(WarenkorbEintrag eintrag, Runnable onAenderung) {
         Span icon = new Span("delete");
         icon.addClassName("material-symbols-outlined");
@@ -131,7 +166,6 @@ class WarenkorbPositionFactory {
         btn.getStyle()
                 .set("background", "none").set("border", "none").set("cursor", "pointer")
                 .set("color", "#d4c3ba").set("padding", "0.25rem").set("min-width", "unset");
-        // FIX: menge auf 0 setzen → aktualisiereWarenkorbUI() entfernt den Eintrag dann
         btn.addClickListener(e -> {
             eintrag.menge = 0;
             onAenderung.run();
@@ -139,6 +173,12 @@ class WarenkorbPositionFactory {
         return btn;
     }
 
+    /**
+     * Formatiert einen Betrag als deutschen Währungsstring (z.B. "1,99€").
+     *
+     * @param betrag der zu formatierende Betrag
+     * @return formatierter String
+     */
     private static String formatPreis(java.math.BigDecimal betrag) {
         return String.format("%,.2f€", betrag)
                 .replace(",", "X").replace(".", ",").replace("X", ".");
