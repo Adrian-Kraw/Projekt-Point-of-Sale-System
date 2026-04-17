@@ -9,7 +9,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Todo: Kommentar ergänzen
+ * Data Transfer Object für den Tagesabschluss eines Geschäftstages.
+ *
+ * <p>
+ *     Fasst alle relevanten Kennzahlen eines ausgewählten Tages zusammen und wird im Rahmen des Tagesabschlusses
+ *     verwendet, um dem Manager eine Übersicht über Umsatz, Transaktionsanzahl und Zahlungsarten bereitzustellen.
+ * </p>
+ *
+ * <p>
+ *     Dieses DTO wird nicht in der Datenbank persistiert, sondern zur Laufzeit aus den {@code Verkauf}-Objekten des
+ *     jeweiligen Tages aggregiert.
+ * </p>
+ *
+ * @author Paula Martin
  */
 @Getter
 @Setter

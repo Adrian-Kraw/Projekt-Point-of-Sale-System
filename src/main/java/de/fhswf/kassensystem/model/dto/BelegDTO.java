@@ -10,6 +10,20 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Data Transfer Object zur Darstellung eines Kassenbelegs.
+ *
+ * <p>
+ *     Enthält alle relevanten Informationen eines abgeschlossenen Verkaufsvorgangs und dient als Grundlage für die
+ *     Beleganzeige sowie den PDF-/Druckdialog.
+ * </p>
+ *
+ * <p>
+ *     Dieses DTO wird nicht persistiert, sondern aus einem abgeschlossenen {@code Verkauf}-Objekt zusammengestellt.
+ * </p>
+ *
+ * @author Paula Martin
+ */
 @Getter
 @Setter
 public class BelegDTO {
