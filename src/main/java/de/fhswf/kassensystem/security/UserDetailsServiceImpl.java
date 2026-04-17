@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
+import org.jspecify.annotations.NonNull;
 import java.util.List;
 
 /**
@@ -50,7 +50,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * @throws UsernameNotFoundException wenn kein Benutzer mit dem Namen existiert oder der Account deaktiviert ist
      */
     @Override
-    public UserDetails loadUserByUsername(String benutzername)
+    public @NonNull UserDetails loadUserByUsername(@NonNull String benutzername)
             throws UsernameNotFoundException {
         User user = userRepository.findByBenutzername(benutzername);
 
