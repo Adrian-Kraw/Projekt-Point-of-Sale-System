@@ -300,7 +300,7 @@ public class LagerView extends AbstractTabellenView {
                 .sorted(java.util.Comparator
                         .comparing((Artikel a) -> a.getKategorie().getName())
                         .thenComparing(Artikel::getName))
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
         boolean zebra = false;
         for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
     }
