@@ -8,7 +8,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * #TODO: Kommentar ergänzen
+ * Service für die Verwaltung von Artikeln im Kassensystem.
+ *
+ * <p>
+ *     Kapselt die Geschäftslogik für die Artikelstammdaten und delegiert Datenbankzugriffe an das
+ *     {@link ArtikelRepository}.
+ * </p>
  */
 @Service
 public class ArtikelService {
@@ -23,9 +28,9 @@ public class ArtikelService {
     }
 
     /**
-     * Sucht einen Artikel unter der genauen Angabe einer Id.
+     * Sucht einen Artikel unter der genauen Angabe einer ID.
      * @param id Die id des Artikels
-     * @return Den Artikel mit der Id
+     * @return Den Artikel mit der ID
      */
     public Artikel findArtikelById(Long id) {
         return artikelRepository.findById(id)
@@ -38,15 +43,6 @@ public class ArtikelService {
      */
     public List<Artikel> findAllArtikel() {
         return artikelRepository.findAll();
-    }
-
-    /**
-     * Sucht einen Artikel unter der Angabe einer Kategorie.
-     * @param kategorie Die Kategorie, nach der gesucht werden soll.
-     * @return Eine Liste an Artikeln, die zu der Kategorie gehören.
-     */
-    public List<Artikel> findByKategorie(Kategorie kategorie) {
-        return artikelRepository.findByKategorie(kategorie);
     }
 
     /**

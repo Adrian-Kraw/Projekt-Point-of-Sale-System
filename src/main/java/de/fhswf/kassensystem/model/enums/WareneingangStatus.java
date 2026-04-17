@@ -12,5 +12,6 @@ package de.fhswf.kassensystem.model.enums;
  */
 public enum WareneingangStatus {
     AUSSTEHEND,
-    BESTAETIGT
+    BESTAETIGT,
+    STORNIERT
 }
