@@ -47,7 +47,7 @@ class ArtikelstatistikPanel extends VerticalLayout {
         liste.setSpacing(false);
         liste.getStyle().set("gap", "1rem");
 
-        int maxAnzahl = statistiken.isEmpty() ? 1 : statistiken.get(0).getAnzahlVerkauft();
+        int maxAnzahl = statistiken.isEmpty() ? 1 : statistiken.getFirst().getAnzahlVerkauft();
         for (ArtikelStatistikDTO dto : statistiken) {
             liste.add(buildStatistikZeile(dto.getArtikel().getName(),
                     dto.getArtikel().getKategorie().getName(),
