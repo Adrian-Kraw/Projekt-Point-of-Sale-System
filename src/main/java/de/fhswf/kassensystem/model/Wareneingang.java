@@ -8,8 +8,23 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Repräsentiert einen Wareneingang im Kassensystem.
+ *
+ * <p>
+ *     Ein Wareneingang dokumentiert die Lieferung von Artikeln und ermöglicht die Erhöhung des Lagerbestands. Er wird
+ *     zunächst mit dem Status {@code AUSSTEHEND} angelegt und muss von einem Manger bestätigt werden, bevor der
+ *     Bestand des zugehörigen Artikels erhöht wird.
+ * </p>
+ *
+ * <p>
+ *     Wareneingänge werden nicht gelöscht, sondern dienen als Nachweis für Bestandsveränderungen.
+ * </p>
+ *
+ * @author Paula Martin
+ */
 @Entity
-@Table(name = "Wareneingang")
+@Table(name = "wareneingang")
 @Getter
 @Setter
 public class Wareneingang {

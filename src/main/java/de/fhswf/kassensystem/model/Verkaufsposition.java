@@ -7,10 +7,23 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * Repräsentiert eine Verkaufsposition im System.
+ * Repräsentiert eine einzelne Position innerhalb eines Verkaufsvorgangs.
+ *
+ * <p>
+ *     Jede Position verknüpft einen {@link Artikel} mit einem {@link Verkauf} und hält die zum Verkaufszeitpunkt
+ *     gültigen Werte fest. Positionen werden beim Hinzufügen von Artikeln zum Warenkorb angelegt und können bis
+ *     zum Abschluss des Vorgangs geändert oder entfernt werden.
+ * </p>
+ *
+ * <p>
+ *     Der {@code einzelpreis} wird bewusst als Snapshot gespeichert, damit spätere Preisänderungen am Artikel keine
+ *     Auswirkung auf historische Belege haben.
+ * </p>
+ *
+ * @author Paula Martin
  */
 @Entity
-@Table(name = "Verkaufsposition")
+@Table(name = "verkaufsposition")
 @Getter
 @Setter
 public class Verkaufsposition {

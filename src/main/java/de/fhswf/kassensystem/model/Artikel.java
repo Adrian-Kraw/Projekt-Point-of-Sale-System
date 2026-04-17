@@ -8,9 +8,21 @@ import java.math.BigDecimal;
 
 /**
  * Repräsentiert einen Artikel im System.
+ *
+ * <p>
+ *     Artikel bilden die Grundlage für die Verkaufsvorgänge und die Bestandsverwaltung. Sie können vom Manager angelegt,
+ *     bearbeitet und deaktiviert werden.
+ * </p>
+ *
+ * <p>
+ *     Ein deaktivierter Artikel steht nicht mehr zum Verkauf, bleibt jedoch für historische Belege und Auswertungen
+ *     erhalten.
+ * </p>
+ *
+ * @author Paula Martin, Adrian Krawietz
  */
 @Entity
-@Table(name = "Artikel")
+@Table(name = "artikel")
 @Getter
 @Setter
 public class Artikel {
