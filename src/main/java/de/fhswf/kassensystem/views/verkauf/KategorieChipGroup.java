@@ -17,7 +17,6 @@ import java.util.function.Consumer;
  */
 class KategorieChipGroup extends HorizontalLayout {
 
-    private String aktiveKategorie = "Alle";
 
     /**
      * Erstellt die Chip-Gruppe mit "Alle" als Standard-Selektion.
@@ -45,7 +44,6 @@ class KategorieChipGroup extends HorizontalLayout {
         stilisiere(chip, aktiv);
 
         chip.addClickListener(e -> {
-            aktiveKategorie = label;
             getChildren().forEach(c -> {
                 if (c instanceof Button b) stilisiere(b, b.getText().equals(label));
             });
@@ -69,14 +67,5 @@ class KategorieChipGroup extends HorizontalLayout {
                 .set("background", aktiv ? "#553722" : "#e8e5ff")
                 .set("color", aktiv ? "white" : "#50453e")
                 .set("box-shadow", aktiv ? "0 4px 15px rgba(85,55,34,0.2)" : "none");
-    }
-
-    /**
-     * Gibt die aktuell ausgewählte Kategorie zurück.
-     *
-     * @return Kategoriename oder {@code "Alle"} wenn kein Filter aktiv ist
-     */
-    String getAktiveKategorie() {
-        return aktiveKategorie;
     }
 }
