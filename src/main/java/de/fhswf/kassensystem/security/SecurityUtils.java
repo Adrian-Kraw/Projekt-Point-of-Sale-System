@@ -2,6 +2,7 @@ package de.fhswf.kassensystem.security;
 
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.repository.UserRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -35,13 +36,13 @@ public class SecurityUtils {
      * und lädt den zugehörigen {@link User} aus der Datenbank.
      *
      * @return der aktuell authentifizierte {@link User}, oder {@code null}
+     *         wenn keine aktive Authentifizierung vorliegt oder
      *         wenn kein Benutzer mit diesem Namen gefunden wurde
      */
     public User getEingeloggterUser() {
-        String benutzername = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return null;
 
-        return userRepository.findByBenutzername(benutzername);
+        return userRepository.findByBenutzername(auth.getName());
     }
 }
