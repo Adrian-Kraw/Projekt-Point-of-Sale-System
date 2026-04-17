@@ -390,6 +390,7 @@ public class TourService {
      * @return Liste der Steps, oder leere Liste wenn die Tour nicht existiert
      */
     public List<TourStep> getSteps(String tourId) {
+        if (tourId == null) return List.of();
         return TOURS.getOrDefault(tourId, List.of());
     }
 }

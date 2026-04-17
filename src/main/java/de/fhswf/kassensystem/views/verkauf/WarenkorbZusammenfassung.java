@@ -309,6 +309,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
      * @return formatierter String
      */
     static String format(BigDecimal betrag) {
-        return String.format("%,.2f€", betrag).replace(",", "X").replace(".", ",").replace("X", ".");
+        if (betrag == null) return "0,00€";
+        return String.format(java.util.Locale.GERMANY, "%,.2f€", betrag);
     }
 }

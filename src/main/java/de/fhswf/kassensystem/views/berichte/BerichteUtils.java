@@ -36,7 +36,7 @@ class BerichteUtils {
      */
     static String fp(BigDecimal v) {
         if (v == null) return "0,00€";
-        return String.format("%,.2f€", v).replace(",", "X").replace(".", ",").replace("X", ".");
+        return String.format(java.util.Locale.GERMANY, "%,.2f€", v);
     }
 
     /**
