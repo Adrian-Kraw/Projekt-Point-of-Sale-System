@@ -154,7 +154,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 : artikelService.findByName(aktuelleSuche))
                 .stream()
                 .sorted(java.util.Comparator.comparing(Artikel::getName))
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
 
         for (Artikel a : alle) {
             if (!aktiveKategorie.equals("Alle") && !a.getKategorie().getName().equals(aktiveKategorie)) continue;
@@ -457,7 +457,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     public void tourAktion(String action) {
         switch (action) {
             case "demo-verkauf" -> {
-                // Ersten verfügbaren Artikel in den Warenkorb legen (nur Demo, kein Verkauf)
                 if (warenkorbListe.isEmpty()) {
                     artikelService.findAllArtikel().stream()
                             .filter(a -> a.isAktiv() && a.getBestand() > 0)
@@ -470,9 +469,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 String anzeige = (betrag == null || betrag.isBlank()) ? "2,99€" : betrag;
                 new ZahlungsDialog(anzeige, art -> {}).open();
             }
-            case "open-quittungsdialog" -> {
-                new QuittungsDialog(() -> {}, () -> {}).open();
-            }
+            case "open-quittungsdialog" -> new QuittungsDialog(() -> {}, () -> {}).open();
         }
     }
 
