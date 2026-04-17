@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  *
  * @author Adrian
  */
-class ArtikelKarteFactory {
+public class ArtikelKarteFactory {
 
     private ArtikelKarteFactory() {}
 
@@ -213,7 +213,7 @@ class ArtikelKarteFactory {
      * @param kategorie Kategorienname des Artikels (case-insensitiv)
      * @return Tabler-Icon-Klasse (z.B. "ti-bread"), Fallback "ti-tag"
      */
-    static String iconFuerKategorie(String kategorie) {
+    public static String iconFuerKategorie(String kategorie) {
         if (kategorie == null) return "ti-tag";
         return switch (kategorie.toLowerCase().trim()) {
             case "brot und brötchen"                         -> "ti-bread";

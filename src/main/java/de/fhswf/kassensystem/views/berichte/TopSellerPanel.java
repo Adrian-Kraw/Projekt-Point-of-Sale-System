@@ -8,7 +8,7 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
-
+import de.fhswf.kassensystem.views.verkauf.ArtikelKarteFactory;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +98,10 @@ class TopSellerPanel extends VerticalLayout {
                 .sorted(Map.Entry.<Artikel, Integer>comparingByValue().reversed())
                 .limit(3)
                 .forEach(e -> liste.add(buildEintrag(
-                        e.getKey().getName(), e.getKey().getKategorie().getName(), e.getValue() + "x")));
+                        e.getKey().getName(),
+                        e.getKey().getKategorie().getName(),
+                        e.getValue() + "x",
+                        e.getKey().getBild())));
 
         if (mengen.isEmpty()) liste.add(BerichteUtils.leerSpan("Keine Verkäufe an diesem Tag."));
         return liste;
@@ -111,10 +114,25 @@ class TopSellerPanel extends VerticalLayout {
      * @param kategorie Kategoriename
      * @param anzahl    verkaufte Menge als Text (z.B. "8x")
      */
-    private HorizontalLayout buildEintrag(String name, String kategorie, String anzahl) {
+    private HorizontalLayout buildEintrag(String name, String kategorie, String anzahl, byte[] bild) {
         Div avatar = new Div();
         avatar.getStyle().set("width", "2.5rem").set("height", "2.5rem")
-                .set("border-radius", "9999px").set("background", "#efecff").set("flex-shrink", "0");
+                .set("border-radius", "9999px").set("flex-shrink", "0")
+                .set("overflow", "hidden").set("background", "#efecff")
+                .set("display", "flex").set("align-items", "center").set("justify-content", "center");
+
+        if (bild != null && bild.length > 0) {
+            String base64 = java.util.Base64.getEncoder().encodeToString(bild);
+            Image img = new Image("data:image/jpeg;base64," + base64, name);
+            img.getStyle().set("width", "100%").set("height", "100%").set("object-fit", "cover");
+            avatar.add(img);
+        } else {
+            Span icon = new Span();
+            icon.addClassName("ti");
+            icon.addClassName(ArtikelKarteFactory.iconFuerKategorie(kategorie));
+            icon.getStyle().set("font-size", "1.3rem").set("color", "#553722");
+            avatar.add(icon);
+        }
 
         Span n = new Span(name);
         n.getStyle().set("font-weight", "700").set("color", "#553722").set("font-size", "0.875rem")

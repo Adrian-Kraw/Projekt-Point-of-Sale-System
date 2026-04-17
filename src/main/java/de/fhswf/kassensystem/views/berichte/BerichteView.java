@@ -28,7 +28,7 @@ import java.util.List;
  * <p>Der Bon-Zielwert wird persistent über den {@link de.fhswf.kassensystem.service.EinstellungService}
  * in der Datenbank gespeichert.
  *
- * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ * <p>Zugriff: Rolle {@code MANAGER}.
  * Nur Manager können den Bon-Zielwert bearbeiten.
  *
  * @author Adrian
@@ -58,7 +58,7 @@ public class BerichteView extends SecuredView {
     public BerichteView(BerichteService berichteService,
                         PdfExportService pdfExportService,
                         EinstellungService einstellungService) {
-        super(Rolle.KASSIERER);
+        super(Rolle.MANAGER);
         this.berichteService    = berichteService;
         this.pdfExportService   = pdfExportService;
         this.einstellungService = einstellungService;
