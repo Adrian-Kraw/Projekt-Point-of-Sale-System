@@ -175,7 +175,7 @@ public class DashboardView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()
-                || auth.getPrincipal().equals("anonymousUser")) {
+                || "anonymousUser".equals(auth.getPrincipal())) {
             event.rerouteTo("login");
         }
     }
