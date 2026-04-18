@@ -104,19 +104,21 @@ public class ArtikelService {
         if (artikel == null) {
             throw new IllegalArgumentException("Artikel darf nicht null sein.");
         }
-
-        if (artikel.getName() == null || artikel.getName().isBlank()) {
+        if (artikel.getName() == null) {
+            throw new IllegalArgumentException("Artikelname darf nicht null sein.");
+        }
+        if (artikel.getName().isBlank()) {
             throw new IllegalArgumentException("Artikelname darf nicht leer sein.");
         }
-
-        if (artikel.getPreis() == null || artikel.getPreis().signum() < 0) {
+        if (artikel.getPreis() == null) {
+            throw new IllegalArgumentException("Artikelpreis darf nicht null sein.");
+        }
+        if (artikel.getPreis().signum() < 0) {
             throw new IllegalArgumentException("Artikelpreis muss größer oder gleich 0 sein.");
         }
-
         if (artikel.getKategorie() == null) {
             throw new IllegalArgumentException("Artikel muss einer Kategorie zugeordnet sein.");
         }
-
         if (artikel.getMehrwertsteuer() == null) {
             throw new IllegalArgumentException("Artikel muss einen Mehrwertsteuersatz zugeordnet sein.");
         }

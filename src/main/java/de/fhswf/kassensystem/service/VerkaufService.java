@@ -57,11 +57,9 @@ public class VerkaufService {
         if (positionen == null) {
             throw new IllegalArgumentException("Positionen dürfen nicht null sein.");
         }
-
         if (positionen.isEmpty()) {
             throw new LeerWarenkorbException();
         }
-
         if (zahlungsart == null) {
             throw new IllegalArgumentException("Zahlungsart darf nicht null sein.");
         }

@@ -81,11 +81,9 @@ public class LagerService {
         if (eingang == null) {
             throw new IllegalArgumentException("Wareneingang darf nicht null sein.");
         }
-
         if (eingang.getArtikel() == null) {
             throw new IllegalArgumentException("Wareneingang muss einem Artikel zugeordnet sein.");
         }
-
         if (eingang.getMenge() <= 0) {
             throw new IllegalArgumentException("Menge muss größer als 0 sein");
         }

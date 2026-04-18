@@ -129,15 +129,18 @@ public class UserService {
         if (user == null) {
             throw new IllegalArgumentException("Benutzer darf nicht null sein.");
         }
-
-        if (user.getBenutzername() == null || user.getBenutzername().isBlank()) {
+        if (user.getBenutzername() == null) {
+            throw new IllegalArgumentException("Benutzername darf nicht null sein.");
+        }
+        if (user.getBenutzername().isBlank()) {
             throw new IllegalArgumentException("Benutzername darf nicht leer sein.");
         }
-
-        if (user.getName() == null || user.getName().isBlank()) {
+        if (user.getName() == null) {
+            throw new IllegalArgumentException(("Name darf nicht null sein."));
+        }
+        if (user.getName().isBlank()) {
             throw new IllegalArgumentException(("Name darf nicht leer sein."));
         }
-
         if (user.getRolle() == null) {
             throw new IllegalArgumentException("Benutzername muss eine Rolle haben.");
         }

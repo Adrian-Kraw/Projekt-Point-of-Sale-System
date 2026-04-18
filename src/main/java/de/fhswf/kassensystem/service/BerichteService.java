@@ -55,7 +55,6 @@ public class BerichteService {
         if (start == null || end == null) {
             throw new IllegalArgumentException("Start- und Endzeitpunkt dürfen nicht null sein.");
         }
-
         if (start.isAfter(end)) {
             throw new IllegalArgumentException("Startzeitpunkt darf nicht nach dem Endzeitpunkt liegen.");
         }
