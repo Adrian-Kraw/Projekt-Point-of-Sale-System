@@ -22,14 +22,6 @@ import java.util.List;
 public interface ArtikelRepository extends JpaRepository<Artikel, Long> {
 
     /**
-     * Gibt alle Artikel zurück, die zu einer bestimmten Kategorie gehören.
-     *
-     * @param kategorie die Kategorie nach der gefiltert werden soll.
-     * @return Liste aller Artikel der angebenen Kategorie oder eine leere Liste, wenn keine Artikel gefunden wurden
-     */
-    List<Artikel> findByKategorie(Kategorie kategorie);
-
-    /**
      * Sucht Artikel anhand eines Namensfragments. Groß- und Kleinschreibung
      * wird ignoriert.
      *
@@ -37,14 +29,6 @@ public interface ArtikelRepository extends JpaRepository<Artikel, Long> {
      * @return Liste an Artikeln oder eine leere Liste, wenn keine Artikel gefunden werden konnten
      */
     List<Artikel> findByNameContainingIgnoreCase(String name);
-
-    /**
-     * Gibt den Artikel mit der angebenen ID zurück.
-     *
-     * @param id der Datenbankidentifikator des gesuchten Artikels
-     * @return der gefundene Artikel oder {@code null} wenn kein Artikel mit der angegebenen ID existiert.
-     */
-    Artikel findArtikelById(Long id);
 
     /**
      * Gibt alle Artikel zurück, deren aktueller Bestand den definierten Minimalbestand unterschreitet.

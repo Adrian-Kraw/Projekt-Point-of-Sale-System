@@ -57,11 +57,4 @@ public interface VerkaufRepository extends JpaRepository<Verkauf, Long> {
             @Param("start") LocalDateTime start,
             @Param("end")   LocalDateTime end);
 
-    /**
-     * Gibt den Verkauf mit der angegebenen ID zurück.
-     *
-     * @param verkaufId Der Datenbankidentifikator des gesuchten Verkaufs
-     * @return der gefundene Verkauf oder {@code null}, wenn kein Verkauf mit der angegebenen ID existiert.
-     */
-    Verkauf findVerkaufById(Long verkaufId);
 }

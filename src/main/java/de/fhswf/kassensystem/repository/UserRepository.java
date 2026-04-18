@@ -18,15 +18,6 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
-     * Gibt den Benutzer mit der angegebenen ID zurück.
-     *
-     * @param id der Datenbankidentifikator des gesuchten Benutzers
-     * @return der gefundene Benutzer oder {@code null} wenn kein Benutzer mit der angegebenen ID
-     *         existiert.
-     */
-    User findUserById(Long id);
-
-    /**
      * Sucht einen Benutzer anhand seines exakten Benutzernamens.
      *
      * @param benutzername der exakte Benutzername des gesuchten Benutzers.
