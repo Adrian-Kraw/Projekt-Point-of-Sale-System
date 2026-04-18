@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.exception.WareneingangBereitsBestaetigt;
 import de.fhswf.kassensystem.exception.WareneingangNotFoundException;
 import de.fhswf.kassensystem.model.Artikel;
@@ -85,7 +86,7 @@ public class LagerService {
             throw new IllegalArgumentException("Wareneingang muss einem Artikel zugeordnet sein.");
         }
         if (eingang.getMenge() <= 0) {
-            throw new IllegalArgumentException("Menge muss größer als 0 sein");
+            throw new UngueltigeEingabeException("Menge muss größer als 0 sein");
         }
 
         eingang.setStatus(WareneingangStatus.AUSSTEHEND);

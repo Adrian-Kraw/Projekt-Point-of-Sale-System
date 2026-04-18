@@ -1,6 +1,6 @@
 package de.fhswf.kassensystem.service;
 
-import de.fhswf.kassensystem.exception.UngueltigerZeitraumException;
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
@@ -56,7 +56,7 @@ public class BerichteService {
             throw new IllegalArgumentException("Start- und Endzeitpunkt dürfen nicht null sein.");
         }
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Startzeitpunkt darf nicht nach dem Endzeitpunkt liegen.");
+            throw new UngueltigeEingabeException("Startzeitpunkt darf nicht nach dem Endzeitpunkt liegen.");
         }
 
         return verkaufRepository.findByTimestampBetween(start, end);
@@ -132,7 +132,7 @@ public class BerichteService {
      */
     public List<ArtikelStatistikDTO> getArtikelStatistik(int tage) {
         if (tage <= 0) {
-            throw new UngueltigerZeitraumException(tage);
+            throw new UngueltigeEingabeException("Anzahl der Tage muss größer als 0 sein, ist aber " + tage + ".");
         }
 
         LocalDateTime start = LocalDateTime.now().minusDays(tage);

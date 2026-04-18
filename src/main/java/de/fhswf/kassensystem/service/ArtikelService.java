@@ -1,6 +1,7 @@
 package de.fhswf.kassensystem.service;
 
 import de.fhswf.kassensystem.exception.ArtikelNotFoundException;
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import de.fhswf.kassensystem.repository.ArtikelRepository;
@@ -108,13 +109,13 @@ public class ArtikelService {
             throw new IllegalArgumentException("Artikelname darf nicht null sein.");
         }
         if (artikel.getName().isBlank()) {
-            throw new IllegalArgumentException("Artikelname darf nicht leer sein.");
+            throw new UngueltigeEingabeException("Artikelname darf nicht leer sein.");
         }
         if (artikel.getPreis() == null) {
             throw new IllegalArgumentException("Artikelpreis darf nicht null sein.");
         }
         if (artikel.getPreis().signum() < 0) {
-            throw new IllegalArgumentException("Artikelpreis muss größer oder gleich 0 sein.");
+            throw new UngueltigeEingabeException("Artikelpreis muss größer oder gleich 0 sein.");
         }
         if (artikel.getKategorie() == null) {
             throw new IllegalArgumentException("Artikel muss einer Kategorie zugeordnet sein.");

@@ -1,6 +1,7 @@
 package de.fhswf.kassensystem.service;
 
 import de.fhswf.kassensystem.exception.BenutzernameExistiertException;
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.exception.UserNotFoundException;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.repository.UserRepository;
@@ -100,8 +101,11 @@ public class UserService {
      * @param neuesPasswort das neue Passwort im Klartext
      */
     public void resetPasswort(Long id, String neuesPasswort) {
-        if (neuesPasswort == null || neuesPasswort.isBlank()) {
-            throw new IllegalArgumentException("Neues Passwort darf nicht leer sein.");
+        if (neuesPasswort == null) {
+            throw new IllegalArgumentException("Neues Passwort darf nicht null sein.");
+        }
+        if (neuesPasswort.isBlank()) {
+            throw new UngueltigeEingabeException("Neues Passwort darf nicht leer sein.");
         }
 
         User user = userRepository.findById(id)
@@ -133,13 +137,13 @@ public class UserService {
             throw new IllegalArgumentException("Benutzername darf nicht null sein.");
         }
         if (user.getBenutzername().isBlank()) {
-            throw new IllegalArgumentException("Benutzername darf nicht leer sein.");
+            throw new UngueltigeEingabeException("Benutzername darf nicht leer sein.");
         }
         if (user.getName() == null) {
-            throw new IllegalArgumentException(("Name darf nicht null sein."));
+            throw new UngueltigeEingabeException("Name darf nicht null sein.");
         }
         if (user.getName().isBlank()) {
-            throw new IllegalArgumentException(("Name darf nicht leer sein."));
+            throw new UngueltigeEingabeException("Name darf nicht leer sein.");
         }
         if (user.getRolle() == null) {
             throw new IllegalArgumentException("Benutzername muss eine Rolle haben.");
