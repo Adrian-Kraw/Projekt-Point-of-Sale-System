@@ -147,6 +147,7 @@ public class BerichteService {
             if (verkauf.getPositionen() == null) continue;
             for (Verkaufsposition position : verkauf.getPositionen()) {
                 Artikel artikel = position.getArtikel();
+                if (artikel == null || position.getEinzelpreis() == null) continue;
                 int menge = position.getMenge();
                 BigDecimal umsatz = position.getEinzelpreis()
                         .multiply(BigDecimal.valueOf(menge));

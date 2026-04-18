@@ -140,7 +140,7 @@ public class UserService {
             throw new UngueltigeEingabeException("Benutzername darf nicht leer sein.");
         }
         if (user.getName() == null) {
-            throw new UngueltigeEingabeException("Name darf nicht null sein.");
+            throw new IllegalArgumentException("Name darf nicht null sein.");
         }
         if (user.getName().isBlank()) {
             throw new UngueltigeEingabeException("Name darf nicht leer sein.");
