@@ -1,6 +1,9 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.BestandUnterschrittenException;
+import de.fhswf.kassensystem.exception.LeerWarenkorbException;
 import de.fhswf.kassensystem.model.Verkauf;
+import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Status;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
 import de.fhswf.kassensystem.repository.VerkaufRepository;
@@ -50,6 +53,30 @@ public class VerkaufService {
             Zahlungsart zahlungsart,
             BigDecimal rabatt,
             BigDecimal gesamtsumme) {
+
+        if (positionen == null) {
+            throw new IllegalArgumentException("Positionen dürfen nicht null sein.");
+        }
+
+        if (positionen.isEmpty()) {
+            throw new LeerWarenkorbException();
+        }
+
+        if (zahlungsart == null) {
+            throw new IllegalArgumentException("Zahlungsart darf nicht null sein.");
+        }
+        if (gesamtsumme == null) {
+            throw new IllegalArgumentException("Gesamtsumme darf nicht null sein.");
+        }
+        if (gesamtsumme.signum() < 0) {
+            throw new IllegalArgumentException("Gesamtsumme muss größer oder gleich 0 sein.");
+        }
+        if (rabatt == null) {
+            throw new IllegalArgumentException("Rabatt darf nicht null sein.");
+        }
+        if (rabatt.signum() < 0) {
+            throw new IllegalArgumentException("Rabatt darf nicht kleiner als 0 sein.");
+        }
 
         Verkauf verkauf = new Verkauf();
         verkauf.setTimestamp(java.time.LocalDateTime.now());

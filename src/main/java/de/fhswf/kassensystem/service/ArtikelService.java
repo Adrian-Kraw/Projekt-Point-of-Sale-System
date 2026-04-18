@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.ArtikelNotFoundException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import de.fhswf.kassensystem.repository.ArtikelRepository;
@@ -33,8 +34,11 @@ public class ArtikelService {
      * @return Den Artikel mit der ID
      */
     public Artikel findArtikelById(Long id) {
+        if (id == null) {
+            throw new ArtikelNotFoundException(null);
+        }
         return artikelRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artikel mit Id " + id + " nicht gefunden."));
+                .orElseThrow(() -> new ArtikelNotFoundException(id));
     }
 
     /**
@@ -51,6 +55,9 @@ public class ArtikelService {
      * @return Gibt die Artikel zurück oder eine leere Liste.
      */
     public List<Artikel> findByName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Suchbegriff darf nicht null sein.");
+        }
         return artikelRepository.findByNameContainingIgnoreCase(name);
     }
 
@@ -60,6 +67,7 @@ public class ArtikelService {
      * @return Gibt den Artikel zurück, der gespeichert werden soll.
      */
     public Artikel createArtikel(Artikel artikel) {
+        validiereArtikel(artikel);
         return artikelRepository.save(artikel);
     }
 
@@ -69,6 +77,10 @@ public class ArtikelService {
      * @return Gibt den Artikel zurück, der bearbeitet werden soll.
      */
     public Artikel updateArtikel(Artikel artikel) {
+        validiereArtikel(artikel);
+        if (artikel.getId () == null) {
+            throw new IllegalArgumentException("Artikel ID darf beim Update nicht null sein");
+        }
         return artikelRepository.save(artikel);
     }
 
@@ -81,5 +93,32 @@ public class ArtikelService {
         Artikel artikel = findArtikelById(id);
         artikel.setAktiv(false);
         artikelRepository.save(artikel);
+    }
+
+    /**
+     * Validiert einen Artikel auf Pflichtfelder.
+     *
+     * @param artikel der zu validierende Artikel
+     */
+    private void validiereArtikel(Artikel artikel) {
+        if (artikel == null) {
+            throw new IllegalArgumentException("Artikel darf nicht null sein.");
+        }
+
+        if (artikel.getName() == null || artikel.getName().isBlank()) {
+            throw new IllegalArgumentException("Artikelname darf nicht leer sein.");
+        }
+
+        if (artikel.getPreis() == null || artikel.getPreis().signum() < 0) {
+            throw new IllegalArgumentException("Artikelpreis muss größer oder gleich 0 sein.");
+        }
+
+        if (artikel.getKategorie() == null) {
+            throw new IllegalArgumentException("Artikel muss einer Kategorie zugeordnet sein.");
+        }
+
+        if (artikel.getMehrwertsteuer() == null) {
+            throw new IllegalArgumentException("Artikel muss einen Mehrwertsteuersatz zugeordnet sein.");
+        }
     }
 }

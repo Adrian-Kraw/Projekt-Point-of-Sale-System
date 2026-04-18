@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.UngueltigerZeitraumException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
@@ -51,6 +52,14 @@ public class BerichteService {
      *         keine gefunden wurden.
      */
     public List<Verkauf> findByTimestampBetween(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Start- und Endzeitpunkt dürfen nicht null sein.");
+        }
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Startzeitpunkt darf nicht nach dem Endzeitpunkt liegen.");
+        }
+
         return verkaufRepository.findByTimestampBetween(start, end);
     }
 
@@ -67,6 +76,10 @@ public class BerichteService {
      * @return TagesabschlussDTO mit Gesamtumsatz, Transaktionsanzahl und Aufschlüsselung nach Zahlungsart.
      */
     public TagesabschlussDTO getTagesabschluss(LocalDate datum) {
+        if (datum == null) {
+            throw new IllegalArgumentException("Datum darf nicht null sein.");
+        }
+
         LocalDateTime start = datum.atStartOfDay();
         LocalDateTime end   = datum.atTime(23, 59, 59);
 
@@ -119,6 +132,10 @@ public class BerichteService {
      *         Liste, wenn keine Verkäufe im Zeitraum vorliegen.
      */
     public List<ArtikelStatistikDTO> getArtikelStatistik(int tage) {
+        if (tage <= 0) {
+            throw new UngueltigerZeitraumException(tage);
+        }
+
         LocalDateTime start = LocalDateTime.now().minusDays(tage);
         LocalDateTime end   = LocalDateTime.now();
 

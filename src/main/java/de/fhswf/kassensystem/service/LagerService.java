@@ -1,5 +1,7 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.WareneingangBereitsBestaetigt;
+import de.fhswf.kassensystem.exception.WareneingangNotFoundException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.Wareneingang;
@@ -76,6 +78,18 @@ public class LagerService {
      * @param eingang der zu erfassende Wareneingang mit Artikel und Menge
      */
     public void bestellungAufgeben(Wareneingang eingang) {
+        if (eingang == null) {
+            throw new IllegalArgumentException("Wareneingang darf nicht null sein.");
+        }
+
+        if (eingang.getArtikel() == null) {
+            throw new IllegalArgumentException("Wareneingang muss einem Artikel zugeordnet sein.");
+        }
+
+        if (eingang.getMenge() <= 0) {
+            throw new IllegalArgumentException("Menge muss größer als 0 sein");
+        }
+
         eingang.setStatus(WareneingangStatus.AUSSTEHEND);
         eingang.setBestelltVon(securityUtils.getEingeloggterUser());
         eingang.setBestelltAm(LocalDateTime.now());
@@ -94,9 +108,19 @@ public class LagerService {
      */
     public void lieferungBestaetigen(Long wareneingangId) {
         Wareneingang wareneingang = wareneingangRepository.findById(wareneingangId)
-                .orElseThrow(() -> new IllegalArgumentException("Wareneingang nicht gefunden."));
+                .orElseThrow(() -> new WareneingangNotFoundException(wareneingangId));
+
+        if (wareneingang.getStatus() == WareneingangStatus.BESTAETIGT) {
+            throw new WareneingangBereitsBestaetigt(wareneingangId);
+        }
 
         Artikel artikel = wareneingang.getArtikel();
+        if (artikel == null) {
+            throw new IllegalStateException(
+                    "Wareneingang " + wareneingangId + " hat keinen zugeordneten Artikel.");
+
+        }
+
         artikel.setBestand(artikel.getBestand() + wareneingang.getMenge());
         artikelRepository.save(artikel);
 
@@ -111,6 +135,13 @@ public class LagerService {
      * @param wareneingangId
      */
     public void lieferungStornieren(Long wareneingangId) {
+        Wareneingang wareneingang = wareneingangRepository.findById(wareneingangId)
+                        .orElseThrow(() -> new WareneingangNotFoundException(wareneingangId));
+
+        if (wareneingang.getStatus() == WareneingangStatus.BESTAETIGT) {
+            throw new WareneingangBereitsBestaetigt(wareneingangId);
+        }
+        // Schöner wäre es ein STORNIERT Flag zu setzen
         wareneingangRepository.deleteById(wareneingangId);
     }
 
