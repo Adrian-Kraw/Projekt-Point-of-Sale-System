@@ -10,14 +10,42 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Repository für Verkäufe
+ * Repository für den Datenbankzugriff auf {@link Verkauf}-Entitäten.
+ *
+ * <p>
+ *     Stellt neben den Standard-CRUD-Operationen aus {@link JpaRepository} zeitraumbasierte Abfragen
+ *     für den Tagesabschluss und die Umsatzübersicht bereit.
+ * </p>
+ *
+ * @author Paula Martin, Adrian Krawietz
  */
 @Repository
 public interface VerkaufRepository extends JpaRepository<Verkauf, Long> {
 
     /**
-     * Lädt alle Verkäufe in einem Zeitraum MIT Positionen (eager via JOIN FETCH).
-     * Verhindert LazyInitializationException in Views außerhalb der DB-Session.
+     * Gibt alle abgeschlossenen Verkäufe innerhalb eines Zeitraums zurück, inklusive
+     * ihrer Positionen und zugehörigen Artikeldaten.
+     *
+     * <p>
+     *     Die Positionen, Artikel und Kategorien werden per {@code JOINFETCH} in einer einzigen
+     *     Datenbankabfrage geladen, um {@code LazyInitializationException} in Vaadin-Views außerhalb
+     *     der JPA-Session zu vermeiden.
+     * </p>
+     *
+     * <p>
+     *     {@code DISTINCT} verhindert doppelte {@link Verkauf}-Einträge, die durch den Join über die
+     *     Positionsliste entstehen würden.
+     * </p>
+     *
+     * <p>
+     *     Stornierte Verkäufe ({@code Status.STORNIERT}) werden bewusst ausgeschlossen, da sie nicht in Umsatzauswertungen
+     *     einfließen sollen.
+     * </p>
+     *
+     * @param start Beginn des Zeitraums (inklusiv)
+     * @param end Ende des Zeitraums (inklusiv)
+     * @return Liste aller abgeschlossener Verkäufe im angegebenen Zeitraum mit vollständig geladenen Positionen, oder
+     *         eine leere Liste, wenn keine Verkäufe gefunden wurden.
      */
     @Query("SELECT DISTINCT v FROM Verkauf v " +
             "LEFT JOIN FETCH v.positionen p " +
@@ -29,5 +57,4 @@ public interface VerkaufRepository extends JpaRepository<Verkauf, Long> {
             @Param("start") LocalDateTime start,
             @Param("end")   LocalDateTime end);
 
-    Verkauf getVerkaufById(Long verkaufId);
 }

@@ -1,5 +1,7 @@
 package de.fhswf.kassensystem.service;
 
+import de.fhswf.kassensystem.exception.ArtikelNotFoundException;
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import de.fhswf.kassensystem.repository.ArtikelRepository;
@@ -8,7 +10,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * #TODO: Kommentar ergänzen
+ * Service für die Verwaltung von Artikeln im Kassensystem.
+ *
+ * <p>
+ *     Kapselt die Geschäftslogik für die Artikelstammdaten und delegiert Datenbankzugriffe an das
+ *     {@link ArtikelRepository}.
+ * </p>
  */
 @Service
 public class ArtikelService {
@@ -23,13 +30,16 @@ public class ArtikelService {
     }
 
     /**
-     * Sucht einen Artikel unter der genauen Angabe einer Id.
+     * Sucht einen Artikel unter der genauen Angabe einer ID.
      * @param id Die id des Artikels
-     * @return Den Artikel mit der Id
+     * @return Den Artikel mit der ID
      */
     public Artikel findArtikelById(Long id) {
+        if (id == null) {
+            throw new ArtikelNotFoundException(null);
+        }
         return artikelRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artikel mit Id " + id + " nicht gefunden."));
+                .orElseThrow(() -> new ArtikelNotFoundException(id));
     }
 
     /**
@@ -41,20 +51,14 @@ public class ArtikelService {
     }
 
     /**
-     * Sucht einen Artikel unter der Angabe einer Kategorie.
-     * @param kategorie Die Kategorie, nach der gesucht werden soll.
-     * @return Eine Liste an Artikeln, die zu der Kategorie gehören.
-     */
-    public List<Artikel> findByKategorie(Kategorie kategorie) {
-        return artikelRepository.findByKategorie(kategorie);
-    }
-
-    /**
      * Gibt einen Artikel unter Angabe des Namens zurück
      * @param name Name des Artikels
      * @return Gibt die Artikel zurück oder eine leere Liste.
      */
     public List<Artikel> findByName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Suchbegriff darf nicht null sein.");
+        }
         return artikelRepository.findByNameContainingIgnoreCase(name);
     }
 
@@ -64,6 +68,7 @@ public class ArtikelService {
      * @return Gibt den Artikel zurück, der gespeichert werden soll.
      */
     public Artikel createArtikel(Artikel artikel) {
+        validiereArtikel(artikel);
         return artikelRepository.save(artikel);
     }
 
@@ -73,6 +78,10 @@ public class ArtikelService {
      * @return Gibt den Artikel zurück, der bearbeitet werden soll.
      */
     public Artikel updateArtikel(Artikel artikel) {
+        validiereArtikel(artikel);
+        if (artikel.getId () == null) {
+            throw new IllegalArgumentException("Artikel ID darf beim Update nicht null sein");
+        }
         return artikelRepository.save(artikel);
     }
 
@@ -85,5 +94,34 @@ public class ArtikelService {
         Artikel artikel = findArtikelById(id);
         artikel.setAktiv(false);
         artikelRepository.save(artikel);
+    }
+
+    /**
+     * Validiert einen Artikel auf Pflichtfelder.
+     *
+     * @param artikel der zu validierende Artikel
+     */
+    private void validiereArtikel(Artikel artikel) {
+        if (artikel == null) {
+            throw new IllegalArgumentException("Artikel darf nicht null sein.");
+        }
+        if (artikel.getName() == null) {
+            throw new IllegalArgumentException("Artikelname darf nicht null sein.");
+        }
+        if (artikel.getName().isBlank()) {
+            throw new UngueltigeEingabeException("Artikelname darf nicht leer sein.");
+        }
+        if (artikel.getPreis() == null) {
+            throw new IllegalArgumentException("Artikelpreis darf nicht null sein.");
+        }
+        if (artikel.getPreis().signum() < 0) {
+            throw new UngueltigeEingabeException("Artikelpreis muss größer oder gleich 0 sein.");
+        }
+        if (artikel.getKategorie() == null) {
+            throw new IllegalArgumentException("Artikel muss einer Kategorie zugeordnet sein.");
+        }
+        if (artikel.getMehrwertsteuer() == null) {
+            throw new IllegalArgumentException("Artikel muss einen Mehrwertsteuersatz zugeordnet sein.");
+        }
     }
 }

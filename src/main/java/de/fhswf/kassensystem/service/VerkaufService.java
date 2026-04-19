@@ -1,152 +1,49 @@
 package de.fhswf.kassensystem.service;
 
-import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Verkauf;
-import de.fhswf.kassensystem.model.Verkaufsposition;
-import de.fhswf.kassensystem.model.dto.BelegDTO;
 import de.fhswf.kassensystem.model.enums.Status;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
-import de.fhswf.kassensystem.repository.ArtikelRepository;
 import de.fhswf.kassensystem.repository.VerkaufRepository;
 import de.fhswf.kassensystem.repository.UserRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
+/**
+ * Service für die Durchführung und Persistierung von Verkaufsvorgängen.
+ *
+ * <p>
+ *     Kapselt die Geschäftslogik für den Kassiervorgang.
+ * </p>
+ *
+ * @author Paula Martin, Adrian Krawietz
+ */
 @Service
 public class VerkaufService {
 
     private VerkaufRepository verkaufRepository;
-    private ArtikelRepository artikelRepository;
     private UserRepository userRepository;
 
-    public VerkaufService(VerkaufRepository verkaufRepository,
-                          ArtikelRepository artikelRepository,
-                          UserRepository userRepository) {
+    public VerkaufService(VerkaufRepository verkaufRepository, UserRepository userRepository) {
         this.verkaufRepository = verkaufRepository;
-        this.artikelRepository = artikelRepository;
         this.userRepository = userRepository;
     }
 
-    public Verkauf verkaufStarten() {
-        Verkauf verkauf = new Verkauf();
-        verkauf.setTimestamp(LocalDateTime.now());
-        verkauf.setStatus(Status.OFFEN);
-        // Defaultwerte damit NOT-NULL Constraints nicht verletzt werden
-        verkauf.setGesamtsumme(java.math.BigDecimal.ZERO);
-        verkauf.setRabatt(java.math.BigDecimal.ZERO);
-        verkauf.setZahlungsart(de.fhswf.kassensystem.model.enums.Zahlungsart.BAR);
-        // Eingeloggten Kassierer setzen
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            de.fhswf.kassensystem.model.User kassierer =
-                    userRepository.findByBenutzername(auth.getName());
-            if (kassierer != null) {
-                verkauf.setKassierer(kassierer);
-            }
-        }
-        return verkaufRepository.save(verkauf);
-    }
-
-    public Verkauf artikelHinzufuegen(Long verkaufId, Artikel artikel, int menge) {
-        Verkauf verkauf = verkaufRepository.getVerkaufById(verkaufId);
-
-        Verkaufsposition verkaufsposition = new Verkaufsposition();
-        verkaufsposition.setArtikel(artikel);
-        verkaufsposition.setMenge(menge);
-        verkaufsposition.setEinzelpreis(artikel.getPreis());
-        verkaufsposition.setVerkauf(verkauf);
-
-        List<Verkaufsposition> positionen = verkauf.getPositionen();
-        if (positionen == null) {
-            positionen = new java.util.ArrayList<>();
-            verkauf.setPositionen(positionen);
-        }
-        positionen.add(verkaufsposition);
-
-        return verkaufRepository.save(verkauf);
-    }
-
-    public Verkauf verkaufAbschliessen(Long verkaufId, Zahlungsart zahlungsart, BigDecimal rabatt, BigDecimal gesamtsumme) {
-        Verkauf verkauf = verkaufRepository.getVerkaufById(verkaufId);
-        verkauf.setStatus(Status.ABGESCHLOSSEN);
-        verkauf.setZahlungsart(zahlungsart);
-        verkauf.setRabatt(rabatt);
-        verkauf.setGesamtsumme(gesamtsumme);
-        return verkaufRepository.save(verkauf);
-    }
-
-    public Verkauf artikelEntfernen(Long verkaufId, Long artikelId) {
-        Verkauf verkauf = verkaufRepository.getVerkaufById(verkaufId);
-
-        Verkaufsposition zuEntfernen = null;
-        for (Verkaufsposition position : verkauf.getPositionen()) {
-            if (position.getArtikel().getId().equals(artikelId)) {
-                zuEntfernen = position;
-                break;
-            }
-        }
-
-        if (zuEntfernen != null) {
-            verkauf.getPositionen().remove(zuEntfernen);
-        }
-
-        return verkaufRepository.save(verkauf);
-
-    }
-
-    public Verkauf mengeAendern(Long verkaufId, Long artikelId, int neueMenge) {
-        Verkauf verkauf = verkaufRepository.findById(verkaufId)
-                .orElseThrow(() -> new RuntimeException("Verkauf nicht gefunden"));
-
-        for (Verkaufsposition position : verkauf.getPositionen()) {
-            if (position.getArtikel().getId().equals(artikelId)) {
-                position.setMenge(neueMenge);
-            }
-        }
-
-        return verkaufRepository.save(verkauf);
-    }
-
-    public BigDecimal summeBerechnen(Long verkaufId) {
-        Verkauf verkauf = verkaufRepository.getVerkaufById(verkaufId);
-        BigDecimal gesamtSumme = BigDecimal.ZERO;
-
-        for (Verkaufsposition position : verkauf.getPositionen()) {
-            gesamtSumme = gesamtSumme.add((position.getEinzelpreis().multiply(BigDecimal.valueOf(position.getMenge()))));
-        }
-
-        return gesamtSumme;
-    }
-
-    public void verkaufStornieren(Long verkaufId) {
-        Verkauf verkauf = verkaufRepository.getVerkaufById(verkaufId);
-        verkauf.setStatus(Status.STORNIERT);
-    }
-
-    public BelegDTO belegAnzeigen(Long verkaufId) {
-        Verkauf verkauf = verkaufRepository.findById(verkaufId)
-                .orElseThrow(() -> new RuntimeException("Verkauf nicht gefunden"));
-        BelegDTO dto = new BelegDTO();
-        dto.setTimestamp(verkauf.getTimestamp());
-        dto.setPositionen(verkauf.getPositionen());
-        dto.setGesamtsumme(verkauf.getGesamtsumme());
-        dto.setZahlungsart(verkauf.getZahlungsart());
-        dto.setRabatt(verkauf.getRabatt());
-        dto.setKassierer(verkauf.getKassierer());
-
-        return dto;
-    }
-
-
     /**
-     * Legt einen kompletten Verkauf in einer einzigen Transaktion an.
-     * Vermeidet mehrfache DB-Roundtrips und Race Conditions.
+     * Schließt einen Verkaufsvorgang ab und persistiert ihn atomar.
+     *
+     * <p>Alle Schritte (Verkauf anlegen, Kassierer zuweisen, Positionen verknüpfen
+     * und speichern) erfolgen in einer einzigen Datenbanktransaktion ({@code @Transactional}),
+     * um inkonsistente Zustände und Race Conditions bei parallelen Kassenvorgängen
+     * zu vermeiden.</p>
+     *
+     * @param positionen Liste der Verkaufspositionen mit Artikel, Menge und Einzelpreis
+     * @param zahlungsart gewählte Zahlungsart (BAR oder KARTE)
+     * @param rabatt gewährter prozentualer Rabatt, {@code 0} für keinen Rabatt
+     * @param gesamtsumme berechneter Gesamtbetrag nach Rabattabzug inklusive MwSt
+     * @return der persistierte {@link Verkauf} inklusive generierter ID
      */
     @Transactional
     public Verkauf verkaufKomplett(
@@ -154,6 +51,28 @@ public class VerkaufService {
             Zahlungsart zahlungsart,
             BigDecimal rabatt,
             BigDecimal gesamtsumme) {
+
+        if (positionen == null) {
+            throw new IllegalArgumentException("Positionen dürfen nicht null sein.");
+        }
+        if (positionen.isEmpty()) {
+            throw new UngueltigeEingabeException("Der Warenkorb darf nicht leer sein.");
+        }
+        if (zahlungsart == null) {
+            throw new IllegalArgumentException("Zahlungsart darf nicht null sein.");
+        }
+        if (gesamtsumme == null) {
+            throw new IllegalArgumentException("Gesamtsumme darf nicht null sein.");
+        }
+        if (gesamtsumme.signum() < 0) {
+            throw new IllegalStateException("Gesamtsumme muss größer oder gleich 0 sein.");
+        }
+        if (rabatt == null) {
+            throw new IllegalArgumentException("Rabatt darf nicht null sein.");
+        }
+        if (rabatt.signum() < 0) {
+            throw new IllegalStateException("Rabatt darf nicht kleiner als 0 sein.");
+        }
 
         Verkauf verkauf = new Verkauf();
         verkauf.setTimestamp(java.time.LocalDateTime.now());

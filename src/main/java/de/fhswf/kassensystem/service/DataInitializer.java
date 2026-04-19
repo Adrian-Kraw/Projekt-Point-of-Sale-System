@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 /**
  * Befüllt die Datenbank beim ersten Start mit Stammdaten.
  * Alle Artikel, Kategorien und MwSt-Sätze werden hier zentral gepflegt.
- * Idempotent: läuft bei jedem Start, fügt aber nur ein wenn der Datensatz
+ * Idempotent: läuft bei jedem Start, fügt aber nur ein, wenn der Datensatz
  * noch nicht existiert.
  */
 @Component

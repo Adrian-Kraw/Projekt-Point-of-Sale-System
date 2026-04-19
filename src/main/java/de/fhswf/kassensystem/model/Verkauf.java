@@ -11,10 +11,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Repräsentiert einen Verkauf im System.
+ * Repräsentiert einen Verkaufsvorgang im Kassensystem.
+ *
+ * <p>
+ *     Ein Verkauf wird beim Start des Kassiervorgangs angelegt und durchläuft die Status {@code OFFEN} -> {@code ABGESCHLOSSEN}
+ *     bzw. {@code OFFEN} -> {@code STORNIERT}.
+ * </p>
+ *
+ * <p>
+ *     Abgeschlossene und stornierte Verkäufe werden niemals gelöscht, da sie als Grundlage für Belege und Auswertungen
+ *     dienen.
+ * </p>
+ *
+ * @author Paula Martin, Adrian Krawietz
  */
 @Entity
-@Table(name = "Verkauf")
+@Table(name = "verkauf")
 @Getter
 @Setter
 public class Verkauf {

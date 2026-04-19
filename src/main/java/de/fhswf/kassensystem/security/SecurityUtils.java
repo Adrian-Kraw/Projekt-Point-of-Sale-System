@@ -21,9 +21,8 @@ public class SecurityUtils {
     private final UserRepository userRepository;
 
     /**
-     * Erstellt eine neue Instanz von {@code SecurityUtils}.
-     *
-     * @param userRepository Repository zum Laden von Benutzern aus der Datenbank
+     * Erstellt eine neue Instanz mit dem benötigten Repository.
+     * @param userRepository Repository für den Datenbankzugriff auf Benutzer
      */
     public SecurityUtils(UserRepository userRepository) {
         this.userRepository = userRepository;
