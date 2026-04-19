@@ -12,7 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * <p>Ein Klick auf die Karte toggelt ein kleines Popup-Menü mit dem "Ausloggen"-Link.
  * Der Logout-Callback wird von {@link de.fhswf.kassensystem.views.MainLayout} übergeben.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class UserCard extends HorizontalLayout {
 

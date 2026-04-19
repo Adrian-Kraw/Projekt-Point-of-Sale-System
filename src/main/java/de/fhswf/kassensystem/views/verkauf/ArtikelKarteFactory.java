@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * Brot/Brötchen → ti-bread, Kuchen → ti-cake, Teilchen → ti-cookie,
  * Sandwiches → ti-baguette, Heiße Getränke → ti-coffee, Kalte Getränke → ti-bottle.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class ArtikelKarteFactory {
 

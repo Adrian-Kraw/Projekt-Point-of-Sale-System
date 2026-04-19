@@ -15,7 +15,7 @@ import java.math.RoundingMode;
  * <p>Zeigt zwei Zahlungskarten (Bar/Karte) und ein umschaltbares
  * Diagramm (Torte oder Balken). Das Diagramm wird über {@link DiagrammFactory} gerendert.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ZahlungsartenPanel extends VerticalLayout {
 

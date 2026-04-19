@@ -28,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *
  * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @RolesAllowed({"KASSIERER", "MANAGER"})
 @Route(value = "dashboard", layout = MainLayout.class)

@@ -14,7 +14,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * mit inline JavaScript. Wird in {@link ZahlungsartenPanel} und
  * {@link UmsatzuebersichtPanel} verwendet.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class DiagrammFactory {
 

@@ -8,7 +8,9 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
 /**
@@ -17,7 +19,7 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
  * <p>Nach erfolgreichem Anlegen wird der {@code onErfolg}-Callback aufgerufen,
  * damit die Benutzertabelle aktualisiert wird.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class NeuerBenutzerDialog extends BaseDialog {
 
@@ -101,11 +103,11 @@ class NeuerBenutzerDialog extends BaseDialog {
         u.setPassword(passwortFeld.getValue());
         u.setRolle(rolleSelect.getValue());
         u.setAktiv(true);
-        userService.createUser(u);
-        Notification.show("Benutzer \"" + u.getName() + "\" erstellt.", 3000,
-                Notification.Position.BOTTOM_START);
-        onErfolg.run();
-        return true;
+        return FehlerUI.versuch(() -> {
+            userService.createUser(u);
+            FehlerUI.erfolg("Benutzer \"" + u.getName() + "\" erstellt.");
+            onErfolg.run();
+        });
     }
 
     @Override protected String getSpeichernLabel() { return "Erstellen"; }

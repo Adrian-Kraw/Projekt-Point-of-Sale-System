@@ -14,7 +14,9 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.service.PdfExportService;
 import de.fhswf.kassensystem.service.VerkaufService;
 import de.fhswf.kassensystem.views.MainLayout;
@@ -43,7 +45,7 @@ import java.util.stream.Collectors;
  *
  * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @RolesAllowed({"KASSIERER", "MANAGER"})
 @Route(value = "kassieren", layout = MainLayout.class)
@@ -149,30 +151,34 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     private void ladeArtikelGrid() {
         artikelGridDiv.removeAll();
         kartenMap.clear();
+        try {
+            List<Artikel> alle = (aktuelleSuche.isBlank()
+                    ? artikelService.findAllArtikel()
+                    : artikelService.findByName(aktuelleSuche))
+                    .stream()
+                    .sorted(java.util.Comparator.comparing(Artikel::getName))
+                    .toList();
 
-        List<Artikel> alle = (aktuelleSuche.isBlank()
-                ? artikelService.findAllArtikel()
-                : artikelService.findByName(aktuelleSuche))
-                .stream()
-                .sorted(java.util.Comparator.comparing(Artikel::getName))
-                .toList();
+            for (Artikel a : alle) {
+                if (!aktiveKategorie.equals("Alle") && !a.getKategorie().getName().equals(aktiveKategorie)) continue;
+                if (!a.isAktiv()) continue;
 
-        for (Artikel a : alle) {
-            if (!aktiveKategorie.equals("Alle") && !a.getKategorie().getName().equals(aktiveKategorie)) continue;
-            if (!a.isAktiv()) continue;
+                int imKorb = warenkorbListe.stream()
+                        .filter(e -> e.artikel.getId().equals(a.getId()))
+                        .mapToInt(e -> e.menge)
+                        .sum();
+                int anzeigeBestand = a.getBestand() >= 999 ? 999 : Math.max(0, a.getBestand() - imKorb);
+                boolean ausverkauft = a.getBestand() == 0;
 
-            // Aktuellen Warenkorb-Abzug berechnen für korrekten Startbestand
-            int imKorb = warenkorbListe.stream()
-                    .filter(e -> e.artikel.getId().equals(a.getId()))
-                    .mapToInt(e -> e.menge)
-                    .sum();
-            int anzeigeBestand = a.getBestand() >= 999 ? 999 : Math.max(0, a.getBestand() - imKorb);
-            boolean ausverkauft = a.getBestand() == 0;
-
-            Div karte = ArtikelKarteFactory.create(a, anzeigeBestand, ausverkauft,
-                    this::artikelZumKorbHinzufuegen);
-            kartenMap.put(a.getId(), karte);
-            artikelGridDiv.add(karte);
+                Div karte = ArtikelKarteFactory.create(a, anzeigeBestand, ausverkauft,
+                        this::artikelZumKorbHinzufuegen);
+                kartenMap.put(a.getId(), karte);
+                artikelGridDiv.add(karte);
+            }
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
     }
 
@@ -201,11 +207,18 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
      * Erstellt die Kategorie-Chip-Gruppe aus allen aktiven Artikelkategorien.
      */
     private KategorieChipGroup buildKategorieFilter() {
-        List<String> kategorien = artikelService.findAllArtikel().stream()
-                .filter(Artikel::isAktiv)
-                .map(a -> a.getKategorie().getName())
-                .distinct()
-                .collect(Collectors.toList());
+        List<String> kategorien = new ArrayList<>();
+        try {
+            kategorien = artikelService.findAllArtikel().stream()
+                    .filter(Artikel::isAktiv)
+                    .map(a -> a.getKategorie().getName())
+                    .distinct()
+                    .collect(Collectors.toList());
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
         KategorieChipGroup chipGroup = new KategorieChipGroup(kategorien, kat -> {
             aktiveKategorie = kat;
             ladeArtikelGrid();
@@ -385,7 +398,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                     + WarenkorbZusammenfassung.format(gesamtsumme);
             if (rabattBetrag.compareTo(BigDecimal.ZERO) > 0)
                 msg += " (Rabatt: " + WarenkorbZusammenfassung.format(rabattBetrag) + ")";
-            Notification.show(msg, 4000, Notification.Position.BOTTOM_CENTER);
+            FehlerUI.erfolg(msg);
 
             final List<Verkaufsposition> bonPositionen = new ArrayList<>(positionen);
             final BigDecimal bonRabatt = rabatt;
@@ -395,8 +408,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                     () -> { warenkorbLeeren(); ladeArtikelGrid(); }
             ).open();
 
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
-            Notification.show("Fehler: " + ex.getMessage(), 4000, Notification.Position.MIDDLE);
+            FehlerUI.technischerFehler(ex);
         }
     }
 
@@ -421,8 +436,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                             "document.body.appendChild(a);a.click();" +
                             "document.body.removeChild(a);URL.revokeObjectURL(url);",
                     base64, dateiname);
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
-            Notification.show("Fehler beim Bon-Druck: " + ex.getMessage(), 4000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Fehler beim Bon-Druck. Bitte versuche es erneut.");
         }
     }
 

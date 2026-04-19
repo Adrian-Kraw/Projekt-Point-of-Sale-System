@@ -23,7 +23,7 @@ import java.util.List;
  * {@link #getNavLinks()}-Liste gespeichert, damit {@link de.fhswf.kassensystem.views.MainLayout}
  * den aktiven Link nach jeder Navigation hervorheben kann.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class SidebarNavigation extends VerticalLayout {
 

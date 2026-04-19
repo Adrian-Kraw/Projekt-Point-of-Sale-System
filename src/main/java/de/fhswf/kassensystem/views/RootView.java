@@ -21,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * {@code @AnonymousAllowed} stellt sicher, dass auch nicht authentifizierte
  * Benutzer die Root-URL aufrufen können, ohne von Spring Security blockiert zu werden.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route("")
 @AnonymousAllowed

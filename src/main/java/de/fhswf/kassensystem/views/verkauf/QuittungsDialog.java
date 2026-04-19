@@ -13,7 +13,7 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
  * Je nach Antwort wird der {@code onJa}- oder {@code onNein}-Callback aufgerufen,
  * der den Kassenbon-Druck bzw. das Leeren des Warenkorbs auslöst.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class QuittungsDialog extends BaseDialog {
 

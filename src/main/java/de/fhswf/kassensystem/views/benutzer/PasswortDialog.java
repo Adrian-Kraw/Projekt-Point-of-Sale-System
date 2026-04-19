@@ -4,7 +4,9 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import de.fhswf.kassensystem.model.User;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
 /**
@@ -13,7 +15,7 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
  * <p>Enthält ein einzelnes Passwortfeld. Nach dem Speichern wird das neue
  * Passwort via {@link de.fhswf.kassensystem.service.UserService#resetPasswort} gesetzt.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class PasswortDialog extends BaseDialog {
 
@@ -65,10 +67,11 @@ class PasswortDialog extends BaseDialog {
             Notification.show("Bitte ein neues Passwort eingeben.", 3000, Notification.Position.MIDDLE);
             return false;
         }
-        userService.resetPasswort(user.getId(), neuesPasswort.getValue());
-        Notification.show("Passwort wurde zurückgesetzt.", 3000, Notification.Position.BOTTOM_START);
-        onErfolg.run();
-        return true;
+        return FehlerUI.versuch(() -> {
+            userService.resetPasswort(user.getId(), neuesPasswort.getValue());
+            FehlerUI.erfolg("Passwort wurde zurückgesetzt.");
+            onErfolg.run();
+        });
     }
 
     @Override protected String getSpeichernLabel() { return "Zurücksetzen"; }

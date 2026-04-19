@@ -12,7 +12,7 @@ import java.math.RoundingMode;
  * Prozentberechnung sowie eine Factory-Methode für Leer-Spans.
  * Nicht instanziierbar.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class BerichteUtils {
 

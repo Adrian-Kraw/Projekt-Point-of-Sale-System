@@ -12,7 +12,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import de.fhswf.kassensystem.model.Mehrwertsteuer;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -29,7 +31,7 @@ import java.util.Set;
  *   <li>{@link #toArtikel()} – liest Feldwerte in ein neues {@code Artikel}-Objekt</li>
  * </ul>
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ArtikelFormularFelder extends VerticalLayout {
 
@@ -131,6 +133,18 @@ class ArtikelFormularFelder extends VerticalLayout {
             Notification.show("Bitte einen MwSt-Satz auswählen.", 3000, Notification.Position.MIDDLE);
             return false;
         }
+        if (preisFeld.getValue() < 0) {
+            Notification.show("Preis darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            return false;
+        }
+        if (!bestandFeld.isEmpty() && bestandFeld.getValue() < 0) {
+            Notification.show("Bestand darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            return false;
+        }
+        if (!minBestandFeld.isEmpty() && minBestandFeld.getValue() < 0) {
+            Notification.show("Minimalbestand darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            return false;
+        }
         return true;
     }
 
@@ -165,14 +179,20 @@ class ArtikelFormularFelder extends VerticalLayout {
      * @return konfiguriertes {@code Select}-Element
      */
     private Select<Kategorie> buildKategorieSelect(ArtikelService service) {
-        Set<Kategorie> kategorien = new LinkedHashSet<>();
-        service.findAllArtikel().forEach(a -> kategorien.add(a.getKategorie()));
         Select<Kategorie> select = new Select<>();
         select.setWidthFull();
         select.addClassName("dialog-feld");
-        select.setItems(kategorien);
-        select.setItemLabelGenerator(Kategorie::getName);
-        if (!kategorien.isEmpty()) select.setValue(kategorien.iterator().next());
+        try {
+            Set<Kategorie> kategorien = new LinkedHashSet<>();
+            service.findAllArtikel().forEach(a -> kategorien.add(a.getKategorie()));
+            select.setItems(kategorien);
+            select.setItemLabelGenerator(Kategorie::getName);
+            if (!kategorien.isEmpty()) select.setValue(kategorien.iterator().next());
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
         return select;
     }
 
@@ -184,15 +204,21 @@ class ArtikelFormularFelder extends VerticalLayout {
      * @return konfiguriertes {@code Select}-Element
      */
     private Select<Mehrwertsteuer> buildMwstSelect(ArtikelService service) {
-        Set<Mehrwertsteuer> saetze = new LinkedHashSet<>();
-        service.findAllArtikel().forEach(a -> saetze.add(a.getMehrwertsteuer()));
         Select<Mehrwertsteuer> select = new Select<>();
         select.setWidthFull();
         select.addClassName("dialog-feld");
-        select.setItems(saetze);
-        select.setItemLabelGenerator(m ->
-                m.getSatz().stripTrailingZeros().toPlainString() + "% (" + m.getBezeichnung() + ")");
-        if (!saetze.isEmpty()) select.setValue(saetze.iterator().next());
+        try {
+            Set<Mehrwertsteuer> saetze = new LinkedHashSet<>();
+            service.findAllArtikel().forEach(a -> saetze.add(a.getMehrwertsteuer()));
+            select.setItems(saetze);
+            select.setItemLabelGenerator(m ->
+                    m.getSatz().stripTrailingZeros().toPlainString() + "% (" + m.getBezeichnung() + ")");
+            if (!saetze.isEmpty()) select.setValue(saetze.iterator().next());
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
         return select;
     }
 

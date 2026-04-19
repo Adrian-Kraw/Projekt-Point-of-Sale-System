@@ -12,7 +12,9 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.MainLayout;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.StatistikKarte;
 
 import java.util.List;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
  *
  * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route(value = "artikel", layout = MainLayout.class)
 public class ArtikelView extends AbstractTabellenView {
@@ -76,12 +78,18 @@ public class ArtikelView extends AbstractTabellenView {
     public void ladeDaten() {
         tabelle.removeAll();
         tabelle.add(buildTabellenHeader());
-        List<Artikel> artikel = aktuelleSuche.isBlank()
-                ? artikelService.findAllArtikel()
-                : artikelService.findByName(aktuelleSuche);
-        artikel.sort(java.util.Comparator.comparing(Artikel::getId));
-        for (Artikel a : artikel) {
-            tabelle.add(ArtikelZeileFactory.create(a, artikelService, this::refresh));
+        try {
+            List<Artikel> artikel = aktuelleSuche.isBlank()
+                    ? artikelService.findAllArtikel()
+                    : artikelService.findByName(aktuelleSuche);
+            artikel.sort(java.util.Comparator.comparing(Artikel::getId));
+            for (Artikel a : artikel) {
+                tabelle.add(ArtikelZeileFactory.create(a, artikelService, this::refresh));
+            }
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
     }
 
@@ -98,18 +106,24 @@ public class ArtikelView extends AbstractTabellenView {
      */
     private void ladeStatistikKarten() {
         statistikKartenLayout.removeAll();
-        List<Artikel> alle      = artikelService.findAllArtikel();
-        long gesamtArtikel      = alle.size();
-        long aktiv              = alle.stream().filter(Artikel::isAktiv).count();
-        long niedrigBestand     = alle.stream().filter(a -> a.getBestand() < a.getMinimalbestand()).count();
-        long kategorien         = alle.stream().map(a -> a.getKategorie().getId()).collect(Collectors.toSet()).size();
+        try {
+            List<Artikel> alle      = artikelService.findAllArtikel();
+            long gesamtArtikel      = alle.size();
+            long aktiv              = alle.stream().filter(Artikel::isAktiv).count();
+            long niedrigBestand     = alle.stream().filter(a -> a.getBestand() < a.getMinimalbestand()).count();
+            long kategorien         = alle.stream().map(a -> a.getKategorie().getId()).collect(Collectors.toSet()).size();
 
-        statistikKartenLayout.add(
-                new StatistikKarte("Gesamtartikel",     String.valueOf(gesamtArtikel), "inventory_2",  false),
-                new StatistikKarte("Aktiv",             String.valueOf(aktiv),          "check_circle", false),
-                new StatistikKarte("Niedriger Bestand", String.valueOf(niedrigBestand), "warning",      true),
-                new StatistikKarte("Kategorien",        String.valueOf(kategorien),     "category",     false)
-        );
+            statistikKartenLayout.add(
+                    new StatistikKarte("Gesamtartikel",     String.valueOf(gesamtArtikel), "inventory_2",  false),
+                    new StatistikKarte("Aktiv",             String.valueOf(aktiv),          "check_circle", false),
+                    new StatistikKarte("Niedriger Bestand", String.valueOf(niedrigBestand), "warning",      true),
+                    new StatistikKarte("Kategorien",        String.valueOf(kategorien),     "category",     false)
+            );
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
     }
 
     /**

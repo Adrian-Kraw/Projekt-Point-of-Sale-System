@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  * <p>Wird von {@link TourManager} instanziiert und der aktuellen UI hinzugefügt.
  * Nach Abschluss der Tour wird die Seite neu geladen.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class TourComponent extends Div {
 

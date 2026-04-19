@@ -12,7 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * <p>Jede Zeile zeigt Avatar-Platzhalter, Artikelname, Kategorie,
  * verkaufte Menge und den Gesamtumsatz des Artikels.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ProduktZeileFactory {
 

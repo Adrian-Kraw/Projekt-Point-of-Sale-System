@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * darunter das {@link ZahlungsartenPanel} und das {@link TopSellerPanel}.
  * Manager können zusätzlich den Bon-Zielwert über das {@link BonZielwertPanel} setzen.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class TagesabschlussPanel extends VerticalLayout {
 

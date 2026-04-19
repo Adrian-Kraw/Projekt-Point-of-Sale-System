@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * <p>Über {@link #aktualisierePreise(java.util.List)} wird die Preisanzeige
  * nach jeder Warenkorb-Änderung aktualisiert.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class WarenkorbZusammenfassung extends VerticalLayout {
 

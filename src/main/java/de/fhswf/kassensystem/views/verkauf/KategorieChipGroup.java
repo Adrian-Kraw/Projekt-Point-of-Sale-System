@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  * Beim Klick auf einen Chip wird der {@code onSelect}-Callback mit dem
  * Kategorienamen aufgerufen und der aktive Chip visuell hervorgehoben.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class KategorieChipGroup extends HorizontalLayout {
 

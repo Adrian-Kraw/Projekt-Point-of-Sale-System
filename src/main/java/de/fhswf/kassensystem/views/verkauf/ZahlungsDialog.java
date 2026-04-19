@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  * übergibt die gewählte {@link de.fhswf.kassensystem.model.enums.Zahlungsart}
  * an den {@code onZahlung}-Callback und schließt den Dialog.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ZahlungsDialog extends BaseDialog {
 

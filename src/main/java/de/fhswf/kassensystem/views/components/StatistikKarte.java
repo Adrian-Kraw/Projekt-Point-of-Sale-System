@@ -11,7 +11,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * und implizit über {@link de.fhswf.kassensystem.views.lager.LagerView} eingesetzt.
  * Im Warnmodus ({@code warnung = true}) werden Schrift und Icon-Hintergrund rot dargestellt.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class StatistikKarte extends VerticalLayout {
 

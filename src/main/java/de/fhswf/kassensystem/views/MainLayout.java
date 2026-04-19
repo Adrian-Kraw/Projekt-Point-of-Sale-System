@@ -39,7 +39,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * ({@code afterNavigation}). Die Onboarding-Tour wird rollenabhängig gestartet –
  * Manager erhalten eine erweiterte Tour mit allen Verwaltungsbereichen.
  *
- * @author Adrian & Paula
+ * @author Adrian Krawietz & Paula Martin
  */
 @PermitAll
 public class MainLayout extends AppLayout implements AfterNavigationObserver {

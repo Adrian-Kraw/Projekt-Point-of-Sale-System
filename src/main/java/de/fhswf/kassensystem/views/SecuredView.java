@@ -27,7 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *   <li>{@link #istManager()} – prüft ob der aktuelle Benutzer die Rolle MANAGER hat</li>
  * </ul>
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public abstract class SecuredView extends VerticalLayout implements BeforeEnterObserver {
 

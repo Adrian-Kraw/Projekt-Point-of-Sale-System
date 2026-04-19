@@ -19,7 +19,7 @@ import java.util.Map;
  * <p>Aggregiert alle Verkaufspositionen des Tages nach Artikel,
  * sortiert absteigend nach Menge und zeigt die drei meistverkauften Artikel.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class TopSellerPanel extends VerticalLayout {
 

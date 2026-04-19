@@ -6,7 +6,9 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 /**
  * Fabrikklasse für einzelne Tabellenzeilen in der Artikelverwaltung.
@@ -15,7 +17,7 @@ import de.fhswf.kassensystem.service.ArtikelService;
  * Minimalgrenze, Status-Badge sowie Aktions-Buttons (Bearbeiten / Deaktivieren).
  * Die Aktions-Buttons sind dauerhaft sichtbar (kein Hover-Hide).
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ArtikelZeileFactory {
 
@@ -170,13 +172,19 @@ class ArtikelZeileFactory {
                 artikel.isAktiv() ? "#ffdad6" : "#ffdcc6");
         sichtbarBtn.getElement().setAttribute("tour-id", "artikel-deaktivieren-btn");
         sichtbarBtn.addClickListener(e -> {
-            if (artikel.isAktiv()) {
-                artikelService.deleteArtikel(artikel.getId());
-            } else {
-                artikel.setAktiv(true);
-                artikelService.updateArtikel(artikel);
+            try {
+                if (artikel.isAktiv()) {
+                    artikelService.deleteArtikel(artikel.getId());
+                } else {
+                    artikel.setAktiv(true);
+                    artikelService.updateArtikel(artikel);
+                }
+                onAenderung.run();
+            } catch (KassensystemException ex) {
+                FehlerUI.fehler(ex.getMessage());
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
             }
-            onAenderung.run();
         });
 
         zelle.add(editBtn, sichtbarBtn);

@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * <p>Zeigt Artikelname und aktuellen Bestand im Vergleich zur Minimalgrenze.
  * Manager erhalten zusätzlich einen "Wareneingang buchen"-Button.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class NachbestellKarteFactory {
 

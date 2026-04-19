@@ -17,7 +17,7 @@ import java.util.Base64;
  *
  * <p>Unterstützte Formate: JPEG, PNG, WebP – maximal 5 MB pro Datei.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ArtikelBildUpload extends VerticalLayout {
 

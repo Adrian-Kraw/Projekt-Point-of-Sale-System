@@ -9,7 +9,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
 import java.util.List;
@@ -20,7 +22,7 @@ import java.util.List;
  *
  * <p>Nur für Benutzer mit der Rolle {@code MANAGER} zugänglich.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route(value = "benutzer", layout = MainLayout.class)
 public class BenutzerView extends AbstractTabellenView {
@@ -61,12 +63,18 @@ public class BenutzerView extends AbstractTabellenView {
     public void ladeDaten() {
         tabelle.removeAll();
         tabelle.add(buildTabellenHeader());
-        List<User> benutzer = userService.findAllUsers();
-        boolean zebra = false;
-        for (User u : benutzer) {
-            tabelle.add(BenutzerZeileFactory.create(u, zebra, userService,
-                    this::ladeDaten, this::oeffnePasswortDialog));
-            zebra = !zebra;
+        try {
+            List<User> benutzer = userService.findAllUsers();
+            boolean zebra = false;
+            for (User u : benutzer) {
+                tabelle.add(BenutzerZeileFactory.create(u, zebra, userService,
+                        this::ladeDaten, this::oeffnePasswortDialog));
+                zebra = !zebra;
+            }
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
     }
 

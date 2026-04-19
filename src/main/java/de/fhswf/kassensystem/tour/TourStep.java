@@ -12,6 +12,8 @@ package de.fhswf.kassensystem.tour;
  * @param action         Optionale Aktion vor dem Step:
  *                       "navigate:dashboard|kassieren|lager",
  *                       "demo-verkauf", "open-zahlungsdialog", "open-quittungsdialog"
+ *
+ * @author Adrian Krawietz
  */
 public record TourStep(
         String targetSelector,

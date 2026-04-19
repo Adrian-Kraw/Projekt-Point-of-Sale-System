@@ -3,11 +3,12 @@ package de.fhswf.kassensystem.views.benutzer;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import de.fhswf.kassensystem.model.User;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.util.function.Consumer;
 
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  * sowie drei Aktions-Buttons (Bearbeiten, Sperren/Entsperren, Passwort-Reset).
  * Alle Buttons sind dauerhaft sichtbar.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class BenutzerZeileFactory {
 
@@ -171,15 +172,21 @@ class BenutzerZeileFactory {
                 user.isAktiv() ? "#ffdad6" : "#dcfce7");
         sperrBtn.getElement().setAttribute("tour-id", "benutzer-sperren-btn");
         sperrBtn.addClickListener(e -> {
-            if (user.isAktiv()) {
-                userService.deactivateUser(user.getId());
-                Notification.show("Benutzer gesperrt.", 2000, Notification.Position.BOTTOM_START);
-            } else {
-                user.setAktiv(true);
-                userService.updateUser(user);
-                Notification.show("Benutzer aktiviert.", 2000, Notification.Position.BOTTOM_START);
+            try {
+                if (user.isAktiv()) {
+                    userService.deactivateUser(user.getId());
+                    FehlerUI.erfolg("Benutzer gesperrt.");
+                } else {
+                    user.setAktiv(true);
+                    userService.updateUser(user);
+                    FehlerUI.erfolg("Benutzer aktiviert.");
+                }
+                onAenderung.run();
+            } catch (KassensystemException ex) {
+                FehlerUI.fehler(ex.getMessage());
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
             }
-            onAenderung.run();
         });
 
         Button passwortBtn = buildAktionsButton("vpn_key", "#553722", "#efecff");

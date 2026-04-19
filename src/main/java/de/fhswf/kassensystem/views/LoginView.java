@@ -24,7 +24,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
  *
  * <p>Zugriff: {@code @AnonymousAllowed} – die Seite ist ohne Login erreichbar.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route("login")
 @PageTitle("Login – Kassensystem")

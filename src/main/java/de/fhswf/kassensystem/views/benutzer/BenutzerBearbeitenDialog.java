@@ -7,7 +7,9 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
 /**
@@ -16,7 +18,7 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
  * <p>Nach erfolgreichem Speichern wird der übergebene
  * {@code onErfolg}-Callback aufgerufen, um die Tabelle neu zu laden.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class BenutzerBearbeitenDialog extends BaseDialog {
 
@@ -96,11 +98,11 @@ class BenutzerBearbeitenDialog extends BaseDialog {
         user.setBenutzername(usernameFeld.getValue().trim());
         user.setName(nameFeld.getValue().trim());
         user.setRolle(rolleSelect.getValue());
-        userService.updateUser(user);
-        Notification.show("Benutzer \"" + user.getName() + "\" aktualisiert.",
-                3000, Notification.Position.BOTTOM_START);
-        onErfolg.run();
-        return true;
+        return FehlerUI.versuch(() -> {
+            userService.updateUser(user);
+            FehlerUI.erfolg("Benutzer \"" + user.getName() + "\" aktualisiert.");
+            onErfolg.run();
+        });
     }
 
     @Override protected String getSpeichernLabel() { return "Speichern"; }

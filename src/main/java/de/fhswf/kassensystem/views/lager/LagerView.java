@@ -12,7 +12,9 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
 
@@ -34,7 +36,7 @@ import java.util.List;
  *
  * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route(value = "lager", layout = MainLayout.class)
 public class LagerView extends AbstractTabellenView {
@@ -102,10 +104,16 @@ public class LagerView extends AbstractTabellenView {
      */
     private void ladeStatistikKarten() {
         statistikKartenLayout.removeAll();
-        int warnAnzahl   = lagerService.getMinimalbestandWarnliste().size();
-        int gesamtAnzahl = artikelService.findAllArtikel().size();
-        statistikKartenLayout.add(buildKritischKarte(warnAnzahl), buildGesamtKarte(gesamtAnzahl));
-        if (istManager()) statistikKartenLayout.add(buildAktionenKarte());
+        try {
+            int warnAnzahl   = lagerService.getMinimalbestandWarnliste().size();
+            int gesamtAnzahl = artikelService.findAllArtikel().size();
+            statistikKartenLayout.add(buildKritischKarte(warnAnzahl), buildGesamtKarte(gesamtAnzahl));
+            if (istManager()) statistikKartenLayout.add(buildAktionenKarte());
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
     }
 
     /**
@@ -114,33 +122,39 @@ public class LagerView extends AbstractTabellenView {
      */
     private void ladeNachbestellHinweise() {
         nachbestellBlock.removeAll();
-        List<Artikel> warnliste = lagerService.getMinimalbestandWarnliste();
-        if (warnliste.isEmpty()) return;
+        try {
+            List<Artikel> warnliste = lagerService.getMinimalbestandWarnliste();
+            if (warnliste.isEmpty()) return;
 
-        HorizontalLayout warnHeader = new HorizontalLayout();
-        warnHeader.setAlignItems(FlexComponent.Alignment.CENTER);
-        warnHeader.setSpacing(false);
-        warnHeader.getStyle().set("background", "#ffdad6").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
-        Span wi = createIcon("notification_important");
-        wi.getStyle().set("color", "#ba1a1a");
-        Span wt = new Span("Nachbestellhinweise");
-        wt.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#ba1a1a")
-                .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif");
-        warnHeader.add(wi, wt);
+            HorizontalLayout warnHeader = new HorizontalLayout();
+            warnHeader.setAlignItems(FlexComponent.Alignment.CENTER);
+            warnHeader.setSpacing(false);
+            warnHeader.getStyle().set("background", "#ffdad6").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+            Span wi = createIcon("notification_important");
+            wi.getStyle().set("color", "#ba1a1a");
+            Span wt = new Span("Nachbestellhinweise");
+            wt.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#ba1a1a")
+                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            warnHeader.add(wi, wt);
 
-        HorizontalLayout grid = new HorizontalLayout();
-        grid.setWidthFull();
-        grid.setSpacing(false);
-        grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
-        for (Artikel a : warnliste) {
-            grid.add(NachbestellKarteFactory.create(a, istManager(), this::oeffneWareneingangFuerArtikel));
+            HorizontalLayout grid = new HorizontalLayout();
+            grid.setWidthFull();
+            grid.setSpacing(false);
+            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+            for (Artikel a : warnliste) {
+                grid.add(NachbestellKarteFactory.create(a, istManager(), this::oeffneWareneingangFuerArtikel));
+            }
+
+            nachbestellBlock.getStyle()
+                    .set("background", "#fff5f2").set("border-radius", "1.25rem")
+                    .set("overflow", "hidden").set("margin-bottom", "2rem");
+            nachbestellBlock.add(warnHeader, grid);
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
-
-        nachbestellBlock.getStyle()
-                .set("background", "#fff5f2").set("border-radius", "1.25rem")
-                .set("overflow", "hidden").set("margin-bottom", "2rem");
-        nachbestellBlock.add(warnHeader, grid);
     }
 
     /**
@@ -149,52 +163,51 @@ public class LagerView extends AbstractTabellenView {
      */
     private void ladeLieferungshinweise() {
         lieferungBlock.removeAll();
+        try {
+            List<Wareneingang> offeneLieferungen = lagerService.getAusstehendeLieferungen();
+            if (offeneLieferungen.isEmpty()) return;
 
-        List<Wareneingang> offeneLieferungen = lagerService.getAusstehendeLieferungen();
+            HorizontalLayout header = new HorizontalLayout();
+            header.setAlignItems(FlexComponent.Alignment.CENTER);
+            header.setSpacing(false);
+            header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
 
-        if (offeneLieferungen.isEmpty()) return;
+            Span icon = createIcon("local_shipping");
+            icon.getStyle().set("color", "#155724");
+            Span titel = new Span("Lieferungsbescheid");
+            titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
+                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
+            header.add(icon, titel);
 
-        // Header
-        HorizontalLayout header = new HorizontalLayout();
-        header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setSpacing(false);
-        header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+            HorizontalLayout grid = new HorizontalLayout();
+            grid.setWidthFull();
+            grid.setSpacing(false);
+            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
 
-        Span icon = createIcon("local_shipping");
-        icon.getStyle().set("color", "#155724");
-        Span titel = new Span("Lieferungsbescheid");
-        titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
-                .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
-                .set("font-family", "'Plus Jakarta Sans', sans-serif");
-        header.add(icon, titel);
+            for (Wareneingang w : offeneLieferungen) {
+                String bestelltAm = w.getBestelltAm()
+                        .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                String bestelltVon = w.getBestelltVon() != null
+                        ? w.getBestelltVon().getBenutzername() : "Unbekannt";
+                String liefertAm = w.getBestelltAm()
+                        .toLocalDate()
+                        .plusDays(1)
+                        .atTime(6, 0)
+                        .format(DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm 'Uhr'"));
+                grid.add(buildLieferungsKarte(w.getId(), w.getArtikel().getName(),
+                        w.getMenge(), bestelltAm, bestelltVon, liefertAm));
+            }
 
-        // Karten-Grid
-        HorizontalLayout grid = new HorizontalLayout();
-        grid.setWidthFull();
-        grid.setSpacing(false);
-        grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
-
-        for (Wareneingang w : offeneLieferungen) {
-            String bestelltAm = w.getBestelltAm()
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
-            String bestelltVon = w.getBestelltVon() != null
-                    ? w.getBestelltVon().getBenutzername() : "Unbekannt";
-
-            // Lieferdatum: nächster Tag 06:00
-            String liefertAm = w.getBestelltAm()
-                    .toLocalDate()
-                    .plusDays(1)
-                    .atTime(6, 0)
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm 'Uhr'"));
-
-            grid.add(buildLieferungsKarte(w.getId(), w.getArtikel().getName(),
-                    w.getMenge(), bestelltAm, bestelltVon, liefertAm));
+            lieferungBlock.getStyle()
+                    .set("background", "#f0fff4").set("border-radius", "1.25rem")
+                    .set("overflow", "hidden").set("margin-bottom", "2rem");
+            lieferungBlock.add(header, grid);
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
-
-        lieferungBlock.getStyle()
-                .set("background", "#f0fff4").set("border-radius", "1.25rem")
-                .set("overflow", "hidden").set("margin-bottom", "2rem");
-        lieferungBlock.add(header, grid);
     }
 
     /**
@@ -258,7 +271,17 @@ public class LagerView extends AbstractTabellenView {
                 .set("font-weight", "700").set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
         bestaetigenBtn.addClickListener(e -> {
-            if (lieferungId != null) { lagerService.lieferungBestaetigen(lieferungId); ladeAlles(); }
+            if (lieferungId != null) {
+                try {
+                    lagerService.lieferungBestaetigen(lieferungId);
+                    FehlerUI.erfolg("Lieferung bestätigt.");
+                    ladeAlles();
+                } catch (KassensystemException ex) {
+                    FehlerUI.fehler(ex.getMessage());
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
+            }
         });
 
         Button ablehnBtn = new Button("✕");
@@ -269,7 +292,17 @@ public class LagerView extends AbstractTabellenView {
                 .set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
         ablehnBtn.addClickListener(e -> {
-            if (lieferungId != null) { lagerService.lieferungStornieren(lieferungId); ladeAlles(); }
+            if (lieferungId != null) {
+                try {
+                    lagerService.lieferungStornieren(lieferungId);
+                    FehlerUI.erfolg("Lieferung storniert.");
+                    ladeAlles();
+                } catch (KassensystemException ex) {
+                    FehlerUI.fehler(ex.getMessage());
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
+            }
         });
 
         btnRow.add(bestaetigenBtn, ablehnBtn);
@@ -294,16 +327,22 @@ public class LagerView extends AbstractTabellenView {
     private void ladeDaten(String suchBegriff) {
         tabellenZeilen.removeAll();
         tabellenZeilen.add(buildTabellenHeader());
-        List<Artikel> artikel = (suchBegriff != null && !suchBegriff.isBlank())
-                ? artikelService.findByName(suchBegriff)
-                : artikelService.findAllArtikel();
-        artikel = artikel.stream()
-                .sorted(java.util.Comparator
-                        .comparing((Artikel a) -> a.getKategorie().getName())
-                        .thenComparing(Artikel::getName))
-                .toList();
-        boolean zebra = false;
-        for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
+        try {
+            List<Artikel> artikel = (suchBegriff != null && !suchBegriff.isBlank())
+                    ? artikelService.findByName(suchBegriff)
+                    : artikelService.findAllArtikel();
+            artikel = artikel.stream()
+                    .sorted(java.util.Comparator
+                            .comparing((Artikel a) -> a.getKategorie().getName())
+                            .thenComparing(Artikel::getName))
+                    .toList();
+            boolean zebra = false;
+            for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
     }
 
     /**

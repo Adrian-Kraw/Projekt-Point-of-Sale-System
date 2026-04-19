@@ -12,7 +12,7 @@ import de.fhswf.kassensystem.views.DashboardView;
  * <p>Enthält ein Kaffeetassen-Icon und den App-Namen "Canapé Café".
  * Ein Klick auf die Zeile navigiert zur {@link de.fhswf.kassensystem.views.DashboardView}.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class LogoRow extends HorizontalLayout {
 

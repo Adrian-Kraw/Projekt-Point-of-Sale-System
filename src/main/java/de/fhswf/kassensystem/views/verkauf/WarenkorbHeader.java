@@ -13,7 +13,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
  * <p>Ein Klick auf den Löschen-Button ruft den {@code onLoeschen}-Callback auf,
  * der in {@link VerkaufView} den gesamten Warenkorb leert.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class WarenkorbHeader extends HorizontalLayout {
 

@@ -9,7 +9,7 @@ import de.fhswf.kassensystem.model.Artikel;
  * Die Menge wird direkt von {@link WarenkorbPositionFactory} und
  * {@link VerkaufView} manipuliert (kein Setter nötig).
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class WarenkorbEintrag {
 

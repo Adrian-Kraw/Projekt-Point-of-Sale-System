@@ -15,7 +15,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * <p>Jede Position zeigt Artikelname, Einzelpreis, Mengenkontrolle (−/+),
  * Gesamtpreis und Löschen-Button.
  *
- * @author Adrian & Paula
+ * @author Adrian Krawietz & Paula Martin
  */
 class WarenkorbPositionFactory {
 

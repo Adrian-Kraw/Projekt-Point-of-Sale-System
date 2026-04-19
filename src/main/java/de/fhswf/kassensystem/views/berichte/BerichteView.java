@@ -11,7 +11,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.BerichteService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.service.EinstellungService;
 import de.fhswf.kassensystem.service.PdfExportService;
 import de.fhswf.kassensystem.views.MainLayout;
@@ -31,7 +33,7 @@ import java.util.List;
  * <p>Zugriff: Rolle {@code MANAGER}.
  * Nur Manager können den Bon-Zielwert bearbeiten.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Route(value = "berichte", layout = MainLayout.class)
 public class BerichteView extends SecuredView {
@@ -90,23 +92,33 @@ public class BerichteView extends SecuredView {
      */
     private void ladeTabInhalt() {
         tabInhalt.removeAll();
-        switch (aktiverTab) {
-            case "tagesabschluss" -> {
-                // Zielwert aus DB laden
-                BigDecimal bonZielwert = einstellungService.getBonZielwert();
-                TagesabschlussDTO dto  = berichteService.getTagesabschluss(aktivDatum);
-                tabInhalt.add(new TagesabschlussPanel(dto, bonZielwert, istManager(),
-                        wert -> {
-                            // Zielwert in DB speichern, dann Tab neu laden
-                            einstellungService.setBonZielwert(wert);
-                            ladeTabInhalt();
-                        }));
+        try {
+            switch (aktiverTab) {
+                case "tagesabschluss" -> {
+                    BigDecimal bonZielwert = einstellungService.getBonZielwert();
+                    TagesabschlussDTO dto  = berichteService.getTagesabschluss(aktivDatum);
+                    tabInhalt.add(new TagesabschlussPanel(dto, bonZielwert, istManager(),
+                            wert -> {
+                                try {
+                                    einstellungService.setBonZielwert(wert);
+                                    ladeTabInhalt();
+                                } catch (KassensystemException ex) {
+                                    FehlerUI.fehler(ex.getMessage());
+                                } catch (Exception ex) {
+                                    FehlerUI.technischerFehler(ex);
+                                }
+                            }));
+                }
+                case "umsatz"  -> tabInhalt.add(new UmsatzuebersichtPanel(berichteService, aktivDatum));
+                case "artikel" -> {
+                    List<ArtikelStatistikDTO> statistiken = berichteService.getArtikelStatistik(30);
+                    tabInhalt.add(new ArtikelstatistikPanel(statistiken));
+                }
             }
-            case "umsatz"  -> tabInhalt.add(new UmsatzuebersichtPanel(berichteService, aktivDatum));
-            case "artikel" -> {
-                List<ArtikelStatistikDTO> statistiken = berichteService.getArtikelStatistik(30);
-                tabInhalt.add(new ArtikelstatistikPanel(statistiken));
-            }
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
         }
     }
 
@@ -271,13 +283,11 @@ public class BerichteView extends SecuredView {
                             "a.href=url;a.download=$1;document.body.appendChild(a);a.click();" +
                             "document.body.removeChild(a);URL.revokeObjectURL(url);",
                     base64, dateiname);
-            com.vaadin.flow.component.notification.Notification.show(
-                    "PDF wird heruntergeladen...", 3000,
-                    com.vaadin.flow.component.notification.Notification.Position.BOTTOM_START);
+            FehlerUI.erfolg("PDF wird heruntergeladen...");
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
-            com.vaadin.flow.component.notification.Notification.show(
-                    "Fehler beim PDF-Export: " + ex.getMessage(), 4000,
-                    com.vaadin.flow.component.notification.Notification.Position.MIDDLE);
+            FehlerUI.fehler("Fehler beim PDF-Export. Bitte versuche es erneut.");
         }
     }
 }

@@ -17,7 +17,7 @@ import de.fhswf.kassensystem.views.SecuredView;
  *
  * <p>Unterklassen müssen {@link #buildHeader()} und {@link #ladeDaten()} implementieren.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public abstract class AbstractTabellenView extends SecuredView {
 

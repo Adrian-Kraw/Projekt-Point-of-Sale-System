@@ -13,7 +13,7 @@ import de.fhswf.kassensystem.model.Artikel;
  * Bestand, Minimalgrenze und einen farbigen Ampelpunkt (grün/orange/rot).
  * Zeilen-Hover-Effekt wird per JavaScript gesetzt.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class LagerZeileFactory {
 

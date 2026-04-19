@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * Das ermöglicht eine saubere Trennung: {@code TourManager} kennt keine Views,
  * und die Views kennen keine Tour-Logik.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Service
 public class TourManager {

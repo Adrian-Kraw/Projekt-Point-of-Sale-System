@@ -9,7 +9,9 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.BerichteService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,7 +29,7 @@ import java.util.*;
  * ein Stundendiagramm (8–18 Uhr, Bar/Karte) und eine Produktliste.
  * Die Wochenansicht zeigt ein Wochendiagramm (Mo–Sa) und eine Zusammenfassung.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class UmsatzuebersichtPanel extends VerticalLayout {
 
@@ -94,60 +96,68 @@ class UmsatzuebersichtPanel extends VerticalLayout {
 
     /**
      * Erstellt die Tagesansicht mit Stundendiagramm und Produktliste.
-     * Lädt alle Verkäufe des aktiven Datums und aggregiert sie nach Stunde und Zahlungsart.
+     * Bei einem Service-Fehler wird ein Fallback-Layout angezeigt.
      */
     private VerticalLayout buildTagesansicht() {
-        List<Verkauf> verkaeufe = service.findByTimestampBetween(
-                aktivDatum.atStartOfDay(), aktivDatum.atTime(23, 59, 59));
+        try {
+            List<Verkauf> verkaeufe = service.findByTimestampBetween(
+                    aktivDatum.atStartOfDay(), aktivDatum.atTime(23, 59, 59));
 
-        BigDecimal[] bar   = new BigDecimal[11];
-        BigDecimal[] karte = new BigDecimal[11];
-        BigDecimal   maxH  = BigDecimal.ONE;
-        for (int i = 0; i < 11; i++) { bar[i] = BigDecimal.ZERO; karte[i] = BigDecimal.ZERO; }
-        for (Verkauf v : verkaeufe) {
-            int h = v.getTimestamp().getHour();
-            if (h >= 8 && h <= 18) {
-                int idx = h - 8;
-                BigDecimal s = BerichteUtils.safe(v.getGesamtsumme());
-                if (v.getZahlungsart() == Zahlungsart.BAR) bar[idx]   = bar[idx].add(s);
-                else                                        karte[idx] = karte[idx].add(s);
-                BigDecimal tot = bar[idx].add(karte[idx]);
-                if (tot.compareTo(maxH) > 0) maxH = tot;
+            BigDecimal[] bar   = new BigDecimal[11];
+            BigDecimal[] karte = new BigDecimal[11];
+            BigDecimal   maxH  = BigDecimal.ONE;
+            for (int i = 0; i < 11; i++) { bar[i] = BigDecimal.ZERO; karte[i] = BigDecimal.ZERO; }
+            for (Verkauf v : verkaeufe) {
+                int h = v.getTimestamp().getHour();
+                if (h >= 8 && h <= 18) {
+                    int idx = h - 8;
+                    BigDecimal s = BerichteUtils.safe(v.getGesamtsumme());
+                    if (v.getZahlungsart() == Zahlungsart.BAR) bar[idx]   = bar[idx].add(s);
+                    else                                        karte[idx] = karte[idx].add(s);
+                    BigDecimal tot = bar[idx].add(karte[idx]);
+                    if (tot.compareTo(maxH) > 0) maxH = tot;
+                }
             }
+
+            HorizontalLayout stundenDiag = new HorizontalLayout();
+            stundenDiag.setWidthFull();
+            stundenDiag.setAlignItems(FlexComponent.Alignment.END);
+            stundenDiag.setSpacing(false);
+            stundenDiag.getStyle().set("height", "14rem").set("gap", "0.5rem").set("padding", "0 0.5rem");
+            String[] labels = {"8","9","10","11","12","13","14","15","16","17","18"};
+            for (int i = 0; i < 11; i++) {
+                stundenDiag.add(DiagrammFactory.buildBalken(labels[i],
+                        Math.max(BerichteUtils.pct(bar[i], maxH), 2) + "%",
+                        Math.max(BerichteUtils.pct(karte[i], maxH), 2) + "%"));
+            }
+
+            VerticalLayout stundenKarte = new VerticalLayout();
+            stundenKarte.setWidthFull();
+            stundenKarte.setPadding(false);
+            stundenKarte.setSpacing(false);
+            stundenKarte.getStyle().set("background", "white").set("border-radius", "1.25rem")
+                    .set("padding", "2rem").set("gap", "1.25rem");
+
+            H3 stundenTitel = new H3("Umsatz nach Stunde – " +
+                    aktivDatum.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            stundenTitel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
+                    .set("color", "#553722").set("font-family", "'Plus Jakarta Sans', sans-serif");
+            stundenKarte.add(stundenTitel, stundenDiag, DiagrammFactory.buildLegende());
+
+            VerticalLayout layout = new VerticalLayout();
+            layout.setWidthFull();
+            layout.setPadding(false);
+            layout.setSpacing(false);
+            layout.getStyle().set("gap", "1.5rem");
+            layout.add(stundenKarte, buildProduktListe(verkaeufe));
+            return layout;
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+            return buildFehlerLayout("Tagesansicht konnte nicht geladen werden.");
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+            return buildFehlerLayout("Tagesansicht konnte nicht geladen werden.");
         }
-
-        HorizontalLayout stundenDiag = new HorizontalLayout();
-        stundenDiag.setWidthFull();
-        stundenDiag.setAlignItems(FlexComponent.Alignment.END);
-        stundenDiag.setSpacing(false);
-        stundenDiag.getStyle().set("height", "14rem").set("gap", "0.5rem").set("padding", "0 0.5rem");
-        String[] labels = {"8","9","10","11","12","13","14","15","16","17","18"};
-        for (int i = 0; i < 11; i++) {
-            stundenDiag.add(DiagrammFactory.buildBalken(labels[i],
-                    Math.max(BerichteUtils.pct(bar[i], maxH), 2) + "%",
-                    Math.max(BerichteUtils.pct(karte[i], maxH), 2) + "%"));
-        }
-
-        VerticalLayout stundenKarte = new VerticalLayout();
-        stundenKarte.setWidthFull();
-        stundenKarte.setPadding(false);
-        stundenKarte.setSpacing(false);
-        stundenKarte.getStyle().set("background", "white").set("border-radius", "1.25rem")
-                .set("padding", "2rem").set("gap", "1.25rem");
-
-        H3 stundenTitel = new H3("Umsatz nach Stunde – " +
-                aktivDatum.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-        stundenTitel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
-                .set("color", "#553722").set("font-family", "'Plus Jakarta Sans', sans-serif");
-        stundenKarte.add(stundenTitel, stundenDiag, DiagrammFactory.buildLegende());
-
-        VerticalLayout layout = new VerticalLayout();
-        layout.setWidthFull();
-        layout.setPadding(false);
-        layout.setSpacing(false);
-        layout.getStyle().set("gap", "1.5rem");
-        layout.add(stundenKarte, buildProduktListe(verkaeufe));
-        return layout;
     }
 
     /**
@@ -203,70 +213,79 @@ class UmsatzuebersichtPanel extends VerticalLayout {
     /**
      * Erstellt die Wochenansicht mit tageweisem Balkendiagramm (Mo–Sa)
      * und einer Zusammenfassung (Wochenumsatz, Transaktionen, stärkster Tag).
+     * Bei einem Service-Fehler wird ein Fallback-Layout angezeigt.
      */
     private VerticalLayout buildWochenansicht() {
-        LocalDate wochenStart = aktivDatum.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        String[]   tagLabels  = {"MO","DI","MI","DO","FR","SA"};
-        BigDecimal[] barW     = new BigDecimal[6];
-        BigDecimal[] karteW   = new BigDecimal[6];
-        BigDecimal   maxTag   = BigDecimal.ONE;
-        BigDecimal   wUmsatz  = BigDecimal.ZERO;
-        int          wTrans   = 0;
+        try {
+            LocalDate wochenStart = aktivDatum.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            String[]   tagLabels  = {"MO","DI","MI","DO","FR","SA"};
+            BigDecimal[] barW     = new BigDecimal[6];
+            BigDecimal[] karteW   = new BigDecimal[6];
+            BigDecimal   maxTag   = BigDecimal.ONE;
+            BigDecimal   wUmsatz  = BigDecimal.ZERO;
+            int          wTrans   = 0;
 
-        for (int i = 0; i < 6; i++) {
-            barW[i] = BigDecimal.ZERO; karteW[i] = BigDecimal.ZERO;
-            List<Verkauf> tv = service.findByTimestampBetween(
-                    wochenStart.plusDays(i).atStartOfDay(),
-                    wochenStart.plusDays(i).atTime(23, 59, 59));
-            wTrans += tv.size();
-            for (Verkauf v : tv) {
-                BigDecimal s = BerichteUtils.safe(v.getGesamtsumme());
-                wUmsatz = wUmsatz.add(s);
-                if (v.getZahlungsart() == Zahlungsart.BAR) barW[i] = barW[i].add(s);
-                else                                        karteW[i] = karteW[i].add(s);
+            for (int i = 0; i < 6; i++) {
+                barW[i] = BigDecimal.ZERO; karteW[i] = BigDecimal.ZERO;
+                List<Verkauf> tv = service.findByTimestampBetween(
+                        wochenStart.plusDays(i).atStartOfDay(),
+                        wochenStart.plusDays(i).atTime(23, 59, 59));
+                wTrans += tv.size();
+                for (Verkauf v : tv) {
+                    BigDecimal s = BerichteUtils.safe(v.getGesamtsumme());
+                    wUmsatz = wUmsatz.add(s);
+                    if (v.getZahlungsart() == Zahlungsart.BAR) barW[i] = barW[i].add(s);
+                    else                                        karteW[i] = karteW[i].add(s);
+                }
+                BigDecimal tot = barW[i].add(karteW[i]);
+                if (tot.compareTo(maxTag) > 0) maxTag = tot;
             }
-            BigDecimal tot = barW[i].add(karteW[i]);
-            if (tot.compareTo(maxTag) > 0) maxTag = tot;
+
+            HorizontalLayout wDiag = new HorizontalLayout();
+            wDiag.setWidthFull();
+            wDiag.setAlignItems(FlexComponent.Alignment.END);
+            wDiag.setSpacing(false);
+            wDiag.getStyle().set("height", "16rem").set("gap", "1rem").set("padding", "0 1rem");
+
+            BigDecimal starkWert = BigDecimal.ZERO;
+            String     starkTag  = "-";
+            for (int i = 0; i < 6; i++) {
+                int bp = Math.max(BerichteUtils.pct(barW[i], maxTag), 2);
+                int kp = Math.max(BerichteUtils.pct(karteW[i], maxTag), 2);
+                wDiag.add(DiagrammFactory.buildBalken(tagLabels[i], bp + "%", kp + "%"));
+                BigDecimal sum = barW[i].add(karteW[i]);
+                if (sum.compareTo(starkWert) > 0) { starkWert = sum; starkTag = tagLabels[i]; }
+            }
+
+            VerticalLayout karte = new VerticalLayout();
+            karte.setWidthFull();
+            karte.setPadding(false);
+            karte.setSpacing(false);
+            karte.getStyle().set("background", "white").set("border-radius", "1.25rem")
+                    .set("padding", "2rem").set("gap", "1.25rem");
+
+            H3 wTitel = new H3("Umsatz nach Zahlungsart – KW " +
+                    aktivDatum.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR) + " (Mo–Sa)");
+            wTitel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
+                    .set("color", "#553722").set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+            karte.add(wTitel, wDiag, DiagrammFactory.buildLegende(),
+                    buildWochenSummary(wUmsatz, wTrans, starkTag));
+
+            VerticalLayout layout = new VerticalLayout();
+            layout.setWidthFull();
+            layout.setPadding(false);
+            layout.setSpacing(false);
+            layout.getStyle().set("gap", "1.5rem");
+            layout.add(karte);
+            return layout;
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+            return buildFehlerLayout("Wochenansicht konnte nicht geladen werden.");
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+            return buildFehlerLayout("Wochenansicht konnte nicht geladen werden.");
         }
-
-        HorizontalLayout wDiag = new HorizontalLayout();
-        wDiag.setWidthFull();
-        wDiag.setAlignItems(FlexComponent.Alignment.END);
-        wDiag.setSpacing(false);
-        wDiag.getStyle().set("height", "16rem").set("gap", "1rem").set("padding", "0 1rem");
-
-        BigDecimal starkWert = BigDecimal.ZERO;
-        String     starkTag  = "-";
-        for (int i = 0; i < 6; i++) {
-            int bp = Math.max(BerichteUtils.pct(barW[i], maxTag), 2);
-            int kp = Math.max(BerichteUtils.pct(karteW[i], maxTag), 2);
-            wDiag.add(DiagrammFactory.buildBalken(tagLabels[i], bp + "%", kp + "%"));
-            BigDecimal sum = barW[i].add(karteW[i]);
-            if (sum.compareTo(starkWert) > 0) { starkWert = sum; starkTag = tagLabels[i]; }
-        }
-
-        VerticalLayout karte = new VerticalLayout();
-        karte.setWidthFull();
-        karte.setPadding(false);
-        karte.setSpacing(false);
-        karte.getStyle().set("background", "white").set("border-radius", "1.25rem")
-                .set("padding", "2rem").set("gap", "1.25rem");
-
-        H3 wTitel = new H3("Umsatz nach Zahlungsart – KW " +
-                aktivDatum.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR) + " (Mo–Sa)");
-        wTitel.getStyle().set("margin", "0").set("font-size", "1.1rem").set("font-weight", "700")
-                .set("color", "#553722").set("font-family", "'Plus Jakarta Sans', sans-serif");
-
-        karte.add(wTitel, wDiag, DiagrammFactory.buildLegende(),
-                buildWochenSummary(wUmsatz, wTrans, starkTag));
-
-        VerticalLayout layout = new VerticalLayout();
-        layout.setWidthFull();
-        layout.setPadding(false);
-        layout.setSpacing(false);
-        layout.getStyle().set("gap", "1.5rem");
-        layout.add(karte);
-        return layout;
     }
 
     /**
@@ -309,5 +328,30 @@ class UmsatzuebersichtPanel extends VerticalLayout {
             summary.add(k);
         }
         return summary;
+    }
+
+    /**
+     * Erstellt ein Fallback-Layout wenn Daten nicht geladen werden konnten.
+     * Wird anstelle des Diagramms angezeigt.
+     *
+     * @param nachricht benutzerfreundliche Fehlermeldung
+     */
+    private VerticalLayout buildFehlerLayout(String nachricht) {
+        Span icon = new Span("error_outline");
+        icon.addClassName("material-symbols-outlined");
+        icon.getStyle().set("font-size", "2rem").set("color", "#ba1a1a");
+
+        Span text = new Span(nachricht);
+        text.getStyle()
+                .set("font-size", "0.9rem").set("color", "#ba1a1a")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        VerticalLayout fehler = new VerticalLayout(icon, text);
+        fehler.setWidthFull();
+        fehler.setAlignItems(FlexComponent.Alignment.CENTER);
+        fehler.getStyle()
+                .set("background", "#fff0f0").set("border-radius", "1.25rem")
+                .set("padding", "3rem 2rem").set("gap", "0.75rem");
+        return fehler;
     }
 }

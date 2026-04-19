@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * an die {@link BerichteView} übergeben, die ihn persistent via
  * {@link de.fhswf.kassensystem.service.EinstellungService} speichert.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class BonZielwertPanel extends HorizontalLayout {
 

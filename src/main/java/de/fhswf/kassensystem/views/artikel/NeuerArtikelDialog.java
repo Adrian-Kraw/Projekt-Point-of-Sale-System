@@ -1,9 +1,10 @@
 package de.fhswf.kassensystem.views.artikel;
 
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 
 /**
@@ -16,7 +17,7 @@ import de.fhswf.kassensystem.views.components.BaseDialog;
  * <p>Enthält {@link ArtikelFormularFelder} für die Eingabefelder
  * und {@link ArtikelBildUpload} für das optionale Artikelbild.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 public class NeuerArtikelDialog extends BaseDialog {
 
@@ -80,15 +81,16 @@ public class NeuerArtikelDialog extends BaseDialog {
 
         if (zuBearbeitenderArtikel != null) {
             artikel.setId(zuBearbeitenderArtikel.getId());
-            artikelService.updateArtikel(artikel);
-            Notification.show("Artikel \"" + artikel.getName() + "\" wurde aktualisiert.",
-                    3000, Notification.Position.BOTTOM_START);
+            return FehlerUI.versuch(() -> {
+                artikelService.updateArtikel(artikel);
+                FehlerUI.erfolg("Artikel \"" + artikel.getName() + "\" wurde aktualisiert.");
+            });
         } else {
-            artikelService.createArtikel(artikel);
-            Notification.show("Artikel \"" + artikel.getName() + "\" wurde erstellt.",
-                    3000, Notification.Position.BOTTOM_START);
+            return FehlerUI.versuch(() -> {
+                artikelService.createArtikel(artikel);
+                FehlerUI.erfolg("Artikel \"" + artikel.getName() + "\" wurde erstellt.");
+            });
         }
-        return true;
     }
 
     @Override protected String getDialogBreite() { return "36rem"; }

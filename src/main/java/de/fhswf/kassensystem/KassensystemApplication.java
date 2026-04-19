@@ -25,7 +25,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Vaadin sucht dafür automatisch die Datei:
  * {@code src/main/frontend/themes/kassensystem/styles.css}
  *
- * @author Adrian & Paula
+ * @author Adrian Krawietz & Paula Martin
  */
 @SpringBootApplication
 @Theme("kassensystem")

@@ -29,7 +29,7 @@ import java.util.Map;
  *   <li>{@code "navigate-tab-umsatz|navigate-tab-artikel"} – wechselt den Berichte-Tab</li>
  * </ul>
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 @Service
 public class TourService {

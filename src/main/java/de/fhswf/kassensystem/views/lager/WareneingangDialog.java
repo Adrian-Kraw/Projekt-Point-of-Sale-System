@@ -7,7 +7,9 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
 import java.util.List;
 
@@ -22,7 +24,7 @@ import java.util.List;
  * {@link de.fhswf.kassensystem.service.LagerService#bestellungAufgeben} persistiert
  * und der {@code onErfolg}-Callback aufgerufen.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class WareneingangDialog extends BaseDialog {
 
@@ -130,14 +132,11 @@ class WareneingangDialog extends BaseDialog {
         if (!lieferantFeld.isEmpty()) eingang.setLieferant(lieferantFeld.getValue());
         if (!kommentarFeld.isEmpty()) eingang.setKommentar(kommentarFeld.getValue());
 
-
-        lagerService.bestellungAufgeben(eingang);
-
-        Notification.show("Bestellung aufgegeben. Warte auf Lieferbestätigung.",
-                4000, Notification.Position.BOTTOM_START);
-
-        onErfolg.run();
-        return true;
+        return FehlerUI.versuch(() -> {
+            lagerService.bestellungAufgeben(eingang);
+            FehlerUI.erfolg("Bestellung aufgegeben. Warte auf Lieferbestätigung.");
+            onErfolg.run();
+        });
     }
 
     @Override protected String getSpeichernLabel() { return "Buchen"; }

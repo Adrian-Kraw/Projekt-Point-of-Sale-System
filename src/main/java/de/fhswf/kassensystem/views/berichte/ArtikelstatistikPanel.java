@@ -15,7 +15,7 @@ import java.util.List;
  * horizontalen Fortschrittsbalken. Der Artikel mit der höchsten Verkaufszahl
  * dient als Referenzwert (100 %) für alle anderen Balken.
  *
- * @author Adrian
+ * @author Adrian Krawietz
  */
 class ArtikelstatistikPanel extends VerticalLayout {
 

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
  * Unterklassen implementieren {@link #buildBody()} für den Inhalt und
  * {@link #onSpeichern()} für die Speicherlogik.
  *
+ * @author Adrian Krawietz
  */
 public abstract class BaseDialog extends Dialog {
 
