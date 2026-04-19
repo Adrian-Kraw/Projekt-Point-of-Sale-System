@@ -12,6 +12,10 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.shared.Registration;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
@@ -48,6 +52,8 @@ public class LagerView extends AbstractTabellenView {
     private final VerticalLayout   nachbestellBlock      = new VerticalLayout();
     private final VerticalLayout   lieferungBlock        = new VerticalLayout();
     private final VerticalLayout   tabellenZeilen        = new VerticalLayout();
+
+    private Registration broadcasterRegistration;
 
     /**
      * Erstellt die View und lädt alle Daten.
@@ -275,6 +281,7 @@ public class LagerView extends AbstractTabellenView {
                 try {
                     lagerService.lieferungBestaetigen(lieferungId);
                     FehlerUI.erfolg("Lieferung bestätigt.");
+                    Broadcaster.broadcast("lager-geaendert");
                     ladeAlles();
                 } catch (KassensystemException ex) {
                     FehlerUI.fehler(ex.getMessage());
@@ -296,6 +303,7 @@ public class LagerView extends AbstractTabellenView {
                 try {
                     lagerService.lieferungStornieren(lieferungId);
                     FehlerUI.erfolg("Lieferung storniert.");
+                    Broadcaster.broadcast("lager-geaendert");
                     ladeAlles();
                 } catch (KassensystemException ex) {
                     FehlerUI.fehler(ex.getMessage());
@@ -351,7 +359,13 @@ public class LagerView extends AbstractTabellenView {
      * @param artikel der vorausgewählte Artikel
      */
     private void oeffneWareneingangFuerArtikel(Artikel artikel) {
-        new WareneingangDialog(artikelService.findAllArtikel(), artikel, lagerService, this::ladeAlles).open();
+        try {
+            new WareneingangDialog(artikelService.findAllArtikel(), artikel, lagerService, this::ladeAlles).open();
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -498,8 +512,15 @@ public class LagerView extends AbstractTabellenView {
                 .set("border-radius", "9999px").set("padding", "1rem 1.5rem").set("cursor", "pointer")
                 .set("display", "flex").set("align-items", "center").set("justify-content", "center")
                 .set("gap", "0.5rem").set("margin-top", "0.5rem");
-        btn.addClickListener(e ->
-                new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open());
+        btn.addClickListener(e -> {
+            try {
+                new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
+            } catch (KassensystemException ex) {
+                FehlerUI.fehler(ex.getMessage());
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
+            }
+        });
 
         karte.add(titel, text, btn);
         return karte;
@@ -513,8 +534,15 @@ public class LagerView extends AbstractTabellenView {
      */
     public void tourAktion(String action) {
         switch (action) {
-            case "open-wareneingang-dialog" ->
+            case "open-wareneingang-dialog" -> {
+                try {
                     new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
+                } catch (KassensystemException ex) {
+                    FehlerUI.fehler(ex.getMessage());
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
+            }
             case "demo-nachbestell" -> zeigeDemoNachbestellung();
             case "demo-lieferung"   -> zeigeDemoLieferung();
             default -> {}
@@ -687,6 +715,38 @@ public class LagerView extends AbstractTabellenView {
         Span zelle = headerZelle("Status", LagerZeileFactory.BREITE_STATUS);
         zelle.getElement().setAttribute("tour-id", "status-spalte");
         return zelle;
+    }
+
+    /**
+     * Registriert den Broadcaster-Listener wenn die View geöffnet wird.
+     * Reagiert auf "bestand-geaendert" und "lager-geaendert" Events
+     * und lädt alle Sektionen neu damit der Manager stets den aktuellen Stand sieht.
+     */
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        broadcasterRegistration = Broadcaster.register(event -> {
+            if ("bestand-geaendert".equals(event) || "lager-geaendert".equals(event)) {
+                attachEvent.getUI().access(() -> {
+                    try {
+                        ladeAlles();
+                    } catch (Exception ex) {
+                        FehlerUI.technischerFehler(ex);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Entfernt den Broadcaster-Listener wenn die View geschlossen/verlassen wird.
+     * Verhindert Memory Leaks durch verwaiste Listener.
+     */
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (broadcasterRegistration != null) {
+            broadcasterRegistration.remove();
+            broadcasterRegistration = null;
+        }
     }
 
 }

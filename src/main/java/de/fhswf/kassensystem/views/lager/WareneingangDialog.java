@@ -7,6 +7,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
@@ -134,6 +135,7 @@ class WareneingangDialog extends BaseDialog {
 
         return FehlerUI.versuch(() -> {
             lagerService.bestellungAufgeben(eingang);
+            Broadcaster.broadcast("lager-geaendert");
             FehlerUI.erfolg("Bestellung aufgegeben. Warte auf Lieferbestätigung.");
             onErfolg.run();
         });

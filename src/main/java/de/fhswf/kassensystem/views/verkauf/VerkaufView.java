@@ -14,6 +14,10 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.shared.Registration;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
@@ -63,6 +67,8 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
 
     private final VerticalLayout warenkorbPositionenLayout = new VerticalLayout();
     private final Div            artikelGridDiv            = new Div();
+
+    private Registration broadcasterRegistration;
 
     /**
      * Erstellt die View mit linker Artikel-Spalte und rechter Warenkorb-Spalte.
@@ -207,7 +213,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
      * Erstellt die Kategorie-Chip-Gruppe aus allen aktiven Artikelkategorien.
      */
     private KategorieChipGroup buildKategorieFilter() {
-        List<String> kategorien = new ArrayList<>();
+        List<String> kategorien = new java.util.ArrayList<>();
         try {
             kategorien = artikelService.findAllArtikel().stream()
                     .filter(Artikel::isAktiv)
@@ -336,12 +342,17 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 ArtikelKarteFactory.aktualisiereBestand(karte, artikelId, anzeige);
             } else {
                 // Nicht im Warenkorb → Originalbestand wiederherstellen
-                // Artikel aus Service nachladen um echten Bestand zu kennen
-                artikelService.findAllArtikel().stream()
-                        .filter(a -> a.getId().equals(artikelId))
-                        .findFirst()
-                        .ifPresent(a -> ArtikelKarteFactory.aktualisiereBestand(
-                                karte, artikelId, a.getBestand()));
+                try {
+                    artikelService.findAllArtikel().stream()
+                            .filter(a -> a.getId().equals(artikelId))
+                            .findFirst()
+                            .ifPresent(a -> ArtikelKarteFactory.aktualisiereBestand(
+                                    karte, artikelId, a.getBestand()));
+                } catch (KassensystemException ex) {
+                    FehlerUI.fehler(ex.getMessage());
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
             }
         }
     }
@@ -393,6 +404,9 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                     artikelService.updateArtikel(e.artikel);
                 }
             }
+
+            // Alle anderen offenen Tabs (Lager, Kassieren) über Bestandsänderung informieren
+            Broadcaster.broadcast("bestand-geaendert");
 
             String msg = "Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
                     + WarenkorbZusammenfassung.format(gesamtsumme);
@@ -477,10 +491,16 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         switch (action) {
             case "demo-verkauf" -> {
                 if (warenkorbListe.isEmpty()) {
-                    artikelService.findAllArtikel().stream()
-                            .filter(a -> a.isAktiv() && a.getBestand() > 0)
-                            .findFirst()
-                            .ifPresent(this::artikelZumKorbHinzufuegen);
+                    try {
+                        artikelService.findAllArtikel().stream()
+                                .filter(a -> a.isAktiv() && a.getBestand() > 0)
+                                .findFirst()
+                                .ifPresent(this::artikelZumKorbHinzufuegen);
+                    } catch (KassensystemException ex) {
+                        FehlerUI.fehler(ex.getMessage());
+                    } catch (Exception ex) {
+                        FehlerUI.technischerFehler(ex);
+                    }
                 }
             }
             case "open-zahlungsdialog" -> {
@@ -489,6 +509,38 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 new ZahlungsDialog(anzeige, art -> {}).open();
             }
             case "open-quittungsdialog" -> new QuittungsDialog(() -> {}, () -> {}).open();
+        }
+    }
+
+    /**
+     * Registriert den Broadcaster-Listener wenn die View geöffnet wird.
+     * Reagiert auf "bestand-geaendert" und "lager-geaendert" Events
+     * und lädt das Artikel-Grid neu damit der Kassierer stets den aktuellen Bestand sieht.
+     */
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        broadcasterRegistration = Broadcaster.register(event -> {
+            if ("bestand-geaendert".equals(event) || "lager-geaendert".equals(event)) {
+                attachEvent.getUI().access(() -> {
+                    try {
+                        ladeArtikelGrid();
+                    } catch (Exception ex) {
+                        FehlerUI.technischerFehler(ex);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Entfernt den Broadcaster-Listener wenn die View geschlossen/verlassen wird.
+     * Verhindert Memory Leaks durch verwaiste Listener.
+     */
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (broadcasterRegistration != null) {
+            broadcasterRegistration.remove();
+            broadcasterRegistration = null;
         }
     }
 
