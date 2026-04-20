@@ -3,6 +3,7 @@ package de.fhswf.kassensystem.security;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,16 +11,18 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit-Tests für {@link SecurityUtils}.
  *
  * <p>Das {@link UserRepository} wird per Mockito gemockt damit keine
  * Datenbankverbindung benötigt wird. Der {@link SecurityContextHolder}
- * wird vor jedem Test geleert um Zustandsübertragung zwischen Tests zu verhindern.
+ * wird vor jedem Test geleert um Zustandsübertragung zwischen Tests zu verhindern.</p>
  */
 class SecurityUtilsTest {
 
@@ -34,21 +37,22 @@ class SecurityUtilsTest {
     }
 
     /**
-     * Kein Authentication-Objekt im SecurityContext: null wird erwartet.
+     * Kein Authentication-Objekt im SecurityContext — leeres Optional wird erwartet.
      */
     @Test
-    void getEingeloggterUser_NichtEingeloggt_GibtNullZurueck() {
-        assertNull(securityUtils.getEingeloggterUser());
+    @DisplayName("Gibt leeres Optional zurück wenn kein Sicherheitskontext vorhanden")
+    void getEingeloggterUser_nichtEingeloggt() {
+        Optional<User> result = securityUtils.getEingeloggterUser();
+
+        assertThat(result).isEmpty();
     }
 
     /**
-     * Gültige Authentifizierung und Benutzer in DB: das User-Objekt wird erwartet.
-     *
-     * <p>Der dritte Parameter (leere Authority-Liste) ist notwendig damit
-     * isAuthenticated() true zurückgibt.
+     * Gültige Authentifizierung und Benutzer in DB — das User-Objekt wird erwartet.
      */
     @Test
-    void getEingeloggterUser_EingeloggtUndGefunden_GibtUserZurueck() {
+    @DisplayName("Gibt User zurück wenn Benutzer eingeloggt und in DB gefunden")
+    void getEingeloggterUser_eingeloggtUndGefunden() {
         User user = new User();
         user.setBenutzername("max");
         when(userRepository.findByBenutzername("max")).thenReturn(user);
@@ -56,48 +60,56 @@ class SecurityUtilsTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("max", null, List.of()));
 
-        User result = securityUtils.getEingeloggterUser();
+        Optional<User> result = securityUtils.getEingeloggterUser();
 
-        assertNotNull(result);
-        assertEquals("max", result.getBenutzername());
+        assertThat(result).isPresent();
+        assertThat(result.get().getBenutzername()).isEqualTo("max");
     }
 
     /**
-     * Authentifizierung vorhanden, aber Benutzer nicht in DB: null wird erwartet.
+     * Authentifizierung vorhanden aber Benutzer nicht in DB — leeres Optional wird erwartet.
      */
     @Test
-    void getEingeloggterUser_BenutzerNichtInDB_GibtNullZurueck() {
+    @DisplayName("Gibt leeres Optional zurück wenn Benutzer nicht in DB gefunden")
+    void getEingeloggterUser_benutzerNichtInDb() {
         when(userRepository.findByBenutzername("ghost")).thenReturn(null);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("ghost", null, List.of()));
 
-        assertNull(securityUtils.getEingeloggterUser());
+        Optional<User> result = securityUtils.getEingeloggterUser();
+
+        assertThat(result).isEmpty();
     }
 
     /**
-     * Anonyme Authentifizierung (nicht eingeloggt): null wird erwartet.
-     * AnonymousAuthenticationToken gilt als nicht authentifiziert.
+     * Anonyme Authentifizierung — leeres Optional wird erwartet.
      */
     @Test
-    void getEingeloggterUser_AnonymerBenutzer_GibtNullZurueck() {
+    @DisplayName("Gibt leeres Optional zurück wenn anonymer Benutzer")
+    void getEingeloggterUser_anonyerBenutzer() {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("key", "anonymousUser",
                         List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
 
-        assertNull(securityUtils.getEingeloggterUser());
+        Optional<User> result = securityUtils.getEingeloggterUser();
+
+        assertThat(result).isEmpty();
     }
 
     /**
-     * Benutzer mit leerem Benutzernamen: kein Treffer in DB, null wird erwartet.
+     * Benutzer mit leerem Benutzernamen — leeres Optional wird erwartet.
      */
     @Test
-    void getEingeloggterUser_LeererBenutzername_GibtNullZurueck() {
+    @DisplayName("Gibt leeres Optional zurück wenn Benutzername leer ist")
+    void getEingeloggterUser_leererBenutzername() {
         when(userRepository.findByBenutzername("")).thenReturn(null);
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("", null, List.of()));
 
-        assertNull(securityUtils.getEingeloggterUser());
+        Optional<User> result = securityUtils.getEingeloggterUser();
+
+        assertThat(result).isEmpty();
     }
 }

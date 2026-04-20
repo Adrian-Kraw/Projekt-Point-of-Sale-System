@@ -3,6 +3,8 @@ package de.fhswf.kassensystem.views.components;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import de.fhswf.kassensystem.exception.KassensystemException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Zentrale Hilfsklasse für einheitliche Fehler- und Erfolgsmeldungen im Frontend.
@@ -30,6 +32,8 @@ import de.fhswf.kassensystem.exception.KassensystemException;
  */
 public final class FehlerUI {
 
+    private static final Logger log = LoggerFactory.getLogger(FehlerUI.class);
+
     private static final int DAUER_FEHLER = 4000;
     private static final int DAUER_ERFOLG = 3000;
 
@@ -47,8 +51,15 @@ public final class FehlerUI {
     /**
      * Zeigt eine rote Fehler-Notification für unerwartete technische Fehler.
      * Zeigt dem Nutzer eine generische Meldung statt interner Details.
+     *
+     * <p> Der vollständige Stack-Trace wird über SLF4J geloggt, damit technische Fehler im
+     * Betrieb nachvollzogen werden können.
+     * </p>
+     *
+     * @param ex die aufgetretene Exception
      */
     public static void technischerFehler(Exception ex) {
+        log.error("Unerwarteter technischer Fehler", ex);
         Notification n = Notification.show(
                 "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
                 DAUER_FEHLER, Notification.Position.MIDDLE);

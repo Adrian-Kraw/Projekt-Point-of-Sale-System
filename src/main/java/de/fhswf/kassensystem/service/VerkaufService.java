@@ -2,14 +2,18 @@ package de.fhswf.kassensystem.service;
 
 import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Verkauf;
+import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Status;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
 import de.fhswf.kassensystem.repository.VerkaufRepository;
 import de.fhswf.kassensystem.repository.UserRepository;
+import de.fhswf.kassensystem.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Service für die Durchführung und Persistierung von Verkaufsvorgängen.
@@ -24,11 +28,13 @@ import java.math.BigDecimal;
 public class VerkaufService {
 
     private VerkaufRepository verkaufRepository;
+    private SecurityUtils securityUtils;
     private UserRepository userRepository;
 
-    public VerkaufService(VerkaufRepository verkaufRepository, UserRepository userRepository) {
+    public VerkaufService(VerkaufRepository verkaufRepository, UserRepository userRepository, SecurityUtils securityUtils) {
         this.verkaufRepository = verkaufRepository;
         this.userRepository = userRepository;
+        this.securityUtils = securityUtils;
     }
 
     /**
@@ -47,7 +53,7 @@ public class VerkaufService {
      */
     @Transactional
     public Verkauf verkaufKomplett(
-            java.util.List<de.fhswf.kassensystem.model.Verkaufsposition> positionen,
+            List<Verkaufsposition> positionen,
             Zahlungsart zahlungsart,
             BigDecimal rabatt,
             BigDecimal gesamtsumme) {
@@ -75,24 +81,17 @@ public class VerkaufService {
         }
 
         Verkauf verkauf = new Verkauf();
-        verkauf.setTimestamp(java.time.LocalDateTime.now());
+        verkauf.setTimestamp(LocalDateTime.now());
         verkauf.setStatus(Status.ABGESCHLOSSEN);
         verkauf.setZahlungsart(zahlungsart);
         verkauf.setRabatt(rabatt);
         verkauf.setGesamtsumme(gesamtsumme);
 
-        // Kassierer aus SecurityContext
-        org.springframework.security.core.Authentication auth =
-                org.springframework.security.core.context.SecurityContextHolder
-                        .getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            de.fhswf.kassensystem.model.User kassierer =
-                    userRepository.findByBenutzername(auth.getName());
-            if (kassierer != null) verkauf.setKassierer(kassierer);
-        }
+        securityUtils.getEingeloggterUser()
+                .ifPresent(verkauf::setKassierer);
 
         // Positionen verknüpfen
-        for (de.fhswf.kassensystem.model.Verkaufsposition pos : positionen) {
+        for (Verkaufsposition pos : positionen) {
             pos.setVerkauf(verkauf);
         }
         verkauf.setPositionen(positionen);
