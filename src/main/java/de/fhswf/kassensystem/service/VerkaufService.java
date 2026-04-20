@@ -74,12 +74,6 @@ public class VerkaufService {
         if (zahlungsart == null) {
             throw new IllegalArgumentException("Zahlungsart darf nicht null sein.");
         }
-//        if (gesamtsumme == null) {
-//            throw new IllegalArgumentException("Gesamtsumme darf nicht null sein.");
-//        }
-//        if (gesamtsumme.signum() < 0) {
-//            throw new IllegalStateException("Gesamtsumme muss größer oder gleich 0 sein.");
-//        }
         if (rabatt == null) {
             throw new IllegalArgumentException("Rabatt darf nicht null sein.");
         }
@@ -87,7 +81,6 @@ public class VerkaufService {
             throw new IllegalStateException("Rabatt darf nicht kleiner als 0 sein.");
         }
 
-        // Summenberechnung gehört in den Service
         BigDecimal zwischensumme = positionen.stream()
                 .map(p -> p.getEinzelpreis().multiply(BigDecimal.valueOf(p.getMenge())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -99,7 +92,7 @@ public class VerkaufService {
 
         BigDecimal gesamtsumme = zwischensumme.subtract(rabattBetrag);
 
-        // Bestandsabbuch – innerhalb der Transaktion!
+        // Bestandsabbuchung gehört in die Transaktion rein
         for (Verkaufsposition pos : positionen) {
             Artikel artikel = pos.getArtikel();
             if (artikel.getBestand() < 999) {
@@ -131,6 +124,4 @@ public class VerkaufService {
 
         return verkaufRepository.save(verkauf);
     }
-
-
 }

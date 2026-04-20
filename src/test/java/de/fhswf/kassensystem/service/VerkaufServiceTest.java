@@ -1,6 +1,5 @@
 package de.fhswf.kassensystem.service;
 
-// import de.fhswf.kassensystem.exception.BestandUnterschrittenException;
 import de.fhswf.kassensystem.exception.UngueltigeEingabeException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
@@ -92,8 +91,7 @@ class VerkaufServiceTest {
             Verkauf result = verkaufService.verkaufKomplett(
                     List.of(testPosition),
                     Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00"));
+                    BigDecimal.ZERO);
 
             assertThat(result.getStatus()).isEqualTo(Status.ABGESCHLOSSEN);
             assertThat(result.getZahlungsart()).isEqualTo(Zahlungsart.BAR);
@@ -119,8 +117,7 @@ class VerkaufServiceTest {
             Verkauf result = verkaufService.verkaufKomplett(
                     List.of(testPosition),
                     Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00"));
+                    BigDecimal.ZERO);
 
             assertThat(result.getKassierer()).isEqualTo(kassierer);
         }
@@ -134,8 +131,7 @@ class VerkaufServiceTest {
             Verkauf result = verkaufService.verkaufKomplett(
                     List.of(testPosition),
                     Zahlungsart.KARTE,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00"));
+                    BigDecimal.ZERO);
 
             assertThat(testPosition.getVerkauf()).isEqualTo(result);
         }
@@ -146,8 +142,7 @@ class VerkaufServiceTest {
             assertThatThrownBy(() -> verkaufService.verkaufKomplett(
                     null,
                     Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00")))
+                    BigDecimal.ZERO))
                     .isInstanceOf(IllegalArgumentException.class);
 
             verify(verkaufRepository, never()).save(any());
@@ -159,52 +154,10 @@ class VerkaufServiceTest {
             assertThatThrownBy(() -> verkaufService.verkaufKomplett(
                     List.of(),
                     Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00")))
+                    BigDecimal.ZERO
+                    ))
                     .isInstanceOf(UngueltigeEingabeException.class)
                     .hasMessageContaining("leer");
-
-            verify(verkaufRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Wirft IllegalArgumentException wenn Zahlungsart null ist")
-        void verkaufKomplett_zahlungsartNull() {
-            assertThatThrownBy(() -> verkaufService.verkaufKomplett(
-                    List.of(testPosition),
-                    null,
-                    BigDecimal.ZERO,
-                    new BigDecimal("5.00")))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Zahlungsart");
-
-            verify(verkaufRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Wirft IllegalArgumentException wenn Gesamtsumme null ist")
-        void verkaufKomplett_gesamtsummeNull() {
-            assertThatThrownBy(() -> verkaufService.verkaufKomplett(
-                    List.of(testPosition),
-                    Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Gesamtsumme");
-
-            verify(verkaufRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("Wirft IllegalStateException wenn Gesamtsumme negativ ist")
-        void verkaufKomplett_gesamtsummeNegativ() {
-            assertThatThrownBy(() -> verkaufService.verkaufKomplett(
-                    List.of(testPosition),
-                    Zahlungsart.BAR,
-                    BigDecimal.ZERO,
-                    new BigDecimal("-1.00")))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("negativ");
 
             verify(verkaufRepository, never()).save(any());
         }
@@ -215,8 +168,8 @@ class VerkaufServiceTest {
             assertThatThrownBy(() -> verkaufService.verkaufKomplett(
                     List.of(testPosition),
                     Zahlungsart.BAR,
-                    null,
-                    new BigDecimal("5.00")))
+                    null
+                    ))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Rabatt");
 
@@ -229,8 +182,7 @@ class VerkaufServiceTest {
             assertThatThrownBy(() -> verkaufService.verkaufKomplett(
                     List.of(testPosition),
                     Zahlungsart.BAR,
-                    new BigDecimal("-0.10"),
-                    new BigDecimal("5.00")))
+                    new BigDecimal("-0.10")))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("negativ");
 
