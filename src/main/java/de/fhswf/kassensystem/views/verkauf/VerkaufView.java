@@ -15,6 +15,10 @@ import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.shared.Registration;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
@@ -64,6 +68,8 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
 
     private final VerticalLayout warenkorbPositionenLayout = new VerticalLayout();
     private final Div            artikelGridDiv            = new Div();
+
+    private Registration broadcasterRegistration;
 
     /**
      * Erstellt die View mit linker Artikel-Spalte und rechter Warenkorb-Spalte.
@@ -382,6 +388,9 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             // Service macht Summenberechnung, Bestandsabbuch und Persistierung
             Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
 
+            // Alle anderen offenen Tabs (Lager, Kassieren) über Bestandsänderung informieren
+            Broadcaster.broadcast("bestand-geaendert");
+
             FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
                     + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
 
@@ -472,6 +481,42 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 new ZahlungsDialog(anzeige, art -> {}).open();
             }
             case "open-quittungsdialog" -> new QuittungsDialog(() -> {}, () -> {}).open();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // BROADCASTER
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Registriert den Broadcaster-Listener wenn die View geöffnet wird.
+     * Reagiert auf "bestand-geaendert" und "lager-geaendert" Events
+     * und lädt das Artikel-Grid neu damit der Kassierer stets den aktuellen Bestand sieht.
+     */
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        broadcasterRegistration = Broadcaster.register(event -> {
+            if ("bestand-geaendert".equals(event) || "lager-geaendert".equals(event)) {
+                attachEvent.getUI().access(() -> {
+                    try {
+                        ladeArtikelGrid();
+                    } catch (Exception ex) {
+                        FehlerUI.technischerFehler(ex);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Entfernt den Broadcaster-Listener wenn die View geschlossen/verlassen wird.
+     * Verhindert Memory Leaks durch verwaiste Listener.
+     */
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (broadcasterRegistration != null) {
+            broadcasterRegistration.remove();
+            broadcasterRegistration = null;
         }
     }
 
