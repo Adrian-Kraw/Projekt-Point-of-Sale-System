@@ -12,12 +12,9 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.shared.Registration;
-import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
@@ -67,8 +64,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
 
     private final VerticalLayout warenkorbPositionenLayout = new VerticalLayout();
     private final Div            artikelGridDiv            = new Div();
-
-    private Registration broadcasterRegistration;
 
     /**
      * Erstellt die View mit linker Artikel-Spalte und rechter Warenkorb-Spalte.
@@ -213,7 +208,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
      * Erstellt die Kategorie-Chip-Gruppe aus allen aktiven Artikelkategorien.
      */
     private KategorieChipGroup buildKategorieFilter() {
-        List<String> kategorien = new java.util.ArrayList<>();
+        List<String> kategorien = new ArrayList<>();
         try {
             kategorien = artikelService.findAllArtikel().stream()
                     .filter(Artikel::isAktiv)
@@ -342,17 +337,12 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 ArtikelKarteFactory.aktualisiereBestand(karte, artikelId, anzeige);
             } else {
                 // Nicht im Warenkorb → Originalbestand wiederherstellen
-                try {
-                    artikelService.findAllArtikel().stream()
-                            .filter(a -> a.getId().equals(artikelId))
-                            .findFirst()
-                            .ifPresent(a -> ArtikelKarteFactory.aktualisiereBestand(
-                                    karte, artikelId, a.getBestand()));
-                } catch (KassensystemException ex) {
-                    FehlerUI.fehler(ex.getMessage());
-                } catch (Exception ex) {
-                    FehlerUI.technischerFehler(ex);
-                }
+                // Artikel aus Service nachladen um echten Bestand zu kennen
+                artikelService.findAllArtikel().stream()
+                        .filter(a -> a.getId().equals(artikelId))
+                        .findFirst()
+                        .ifPresent(a -> ArtikelKarteFactory.aktualisiereBestand(
+                                karte, artikelId, a.getBestand()));
             }
         }
     }
@@ -378,15 +368,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
      */
     private void verkaufAbschliessen(Zahlungsart zahlungsart) {
         try {
-            BigDecimal zwischensumme = warenkorbListe.stream()
-                    .map(e -> e.artikel.getPreis().multiply(BigDecimal.valueOf(e.menge)))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
             BigDecimal rabatt = zusammenfassung.getAktuellerRabattProzent();
-            BigDecimal rabattBetrag = rabatt.compareTo(BigDecimal.ZERO) > 0
-                    ? zwischensumme.multiply(rabatt).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-            BigDecimal gesamtsumme = zwischensumme.subtract(rabattBetrag);
 
             List<Verkaufsposition> positionen = new ArrayList<>();
             for (WarenkorbEintrag e : warenkorbListe) {
@@ -396,29 +378,16 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 pos.setEinzelpreis(e.artikel.getPreis());
                 positionen.add(pos);
             }
-            verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt, gesamtsumme);
 
-            for (WarenkorbEintrag e : warenkorbListe) {
-                if (e.artikel.getBestand() < 999) {
-                    e.artikel.setBestand(Math.max(0, e.artikel.getBestand() - e.menge));
-                    artikelService.updateArtikel(e.artikel);
-                }
-            }
+            // Service macht Summenberechnung, Bestandsabbuch und Persistierung
+            Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
 
-            // Alle anderen offenen Tabs (Lager, Kassieren) über Bestandsänderung informieren
-            Broadcaster.broadcast("bestand-geaendert");
-
-            String msg = "Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
-                    + WarenkorbZusammenfassung.format(gesamtsumme);
-            if (rabattBetrag.compareTo(BigDecimal.ZERO) > 0)
-                msg += " (Rabatt: " + WarenkorbZusammenfassung.format(rabattBetrag) + ")";
-            FehlerUI.erfolg(msg);
+            FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
+                    + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
 
             final List<Verkaufsposition> bonPositionen = new ArrayList<>(positionen);
-            final BigDecimal bonRabatt = rabatt;
-
             new QuittungsDialog(
-                    () -> { druckeKassenbon(bonPositionen, bonRabatt); warenkorbLeeren(); ladeArtikelGrid(); },
+                    () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); },
                     () -> { warenkorbLeeren(); ladeArtikelGrid(); }
             ).open();
 
@@ -491,16 +460,10 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
         switch (action) {
             case "demo-verkauf" -> {
                 if (warenkorbListe.isEmpty()) {
-                    try {
-                        artikelService.findAllArtikel().stream()
-                                .filter(a -> a.isAktiv() && a.getBestand() > 0)
-                                .findFirst()
-                                .ifPresent(this::artikelZumKorbHinzufuegen);
-                    } catch (KassensystemException ex) {
-                        FehlerUI.fehler(ex.getMessage());
-                    } catch (Exception ex) {
-                        FehlerUI.technischerFehler(ex);
-                    }
+                    artikelService.findAllArtikel().stream()
+                            .filter(a -> a.isAktiv() && a.getBestand() > 0)
+                            .findFirst()
+                            .ifPresent(this::artikelZumKorbHinzufuegen);
                 }
             }
             case "open-zahlungsdialog" -> {
@@ -509,38 +472,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 new ZahlungsDialog(anzeige, art -> {}).open();
             }
             case "open-quittungsdialog" -> new QuittungsDialog(() -> {}, () -> {}).open();
-        }
-    }
-
-    /**
-     * Registriert den Broadcaster-Listener wenn die View geöffnet wird.
-     * Reagiert auf "bestand-geaendert" und "lager-geaendert" Events
-     * und lädt das Artikel-Grid neu damit der Kassierer stets den aktuellen Bestand sieht.
-     */
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        broadcasterRegistration = Broadcaster.register(event -> {
-            if ("bestand-geaendert".equals(event) || "lager-geaendert".equals(event)) {
-                attachEvent.getUI().access(() -> {
-                    try {
-                        ladeArtikelGrid();
-                    } catch (Exception ex) {
-                        FehlerUI.technischerFehler(ex);
-                    }
-                });
-            }
-        });
-    }
-
-    /**
-     * Entfernt den Broadcaster-Listener wenn die View geschlossen/verlassen wird.
-     * Verhindert Memory Leaks durch verwaiste Listener.
-     */
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        if (broadcasterRegistration != null) {
-            broadcasterRegistration.remove();
-            broadcasterRegistration = null;
         }
     }
 

@@ -1,10 +1,14 @@
 package de.fhswf.kassensystem.security;
 
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.repository.UserRepository;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 /**
  * Hilfsklasse für sicherheitsbezogene Hilfsmethoden.
@@ -38,10 +42,12 @@ public class SecurityUtils {
      *         wenn keine aktive Authentifizierung vorliegt oder
      *         wenn kein Benutzer mit diesem Namen gefunden wurde
      */
-    public User getEingeloggterUser() {
+    public Optional<User> getEingeloggterUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) return null;
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return Optional.empty();
+        }
 
-        return userRepository.findByBenutzername(auth.getName());
+        return Optional.ofNullable(userRepository.findByBenutzername(auth.getName()));
     }
 }

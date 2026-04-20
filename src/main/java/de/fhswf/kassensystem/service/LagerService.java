@@ -90,7 +90,8 @@ public class LagerService {
         }
 
         eingang.setStatus(WareneingangStatus.AUSSTEHEND);
-        eingang.setBestelltVon(securityUtils.getEingeloggterUser());
+        securityUtils.getEingeloggterUser()
+                        .ifPresent(eingang::setBestelltVon);
         eingang.setBestelltAm(LocalDateTime.now());
         wareneingangRepository.save(eingang);
     }
