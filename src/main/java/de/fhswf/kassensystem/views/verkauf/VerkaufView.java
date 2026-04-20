@@ -12,6 +12,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import de.fhswf.kassensystem.model.Artikel;
+import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
 import de.fhswf.kassensystem.exception.KassensystemException;
@@ -367,15 +368,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
      */
     private void verkaufAbschliessen(Zahlungsart zahlungsart) {
         try {
-            BigDecimal zwischensumme = warenkorbListe.stream()
-                    .map(e -> e.artikel.getPreis().multiply(BigDecimal.valueOf(e.menge)))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
             BigDecimal rabatt = zusammenfassung.getAktuellerRabattProzent();
-            BigDecimal rabattBetrag = rabatt.compareTo(BigDecimal.ZERO) > 0
-                    ? zwischensumme.multiply(rabatt).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-            BigDecimal gesamtsumme = zwischensumme.subtract(rabattBetrag);
 
             List<Verkaufsposition> positionen = new ArrayList<>();
             for (WarenkorbEintrag e : warenkorbListe) {
@@ -385,26 +378,16 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 pos.setEinzelpreis(e.artikel.getPreis());
                 positionen.add(pos);
             }
-            verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt, gesamtsumme);
 
-            for (WarenkorbEintrag e : warenkorbListe) {
-                if (e.artikel.getBestand() < 999) {
-                    e.artikel.setBestand(Math.max(0, e.artikel.getBestand() - e.menge));
-                    artikelService.updateArtikel(e.artikel);
-                }
-            }
+            // Service macht Summenberechnung, Bestandsabbuch und Persistierung
+            Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
 
-            String msg = "Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
-                    + WarenkorbZusammenfassung.format(gesamtsumme);
-            if (rabattBetrag.compareTo(BigDecimal.ZERO) > 0)
-                msg += " (Rabatt: " + WarenkorbZusammenfassung.format(rabattBetrag) + ")";
-            FehlerUI.erfolg(msg);
+            FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
+                    + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
 
             final List<Verkaufsposition> bonPositionen = new ArrayList<>(positionen);
-            final BigDecimal bonRabatt = rabatt;
-
             new QuittungsDialog(
-                    () -> { druckeKassenbon(bonPositionen, bonRabatt); warenkorbLeeren(); ladeArtikelGrid(); },
+                    () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); },
                     () -> { warenkorbLeeren(); ladeArtikelGrid(); }
             ).open();
 
