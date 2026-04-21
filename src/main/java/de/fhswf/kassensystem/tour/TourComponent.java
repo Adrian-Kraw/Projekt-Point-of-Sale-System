@@ -13,6 +13,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.shared.Registration;
 
+import de.fhswf.kassensystem.views.components.FehlerUI;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -141,8 +143,13 @@ public class TourComponent extends Div {
                 .set("width", "0").set("height", "0");
         actionBtn.addClickListener(e -> {
             TourStep step = steps.get(currentIndex);
-            if (step.hasAction() && !step.action().startsWith("navigate:"))
-                actionHandler.accept(step.action());
+            if (step.hasAction() && !step.action().startsWith("navigate:")) {
+                try {
+                    actionHandler.accept(step.action());
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
+            }
         });
         add(actionBtn);
     }
@@ -224,10 +231,26 @@ public class TourComponent extends Div {
      */
     private void navigateIfNeeded(TourStep step, Runnable after) {
         String route = routeForSelector(step.targetSelector());
-        if (route == null) { after.run(); return; }
+        if (route == null) {
+            try {
+                after.run();
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
+            }
+            return;
+        }
         String cur = UI.getCurrent().getActiveViewLocation().getPath();
-        if (cur.equals(route)) after.run();
-        else { hideSpotlight(); UI.getCurrent().navigate(route); scheduleNav(after); }
+        if (cur.equals(route)) {
+            try {
+                after.run();
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
+            }
+        } else {
+            hideSpotlight();
+            UI.getCurrent().navigate(route);
+            scheduleNav(after);
+        }
     }
 
     /**
@@ -245,7 +268,15 @@ public class TourComponent extends Div {
                 .set("width", "0").set("height", "0");
         navBtn.addClickListener(e -> {
             remove(navBtn);
-            if (pendingCallback != null) { Runnable r = pendingCallback; pendingCallback = null; r.run(); }
+            if (pendingCallback != null) {
+                Runnable r = pendingCallback;
+                pendingCallback = null;
+                try {
+                    r.run();
+                } catch (Exception ex) {
+                    FehlerUI.technischerFehler(ex);
+                }
+            }
         });
         add(navBtn);
         UI.getCurrent().getPage().executeJs(

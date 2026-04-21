@@ -11,9 +11,14 @@ import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.RouterLink;
 import de.fhswf.kassensystem.tour.TourManager;
+import de.fhswf.kassensystem.views.artikel.ArtikelView;
+import de.fhswf.kassensystem.views.benutzer.BenutzerView;
+import de.fhswf.kassensystem.views.berichte.BerichteView;
+import de.fhswf.kassensystem.views.lager.LagerView;
 import de.fhswf.kassensystem.views.sidebar.LogoRow;
 import de.fhswf.kassensystem.views.sidebar.SidebarNavigation;
 import de.fhswf.kassensystem.views.sidebar.UserCard;
+import de.fhswf.kassensystem.views.verkauf.VerkaufView;
 import jakarta.annotation.security.PermitAll;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -158,15 +163,15 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         String tourId = istManager() ? "manager" : "kassierer";
         btn.addClickListener(e -> tourManager.start(tourId, action -> {
             Component currentView = getContent();
-            if (currentView instanceof de.fhswf.kassensystem.views.verkauf.VerkaufView vv) {
+            if (currentView instanceof VerkaufView vv) {
                 vv.tourAktion(action);
-            } else if (currentView instanceof de.fhswf.kassensystem.views.lager.LagerView lv) {
+            } else if (currentView instanceof LagerView lv) {
                 lv.tourAktion(action);
-            } else if (currentView instanceof de.fhswf.kassensystem.views.artikel.ArtikelView av) {
+            } else if (currentView instanceof ArtikelView av) {
                 av.tourAktion(action);
-            } else if (currentView instanceof de.fhswf.kassensystem.views.berichte.BerichteView bv) {
+            } else if (currentView instanceof BerichteView bv) {
                 bv.tourAktion(action);
-            } else if (currentView instanceof de.fhswf.kassensystem.views.benutzer.BenutzerView buv) {
+            } else if (currentView instanceof BenutzerView buv) {
                 buv.tourAktion(action);
             }
         }));

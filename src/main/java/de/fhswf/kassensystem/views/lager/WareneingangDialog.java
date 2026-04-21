@@ -1,17 +1,16 @@
 package de.fhswf.kassensystem.views.lager;
 
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
-import de.fhswf.kassensystem.broadcast.Broadcaster;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
-import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
+import de.fhswf.kassensystem.views.components.FehlerUI;
+
 import java.util.List;
 
 /**
@@ -124,7 +123,7 @@ class WareneingangDialog extends BaseDialog {
     @Override
     protected boolean onSpeichern() {
         if (artikelSelect.isEmpty() || mengeFeld.isEmpty()) {
-            Notification.show("Bitte Artikel und Menge angeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte Artikel und Menge angeben.");
             return false;
         }
         Wareneingang eingang = new Wareneingang();

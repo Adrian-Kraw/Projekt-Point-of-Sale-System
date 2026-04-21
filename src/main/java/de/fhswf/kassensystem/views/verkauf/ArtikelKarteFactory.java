@@ -2,6 +2,7 @@ package de.fhswf.kassensystem.views.verkauf;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -105,19 +106,30 @@ public class ArtikelKarteFactory {
                 .set("margin-bottom", "1rem").set("position", "relative").set("overflow", "hidden");
 
         if (artikel.getBild() != null && artikel.getBild().length > 0) {
-            String base64 = Base64.getEncoder().encodeToString(artikel.getBild());
-            com.vaadin.flow.component.html.Image img =
-                    new com.vaadin.flow.component.html.Image(
-                            "data:image/jpeg;base64," + base64, artikel.getName());
-            img.getStyle().set("width", "100%").set("height", "100%")
-                    .set("object-fit", "cover").set("border-radius", "0.75rem");
-            wrapper.add(img);
+            wrapper.add(buildArtikelBild(artikel));
         } else {
             wrapper.add(buildTablerIcon(iconFuerKategorie(artikel.getKategorie().getName())));
         }
 
-        if (ausverkauft) wrapper.add(buildAusverkauftBadge());
+        if (ausverkauft) {
+            wrapper.add(buildAusverkauftBadge());
+        }
         return wrapper;
+    }
+
+    /**
+     * Erstellt ein {@code <img>}-Element mit dem base64-kodierten Artikelbild.
+     *
+     * @param artikel Artikel dessen Bild verwendet wird
+     * @return fertig gestyltes Image-Element
+     */
+    private static Image buildArtikelBild(Artikel artikel) {
+        String base64 = Base64.getEncoder().encodeToString(artikel.getBild());
+        Image img = new Image("data:image/jpeg;base64," + base64, artikel.getName());
+        img.getStyle()
+                .set("width", "100%").set("height", "100%")
+                .set("object-fit", "cover").set("border-radius", "0.75rem");
+        return img;
     }
 
     /**
@@ -195,9 +207,7 @@ public class ArtikelKarteFactory {
         row.setSpacing(false);
         row.getStyle().set("margin-top", "auto");
 
-        String preisFormatiert = String.format("%,.2f€", artikel.getPreis())
-                .replace(",", "X").replace(".", ",").replace("X", ".");
-        Span preis = new Span(preisFormatiert);
+        Span preis = new Span(WarenkorbZusammenfassung.format(artikel.getPreis()));
         preis.getStyle()
                 .set("font-size", "1.25rem").set("font-weight", "800")
                 .set("color", ausverkauft ? "#82746d" : "#553722")

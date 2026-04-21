@@ -4,10 +4,11 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import de.fhswf.kassensystem.views.components.FehlerUI;
+import java.math.BigDecimal;
 
 /**
  * Fabrikklasse für einzelne Positionen im Warenkorb der Kassier-View.
@@ -30,9 +31,9 @@ class WarenkorbPositionFactory {
      * @return fertig gestyltes Positions-Layout
      */
     static HorizontalLayout create(WarenkorbEintrag eintrag, boolean zebra, Runnable onAenderung) {
-        String gesamtText = formatPreis(eintrag.artikel.getPreis()
-                .multiply(java.math.BigDecimal.valueOf(eintrag.menge)));
-        String einzelText = formatPreis(eintrag.artikel.getPreis());
+        String gesamtText = WarenkorbZusammenfassung.format(eintrag.artikel.getPreis()
+                .multiply(BigDecimal.valueOf(eintrag.menge)));
+        String einzelText = WarenkorbZusammenfassung.format(eintrag.artikel.getPreis());
 
         HorizontalLayout position = new HorizontalLayout();
         position.setWidthFull();
@@ -97,14 +98,11 @@ class WarenkorbPositionFactory {
         Button plusBtn = buildMengeButton("add");
         plusBtn.addClickListener(e -> {
             if (eintrag.artikel.getBestand() < 999 && eintrag.menge >= eintrag.artikel.getBestand()) {
-                com.vaadin.flow.component.notification.Notification.show(
-                        "Nicht mehr Bestand vorhanden als bereits im Warenkorb.",
-                        2500, Notification.Position.MIDDLE);
+                FehlerUI.fehler("Nicht mehr Bestand vorhanden als bereits im Warenkorb.");
                 return;
             }
             eintrag.menge++;
             onAenderung.run();
-
         });
 
         HorizontalLayout kontrolle = new HorizontalLayout();
@@ -173,14 +171,4 @@ class WarenkorbPositionFactory {
         return btn;
     }
 
-    /**
-     * Formatiert einen Betrag als deutschen Währungsstring (z.B. "1,99€").
-     *
-     * @param betrag der zu formatierende Betrag
-     * @return formatierter String
-     */
-    private static String formatPreis(java.math.BigDecimal betrag) {
-        return String.format("%,.2f€", betrag)
-                .replace(",", "X").replace(".", ",").replace("X", ".");
-    }
 }

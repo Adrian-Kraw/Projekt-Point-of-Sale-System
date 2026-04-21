@@ -3,16 +3,15 @@ package de.fhswf.kassensystem.views.artikel;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Kategorie;
 import de.fhswf.kassensystem.model.Mehrwertsteuer;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 
@@ -26,7 +25,7 @@ import java.util.Set;
  *
  * <p>Die Klasse stellt drei öffentliche Methoden bereit:
  * <ul>
- *   <li>{@link #befuelleFelder(de.fhswf.kassensystem.model.Artikel)} – füllt Felder beim Bearbeiten</li>
+ *   <li>{@link #befuelleFelder(Artikel)} – füllt Felder beim Bearbeiten</li>
  *   <li>{@link #valide()} – prüft Pflichtfelder und zeigt Fehlermeldungen</li>
  *   <li>{@link #toArtikel()} – liest Feldwerte in ein neues {@code Artikel}-Objekt</li>
  * </ul>
@@ -35,12 +34,12 @@ import java.util.Set;
  */
 class ArtikelFormularFelder extends VerticalLayout {
 
-    private final TextField          nameFeld       = new TextField();
-    private final Select<Kategorie>  kategorieSelect;
-    private final NumberField        preisFeld      = new NumberField();
+    private final TextField              nameFeld       = new TextField();
+    private final Select<Kategorie>      kategorieSelect;
+    private final NumberField            preisFeld      = new NumberField();
     private final Select<Mehrwertsteuer> mwstSelect;
-    private final NumberField        bestandFeld    = new NumberField();
-    private final NumberField        minBestandFeld = new NumberField();
+    private final NumberField            bestandFeld    = new NumberField();
+    private final NumberField            minBestandFeld = new NumberField();
 
     /**
      * Erstellt alle Eingabefelder und baut das zweispaltige Formularlayout auf.
@@ -112,44 +111,44 @@ class ArtikelFormularFelder extends VerticalLayout {
 
     /**
      * Prüft ob alle Pflichtfelder ausgefüllt sind.
-     * Zeigt bei fehlenden Eingaben eine Notification in der Mitte des Bildschirms.
+     * Zeigt bei fehlenden Eingaben eine Fehlermeldung über {@link FehlerUI}.
      *
      * @return {@code true} wenn alle Pflichtfelder valide sind, sonst {@code false}
      */
     boolean valide() {
         if (nameFeld.isEmpty()) {
-            Notification.show("Bitte einen Namen eingeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte einen Namen eingeben.");
             return false;
         }
         if (kategorieSelect.isEmpty()) {
-            Notification.show("Bitte eine Kategorie auswählen.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte eine Kategorie auswählen.");
             return false;
         }
         if (preisFeld.isEmpty()) {
-            Notification.show("Bitte einen Preis eingeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte einen Preis eingeben.");
             return false;
         }
         if (mwstSelect.isEmpty()) {
-            Notification.show("Bitte einen MwSt-Satz auswählen.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte einen MwSt-Satz auswählen.");
             return false;
         }
         if (preisFeld.getValue() < 0) {
-            Notification.show("Preis darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Preis darf nicht negativ sein.");
             return false;
         }
         if (!bestandFeld.isEmpty() && bestandFeld.getValue() < 0) {
-            Notification.show("Bestand darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bestand darf nicht negativ sein.");
             return false;
         }
         if (!minBestandFeld.isEmpty() && minBestandFeld.getValue() < 0) {
-            Notification.show("Minimalbestand darf nicht negativ sein.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Minimalbestand darf nicht negativ sein.");
             return false;
         }
         return true;
     }
 
     /**
-     * Liest die aktuellen Feldwerte aus und erstellt daraus ein neues {@link de.fhswf.kassensystem.model.Artikel}-Objekt.
+     * Liest die aktuellen Feldwerte aus und erstellt daraus ein neues {@link Artikel}-Objekt.
      * Fehlende optionale Felder (Bestand, Minimalbestand) werden mit Standardwerten befüllt.
      *
      * @return neues {@code Artikel}-Objekt mit den eingegebenen Werten

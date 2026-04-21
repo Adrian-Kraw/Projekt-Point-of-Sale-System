@@ -2,10 +2,10 @@ package de.fhswf.kassensystem.views.berichte;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.math.BigDecimal;
 import java.util.function.Consumer;
@@ -45,13 +45,11 @@ public class BonZielwertPanel extends HorizontalLayout {
                 .set("color", "#82746d")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        // Kein onSpeichern = Kassierer: nur Anzeige, kein Edit-Button
         if (onSpeichern == null) {
             add(anzeige);
             return;
         }
 
-        // Edit-Button – nur Icon, kein Label
         Button editBtn = new Button();
         Span editIcon = new Span("edit");
         editIcon.addClassName("material-symbols-outlined");
@@ -62,7 +60,6 @@ public class BonZielwertPanel extends HorizontalLayout {
                 .set("padding", "0.2rem").set("min-width", "unset").set("color", "#82746d")
                 .set("border-radius", "0.4rem");
 
-        // Eingabefeld + Bestätigen (initial versteckt)
         TextField eingabe = new TextField();
         eingabe.setPlaceholder("Zielwert in €");
         eingabe.getStyle().set("width", "8rem").set("display", "none");
@@ -74,7 +71,6 @@ public class BonZielwertPanel extends HorizontalLayout {
                 .set("cursor", "pointer").set("font-weight", "700").set("min-width", "unset")
                 .set("display", "none");
 
-        // Edit klicken → Eingabefeld einblenden
         editBtn.addClickListener(e -> {
             boolean editModus = eingabe.getStyle().get("display").equals("none");
             eingabe.getStyle().set("display", editModus ? "block" : "none");
@@ -85,7 +81,6 @@ public class BonZielwertPanel extends HorizontalLayout {
             }
         });
 
-        // Bestätigen → Wert speichern und Anzeige aktualisieren
         okBtn.addClickListener(e -> {
             String val = eingabe.getValue().trim().replace(",", ".");
             if (val.isBlank()) {
@@ -95,17 +90,16 @@ public class BonZielwertPanel extends HorizontalLayout {
                 try {
                     BigDecimal wert = new BigDecimal(val);
                     if (wert.compareTo(BigDecimal.ZERO) < 0) {
-                        Notification.show("Wert muss positiv sein.", 2000, Notification.Position.MIDDLE);
+                        FehlerUI.fehler("Wert muss positiv sein.");
                         return;
                     }
                     onSpeichern.accept(wert);
                     anzeige.setText(formatZielwert(wert));
                 } catch (NumberFormatException ex) {
-                    Notification.show("Ungültiger Wert.", 2000, Notification.Position.MIDDLE);
+                    FehlerUI.fehler("Ungültiger Wert.");
                     return;
                 }
             }
-            // Zurück in Anzeigemodus
             eingabe.getStyle().set("display", "none");
             okBtn.getStyle().set("display", "none");
             editBtn.getStyle().set("color", "#82746d");
@@ -123,7 +117,6 @@ public class BonZielwertPanel extends HorizontalLayout {
      */
     private String formatZielwert(BigDecimal wert) {
         if (wert == null || wert.compareTo(BigDecimal.ZERO) == 0) return "Zielwert: –";
-        return String.format("Zielwert: %,.2f€", wert)
-                .replace(",", "X").replace(".", ",").replace("X", ".");
+        return "Zielwert: " + BerichteUtils.fp(wert);
     }
 }

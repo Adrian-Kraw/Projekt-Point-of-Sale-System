@@ -4,6 +4,7 @@ import com.vaadin.flow.component.html.Span;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
 
 /**
  * Statische Hilfsmethoden für alle Berichte-Panels.
@@ -20,9 +21,6 @@ class BerichteUtils {
 
     /**
      * Gibt {@code v} zurück, oder {@link BigDecimal#ZERO} wenn {@code v} {@code null} ist.
-     *
-     * @param v Wert oder {@code null}
-     * @return nie {@code null}
      */
     static BigDecimal safe(BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;
@@ -36,16 +34,12 @@ class BerichteUtils {
      */
     static String fp(BigDecimal v) {
         if (v == null) return "0,00€";
-        return String.format(java.util.Locale.GERMANY, "%,.2f€", v);
+        return String.format(Locale.GERMANY, "%,.2f€", v);
     }
 
     /**
      * Berechnet den prozentualen Anteil von {@code val} an {@code max} (gerundet).
      * Gibt 0 zurück wenn {@code max} gleich null ist.
-     *
-     * @param val Zähler
-     * @param max Nenner (Maximalwert)
-     * @return ganzzahliger Prozentwert (0–100)
      */
     static int pct(BigDecimal val, BigDecimal max) {
         if (max.compareTo(BigDecimal.ZERO) == 0) return 0;

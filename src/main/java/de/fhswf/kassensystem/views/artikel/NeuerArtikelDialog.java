@@ -2,7 +2,6 @@ package de.fhswf.kassensystem.views.artikel;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import de.fhswf.kassensystem.model.Artikel;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;

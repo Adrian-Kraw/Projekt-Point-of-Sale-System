@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.views.components;
 
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -81,8 +82,8 @@ public class StatistikKarte extends VerticalLayout {
      * @param iconName Icon-Name
      * @param warnung  {@code true} für roten Hintergrund und rote Icon-Farbe
      */
-    private com.vaadin.flow.component.html.Div buildIconBox(String iconName, boolean warnung) {
-        com.vaadin.flow.component.html.Div box = new com.vaadin.flow.component.html.Div();
+    private Div buildIconBox(String iconName, boolean warnung) {
+        Div box = new Div();
         box.getStyle()
                 .set("width", "2.5rem").set("height", "2.5rem").set("border-radius", "9999px")
                 .set("background", warnung ? "#ffdad6" : "#efecff")

@@ -23,7 +23,7 @@ public class LogoRow extends HorizontalLayout {
         setWidthFull();
         setAlignItems(FlexComponent.Alignment.CENTER);
         getStyle().set("padding", "0 0.5rem");
-        getElement().setAttribute("tour-id", "logo-row"); // ← NEU
+        getElement().setAttribute("tour-id", "logo-row");
         add(buildLogoLink());
     }
 

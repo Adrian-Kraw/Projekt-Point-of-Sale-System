@@ -40,6 +40,8 @@ class ArtikelZeileFactory {
      * @param artikelService Service für Bearbeiten- und Deaktivieren-Aktionen
      * @param onAenderung    wird nach jeder Änderung aufgerufen um die Tabelle neu zu laden
      * @return fertiges Zeilen-Layout
+     *
+     * @author Adrian Krawietz
      */
     static HorizontalLayout create(Artikel artikel, ArtikelService artikelService,
                                    Runnable onAenderung) {

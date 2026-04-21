@@ -1,28 +1,33 @@
 package de.fhswf.kassensystem.views.lager;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Wareneingang;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.shared.Registration;
-import de.fhswf.kassensystem.broadcast.Broadcaster;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.LagerService;
-import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -97,7 +102,7 @@ public class LagerView extends AbstractTabellenView {
     /**
      * Lädt alle Sektionen der View neu (Statistiken, Nachbestellungen, Lieferungen, Tabelle).
      */
-    private void ladeAlles() {
+    void ladeAlles() {
         ladeStatistikKarten();
         ladeNachbestellHinweise();
         ladeLieferungshinweise();
@@ -192,15 +197,10 @@ public class LagerView extends AbstractTabellenView {
             grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
 
             for (Wareneingang w : offeneLieferungen) {
-                String bestelltAm = w.getBestelltAm()
-                        .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
-                String bestelltVon = w.getBestelltVon() != null
-                        ? w.getBestelltVon().getBenutzername() : "Unbekannt";
-                String liefertAm = w.getBestelltAm()
-                        .toLocalDate()
-                        .plusDays(1)
-                        .atTime(6, 0)
-                        .format(DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm 'Uhr'"));
+                String bestelltAm  = w.getBestelltAm().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                String bestelltVon = w.getBestelltVon() != null ? w.getBestelltVon().getBenutzername() : "Unbekannt";
+                String liefertAm   = w.getBestelltAm().toLocalDate().plusDays(1)
+                        .atTime(6, 0).format(DateTimeFormatter.ofPattern("dd.MM.yyyy 'um' HH:mm 'Uhr'"));
                 grid.add(buildLieferungsKarte(w.getId(), w.getArtikel().getName(),
                         w.getMenge(), bestelltAm, bestelltVon, liefertAm));
             }
@@ -236,7 +236,6 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "1rem 1.25rem").set("gap", "1rem")
                 .set("flex", "1").set("min-width", "260px");
 
-        // Info links
         Span name = new Span(artikelName);
         name.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
@@ -264,32 +263,13 @@ public class LagerView extends AbstractTabellenView {
         info.getStyle().set("flex", "1").set("gap", "0.3rem");
         info.add(name, badgeRow);
 
-        // Buttons rechts
-        HorizontalLayout btnRow = new HorizontalLayout();
-        btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
-        btnRow.setSpacing(false);
-        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0");
-
         Button bestaetigenBtn = new Button("✓  Lieferung bestätigen");
         bestaetigenBtn.getStyle()
                 .set("background", "#155724").set("color", "white").set("border", "none")
                 .set("border-radius", "0.75rem").set("padding", "0.6rem 1.1rem")
                 .set("font-weight", "700").set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
-        bestaetigenBtn.addClickListener(e -> {
-            if (lieferungId != null) {
-                try {
-                    lagerService.lieferungBestaetigen(lieferungId);
-                    FehlerUI.erfolg("Lieferung bestätigt.");
-                    Broadcaster.broadcast("lager-geaendert");
-                    ladeAlles();
-                } catch (KassensystemException ex) {
-                    FehlerUI.fehler(ex.getMessage());
-                } catch (Exception ex) {
-                    FehlerUI.technischerFehler(ex);
-                }
-            }
-        });
+        bestaetigenBtn.addClickListener(e -> onLieferungBestaetigen(lieferungId));
 
         Button ablehnBtn = new Button("✕");
         ablehnBtn.getStyle()
@@ -298,21 +278,12 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "0.6rem 0.85rem").set("font-weight", "700")
                 .set("font-size", "0.8rem").set("cursor", "pointer")
                 .set("white-space", "nowrap").set("font-family", "'Plus Jakarta Sans', sans-serif");
-        ablehnBtn.addClickListener(e -> {
-            if (lieferungId != null) {
-                try {
-                    lagerService.lieferungStornieren(lieferungId);
-                    FehlerUI.erfolg("Lieferung storniert.");
-                    Broadcaster.broadcast("lager-geaendert");
-                    ladeAlles();
-                } catch (KassensystemException ex) {
-                    FehlerUI.fehler(ex.getMessage());
-                } catch (Exception ex) {
-                    FehlerUI.technischerFehler(ex);
-                }
-            }
-        });
+        ablehnBtn.addClickListener(e -> onLieferungStornieren(lieferungId));
 
+        HorizontalLayout btnRow = new HorizontalLayout();
+        btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        btnRow.setSpacing(false);
+        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0");
         btnRow.add(bestaetigenBtn, ablehnBtn);
 
         karte.add(info, btnRow);
@@ -340,12 +311,14 @@ public class LagerView extends AbstractTabellenView {
                     ? artikelService.findByName(suchBegriff)
                     : artikelService.findAllArtikel();
             artikel = artikel.stream()
-                    .sorted(java.util.Comparator
-                            .comparing((Artikel a) -> a.getKategorie().getName())
+                    .sorted(Comparator.comparing((Artikel a) -> a.getKategorie().getName())
                             .thenComparing(Artikel::getName))
                     .toList();
             boolean zebra = false;
-            for (Artikel a : artikel) { tabellenZeilen.add(LagerZeileFactory.create(a, zebra)); zebra = !zebra; }
+            for (Artikel a : artikel) {
+                tabellenZeilen.add(LagerZeileFactory.create(a, zebra));
+                zebra = !zebra;
+            }
         } catch (KassensystemException ex) {
             FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
@@ -361,6 +334,61 @@ public class LagerView extends AbstractTabellenView {
     private void oeffneWareneingangFuerArtikel(Artikel artikel) {
         try {
             new WareneingangDialog(artikelService.findAllArtikel(), artikel, lagerService, this::ladeAlles).open();
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
+    }
+
+    /**
+     * Öffnet den {@link WareneingangDialog} ohne vorausgewählten Artikel.
+     */
+    private void oeffneWareneingangDialog() {
+        try {
+            new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // LIEFERUNGS-AKTIONEN
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Bestätigt eine Lieferung und aktualisiert die View.
+     *
+     * @param lieferungId ID der zu bestätigenden Lieferung, {@code null} im Demo-Modus
+     */
+    private void onLieferungBestaetigen(Long lieferungId) {
+        if (lieferungId == null) return;
+        try {
+            lagerService.lieferungBestaetigen(lieferungId);
+            FehlerUI.erfolg("Lieferung bestätigt.");
+            Broadcaster.broadcast("lager-geaendert");
+            ladeAlles();
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
+    }
+
+    /**
+     * Storniert eine Lieferung und aktualisiert die View.
+     *
+     * @param lieferungId ID der zu stornierenden Lieferung, {@code null} im Demo-Modus
+     */
+    private void onLieferungStornieren(Long lieferungId) {
+        if (lieferungId == null) return;
+        try {
+            lagerService.lieferungStornieren(lieferungId);
+            FehlerUI.erfolg("Lieferung storniert.");
+            Broadcaster.broadcast("lager-geaendert");
+            ladeAlles();
         } catch (KassensystemException ex) {
             FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
@@ -435,7 +463,6 @@ public class LagerView extends AbstractTabellenView {
 
     /**
      * Erstellt eine allgemeine Statistikkarte mit Label, Icon-Box, Zahlenwert und Hinweistext.
-     * Die Icon-Box steht direkt unter der Überschrift (nicht neben dem Wert).
      *
      * @param label    Kartenüberschrift
      * @param wert     Hauptzahlenwert
@@ -512,19 +539,15 @@ public class LagerView extends AbstractTabellenView {
                 .set("border-radius", "9999px").set("padding", "1rem 1.5rem").set("cursor", "pointer")
                 .set("display", "flex").set("align-items", "center").set("justify-content", "center")
                 .set("gap", "0.5rem").set("margin-top", "0.5rem");
-        btn.addClickListener(e -> {
-            try {
-                new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
-            } catch (KassensystemException ex) {
-                FehlerUI.fehler(ex.getMessage());
-            } catch (Exception ex) {
-                FehlerUI.technischerFehler(ex);
-            }
-        });
+        btn.addClickListener(e -> oeffneWareneingangDialog());
 
         karte.add(titel, text, btn);
         return karte;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // TOUR-AKTIONEN
+    // ═══════════════════════════════════════════════════════════
 
     /**
      * Verarbeitet Tour-Aktionen aus dem {@link de.fhswf.kassensystem.tour.TourManager}.
@@ -534,18 +557,10 @@ public class LagerView extends AbstractTabellenView {
      */
     public void tourAktion(String action) {
         switch (action) {
-            case "open-wareneingang-dialog" -> {
-                try {
-                    new WareneingangDialog(artikelService.findAllArtikel(), lagerService, this::ladeAlles).open();
-                } catch (KassensystemException ex) {
-                    FehlerUI.fehler(ex.getMessage());
-                } catch (Exception ex) {
-                    FehlerUI.technischerFehler(ex);
-                }
-            }
-            case "demo-nachbestell" -> zeigeDemoNachbestellung();
-            case "demo-lieferung"   -> zeigeDemoLieferung();
-            default -> {}
+            case "open-wareneingang-dialog" -> oeffneWareneingangDialog();
+            case "demo-nachbestell"         -> zeigeDemoNachbestellung();
+            case "demo-lieferung"           -> zeigeDemoLieferung();
+            default                         -> {}
         }
     }
 
@@ -554,61 +569,63 @@ public class LagerView extends AbstractTabellenView {
      * Nur aktiv wenn der Nachbestellblock aktuell leer ist.
      */
     private void zeigeDemoNachbestellung() {
-        // Nur Demo anzeigen wenn Block gerade leer ist
-        if (!nachbestellBlock.getChildren().findAny().isPresent()) {
-            nachbestellBlock.removeAll();
-            HorizontalLayout warnHeader = new HorizontalLayout();
-            warnHeader.setAlignItems(FlexComponent.Alignment.CENTER);
-            warnHeader.setSpacing(false);
-            warnHeader.getStyle().set("background", "#ffdad6").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
-            Span wi = createIcon("notification_important");
-            wi.getStyle().set("color", "#ba1a1a");
-            Span wt = new Span("Nachbestellhinweise (Demo)");
-            wt.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#ba1a1a")
-                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
-                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
-            warnHeader.add(wi, wt);
+        if (nachbestellBlock.getChildren().findAny().isPresent()) return;
 
-            // Demo-Karte ohne echten Artikel
-            HorizontalLayout demoKarte = new HorizontalLayout();
-            demoKarte.setAlignItems(FlexComponent.Alignment.CENTER);
-            demoKarte.setSpacing(false);
-            demoKarte.getStyle()
-                    .set("background", "rgba(255,255,255,0.6)").set("border-radius", "0.75rem")
-                    .set("padding", "1rem 1.25rem").set("gap", "1rem").set("flex", "1");
-            Span demoName = new Span("Beispielartikel");
-            demoName.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
-                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
-            Span demoBadge = new Span("2 Stk.");
-            demoBadge.getStyle().set("background", "#ba1a1a").set("color", "white").set("border-radius", "9999px")
-                    .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
-                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
-            Span demoMeta = new Span("von 5 Stk. (Min)");
-            demoMeta.getStyle().set("font-size", "0.8rem").set("color", "#82746d")
-                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
-            HorizontalLayout demoRow = new HorizontalLayout();
-            demoRow.setSpacing(false);
-            demoRow.getStyle().set("gap", "0.4rem");
-            demoRow.setAlignItems(FlexComponent.Alignment.CENTER);
-            demoRow.add(demoBadge, demoMeta);
-            VerticalLayout demoInfo = new VerticalLayout();
-            demoInfo.setPadding(false);
-            demoInfo.setSpacing(false);
-            demoInfo.getStyle().set("flex", "1");
-            demoInfo.add(demoName, demoRow);
-            demoKarte.add(demoInfo);
+        HorizontalLayout warnHeader = new HorizontalLayout();
+        warnHeader.setAlignItems(FlexComponent.Alignment.CENTER);
+        warnHeader.setSpacing(false);
+        warnHeader.getStyle().set("background", "#ffdad6").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+        Span wi = createIcon("notification_important");
+        wi.getStyle().set("color", "#ba1a1a");
+        Span wt = new Span("Nachbestellhinweise (Demo)");
+        wt.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#ba1a1a")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+        warnHeader.add(wi, wt);
 
-            HorizontalLayout grid = new HorizontalLayout();
-            grid.setWidthFull();
-            grid.setSpacing(false);
-            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
-            grid.add(demoKarte);
+        HorizontalLayout demoKarte = new HorizontalLayout();
+        demoKarte.setAlignItems(FlexComponent.Alignment.CENTER);
+        demoKarte.setSpacing(false);
+        demoKarte.getStyle()
+                .set("background", "rgba(255,255,255,0.6)").set("border-radius", "0.75rem")
+                .set("padding", "1rem 1.25rem").set("gap", "1rem").set("flex", "1");
 
-            nachbestellBlock.getStyle()
-                    .set("background", "#fff5f2").set("border-radius", "1.25rem")
-                    .set("overflow", "hidden").set("margin-bottom", "2rem");
-            nachbestellBlock.add(warnHeader, grid);
-        }
+        Span demoName = new Span("Beispielartikel");
+        demoName.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Span demoBadge = new Span("2 Stk.");
+        demoBadge.getStyle().set("background", "#ba1a1a").set("color", "white").set("border-radius", "9999px")
+                .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        Span demoMeta = new Span("von 5 Stk. (Min)");
+        demoMeta.getStyle().set("font-size", "0.8rem").set("color", "#82746d")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        HorizontalLayout demoRow = new HorizontalLayout();
+        demoRow.setSpacing(false);
+        demoRow.getStyle().set("gap", "0.4rem");
+        demoRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        demoRow.add(demoBadge, demoMeta);
+
+        VerticalLayout demoInfo = new VerticalLayout();
+        demoInfo.setPadding(false);
+        demoInfo.setSpacing(false);
+        demoInfo.getStyle().set("flex", "1");
+        demoInfo.add(demoName, demoRow);
+        demoKarte.add(demoInfo);
+
+        HorizontalLayout grid = new HorizontalLayout();
+        grid.setWidthFull();
+        grid.setSpacing(false);
+        grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+        grid.add(demoKarte);
+
+        nachbestellBlock.getStyle()
+                .set("background", "#fff5f2").set("border-radius", "1.25rem")
+                .set("overflow", "hidden").set("margin-bottom", "2rem");
+        nachbestellBlock.add(warnHeader, grid);
     }
 
     /**
@@ -616,33 +633,31 @@ public class LagerView extends AbstractTabellenView {
      * Nur aktiv wenn der Lieferungsblock aktuell leer ist.
      */
     private void zeigeDemoLieferung() {
-        // Nur Demo anzeigen wenn Block gerade leer ist
-        if (!lieferungBlock.getChildren().findAny().isPresent()) {
-            lieferungBlock.removeAll();
-            HorizontalLayout header = new HorizontalLayout();
-            header.setAlignItems(FlexComponent.Alignment.CENTER);
-            header.setSpacing(false);
-            header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
-            Span icon = createIcon("local_shipping");
-            icon.getStyle().set("color", "#155724");
-            Span titel = new Span("Lieferungsbescheid (Demo)");
-            titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
-                    .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
-                    .set("font-family", "'Plus Jakarta Sans', sans-serif");
-            header.add(icon, titel);
+        if (lieferungBlock.getChildren().findAny().isPresent()) return;
 
-            HorizontalLayout grid = new HorizontalLayout();
-            grid.setWidthFull();
-            grid.setSpacing(false);
-            grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
-            grid.add(buildLieferungsKarte(null, "Beispielartikel", 20,
-                    "15.04.2026 08:00", "@manager", "16.04.2026 um 06:00 Uhr"));
+        HorizontalLayout header = new HorizontalLayout();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setSpacing(false);
+        header.getStyle().set("background", "#d4edda").set("padding", "1rem 1.5rem").set("gap", "0.75rem");
+        Span icon = createIcon("local_shipping");
+        icon.getStyle().set("color", "#155724");
+        Span titel = new Span("Lieferungsbescheid (Demo)");
+        titel.getStyle().set("font-size", "0.875rem").set("font-weight", "700").set("color", "#155724")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.05em")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+        header.add(icon, titel);
 
-            lieferungBlock.getStyle()
-                    .set("background", "#f0fff4").set("border-radius", "1.25rem")
-                    .set("overflow", "hidden").set("margin-bottom", "2rem");
-            lieferungBlock.add(header, grid);
-        }
+        HorizontalLayout grid = new HorizontalLayout();
+        grid.setWidthFull();
+        grid.setSpacing(false);
+        grid.getStyle().set("padding", "1.5rem").set("gap", "1rem").set("flex-wrap", "wrap");
+        grid.add(buildLieferungsKarte(null, "Beispielartikel", 20,
+                "15.04.2026 08:00", "@manager", "16.04.2026 um 06:00 Uhr"));
+
+        lieferungBlock.getStyle()
+                .set("background", "#f0fff4").set("border-radius", "1.25rem")
+                .set("overflow", "hidden").set("margin-bottom", "2rem");
+        lieferungBlock.add(header, grid);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -708,6 +723,7 @@ public class LagerView extends AbstractTabellenView {
         );
         return header;
     }
+
     /**
      * Erstellt die Status-Spaltenüberschrift und setzt die Tour-ID für den Onboarding-Guide.
      */
@@ -716,6 +732,10 @@ public class LagerView extends AbstractTabellenView {
         zelle.getElement().setAttribute("tour-id", "status-spalte");
         return zelle;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // BROADCASTER
+    // ═══════════════════════════════════════════════════════════
 
     /**
      * Registriert den Broadcaster-Listener wenn die View geöffnet wird.
@@ -748,5 +768,4 @@ public class LagerView extends AbstractTabellenView {
             broadcasterRegistration = null;
         }
     }
-
 }

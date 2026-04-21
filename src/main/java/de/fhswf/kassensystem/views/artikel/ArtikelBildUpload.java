@@ -2,10 +2,10 @@ package de.fhswf.kassensystem.views.artikel;
 
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.server.streams.UploadHandler;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.util.Base64;
 
@@ -43,15 +43,19 @@ class ArtikelBildUpload extends VerticalLayout {
                 .set("border-radius", "0.75rem").set("display", "none");
 
         Upload upload = new Upload(UploadHandler.inMemory((metadata, data) -> {
-            bildBytes = data;
-            String base64  = Base64.getEncoder().encodeToString(data);
-            String dataUrl = "data:" + metadata.contentType() + ";base64," + base64;
-            getUI().ifPresent(ui -> ui.access(() -> {
-                vorschau.getElement().setAttribute("src", dataUrl);
-                vorschau.getStyle().set("display", "block");
-                Notification.show("Bild geladen: " + metadata.fileName(),
-                        2000, Notification.Position.BOTTOM_START);
-            }));
+            try {
+                bildBytes = data;
+                String base64  = Base64.getEncoder().encodeToString(data);
+                String dataUrl = "data:" + metadata.contentType() + ";base64," + base64;
+                getUI().ifPresent(ui -> ui.access(() -> {
+                    vorschau.getElement().setAttribute("src", dataUrl);
+                    vorschau.getStyle().set("display", "block");
+                    FehlerUI.erfolg("Bild geladen: " + metadata.fileName());
+                }));
+            } catch (Exception ex) {
+                getUI().ifPresent(ui -> ui.access(() ->
+                        FehlerUI.fehler("Bild konnte nicht geladen werden.")));
+            }
         }));
         upload.setWidthFull();
         upload.setAcceptedFileTypes("image/jpeg", "image/png", "image/webp");
@@ -59,9 +63,13 @@ class ArtikelBildUpload extends VerticalLayout {
         upload.setMaxFileSize(5 * 1024 * 1024);
 
         upload.addFileRemovedListener(event -> {
-            bildBytes = null;
-            vorschau.getElement().setAttribute("src", "");
-            vorschau.getStyle().set("display", "none");
+            try {
+                bildBytes = null;
+                vorschau.getElement().setAttribute("src", "");
+                vorschau.getStyle().set("display", "none");
+            } catch (Exception ex) {
+                FehlerUI.technischerFehler(ex);
+            }
         });
 
         add(label, upload, vorschau);

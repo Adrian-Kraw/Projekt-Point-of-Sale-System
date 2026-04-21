@@ -63,7 +63,7 @@ public class QuittungsDialog extends BaseDialog {
                 .set("font-weight", "700").set("cursor", "pointer")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif")
                 .set("box-shadow", "0 4px 15px rgba(85,55,34,0.25)");
-        jaBtn.addClickListener(e -> { close(); onJa.run(); });
+        jaBtn.addClickListener(e -> onJaGeklickt());
 
         Button neinBtn = new Button("Nein");
         neinBtn.getStyle()
@@ -72,7 +72,7 @@ public class QuittungsDialog extends BaseDialog {
                 .set("padding", "0.75rem 2rem").set("font-weight", "700")
                 .set("color", "#553722").set("cursor", "pointer")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
-        neinBtn.addClickListener(e -> { close(); onNein.run(); });
+        neinBtn.addClickListener(e -> onNeinGeklickt());
 
         HorizontalLayout footer = new HorizontalLayout();
         footer.setWidthFull();
@@ -82,6 +82,29 @@ public class QuittungsDialog extends BaseDialog {
         return footer;
     }
 
+
+    /**
+     * Überschreibt die Standard-Speichern-Logik, da wir eigene Ja/Nein-Buttons verwenden.
+     * Hier wird nichts gespeichert, sondern die Buttons lösen direkt die Aktionen aus.
+     */
     @Override
-    protected boolean onSpeichern() { return true; }
+    protected boolean onSpeichern() {
+        return true;
+    }
+
+    /**
+     * Schließt den Dialog und führt den Ja-Callback aus (Kassenbon drucken).
+     */
+    private void onJaGeklickt() {
+        close();
+        onJa.run();
+    }
+
+    /**
+     * Schließt den Dialog und führt den Nein-Callback aus (nur Warenkorb leeren).
+     */
+    private void onNeinGeklickt() {
+        close();
+        onNein.run();
+    }
 }

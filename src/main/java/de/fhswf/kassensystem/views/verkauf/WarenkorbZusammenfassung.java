@@ -3,15 +3,15 @@ package de.fhswf.kassensystem.views.verkauf;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  * <p>Zeigt Zwischensumme, MwSt 7%, MwSt 19%, optionale Rabattzeile und Gesamtbetrag.
  * Der Rabatt wird als Prozentsatz eingegeben und auf die Zwischensumme angewendet.
  *
- * <p>Über {@link #aktualisierePreise(java.util.List)} wird die Preisanzeige
+ * <p>Über {@link #aktualisierePreise(List)} wird die Preisanzeige
  * nach jeder Warenkorb-Änderung aktualisiert.
  *
  * @author Adrian Krawietz
@@ -94,7 +94,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
             zwischensumme     = zwischensumme.add(pos);
             BigDecimal satz   = e.artikel.getMehrwertsteuer().getSatz();
             BigDecimal netto  = pos.divide(
-                    BigDecimal.ONE.add(satz.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)),4, RoundingMode.HALF_UP);
+                    BigDecimal.ONE.add(satz.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)), 4, RoundingMode.HALF_UP);
             BigDecimal mwstBetrag = pos.subtract(netto);
             if (satz.compareTo(BigDecimal.valueOf(7)) == 0) mwst7total  = mwst7total.add(mwstBetrag);
             else                                             mwst19total = mwst19total.add(mwstBetrag);
@@ -111,7 +111,6 @@ class WarenkorbZusammenfassung extends VerticalLayout {
         mwst19Span.setText(format(mwst19total));
         gesamtBetragSpan.setText(format(zwischensumme.subtract(rabattBetrag)));
 
-        // Rabatt-Zeile sichtbar/unsichtbar
         if (rabattBetrag.compareTo(BigDecimal.ZERO) > 0) {
             rabattLabelSpan.setText("Rabatt (" + aktuellerRabattProzent.toPlainString() + "%)");
             rabattBetragSpan.setText("- " + format(rabattBetrag));
@@ -133,7 +132,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
     /**
      * Gibt den aktuell eingestellten Rabattprozentsatz zurück.
      *
-     * @return Rabatt in Prozent, oder {@link java.math.BigDecimal#ZERO} wenn kein Rabatt aktiv
+     * @return Rabatt in Prozent, oder {@code BigDecimal.ZERO} wenn kein Rabatt aktiv
      */
     BigDecimal getAktuellerRabattProzent() { return aktuellerRabattProzent; }
 
@@ -142,7 +141,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
      *
      * @return Gesamtbetrag-Text (z.B. "12,99€")
      */
-    String getGesamtBetragText()           { return gesamtBetragSpan.getText(); }
+    String getGesamtBetragText() { return gesamtBetragSpan.getText(); }
 
     // ═══════════════════════════════════════════════════════════
     // UI-BUILDER
@@ -176,15 +175,14 @@ class WarenkorbZusammenfassung extends VerticalLayout {
             try {
                 BigDecimal pct = new BigDecimal(val.replace(",", "."));
                 if (pct.compareTo(BigDecimal.ZERO) < 0 || pct.compareTo(BigDecimal.valueOf(100)) > 0) {
-                    Notification.show("Rabatt muss zwischen 0 und 100% liegen.", 3000, Notification.Position.MIDDLE);
+                    FehlerUI.fehler("Rabatt muss zwischen 0 und 100% liegen.");
                     return;
                 }
                 aktuellerRabattProzent = pct;
-                Notification.show("Rabatt von " + pct.toPlainString() + "% wird angewendet.",
-                        2000, Notification.Position.BOTTOM_START);
+                FehlerUI.erfolg("Rabatt von " + pct.toPlainString() + "% wird angewendet.");
                 onRabattGeaendert.run();
             } catch (NumberFormatException ex) {
-                Notification.show("Ungültiger Wert – bitte eine Zahl eingeben.", 3000, Notification.Position.MIDDLE);
+                FehlerUI.fehler("Ungültiger Wert – bitte eine Zahl eingeben.");
             }
         });
 
@@ -211,7 +209,7 @@ class WarenkorbZusammenfassung extends VerticalLayout {
                 preisZeile("Zwischensumme", zwischensummeSpan),
                 preisZeile("MwSt 7%",       mwst7Span),
                 preisZeile("MwSt 19%",      mwst19Span),
-                rabattAnzeigeZeile          // bereits initialisiert, sichtbarkeit via setVisible()
+                rabattAnzeigeZeile
         );
 
         Div linie = new Div();
@@ -306,10 +304,10 @@ class WarenkorbZusammenfassung extends VerticalLayout {
      * Formatiert einen Betrag als deutschen Währungsstring (z.B. "12,99€").
      *
      * @param betrag der zu formatierende Betrag
-     * @return formatierter String
+     * @return formatierter String, oder "0,00€" bei null
      */
     static String format(BigDecimal betrag) {
         if (betrag == null) return "0,00€";
-        return String.format(java.util.Locale.GERMANY, "%,.2f€", betrag);
+        return String.format(Locale.GERMANY, "%,.2f€", betrag);
     }
 }

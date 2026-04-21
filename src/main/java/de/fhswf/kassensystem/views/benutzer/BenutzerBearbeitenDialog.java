@@ -7,7 +7,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
@@ -92,7 +91,7 @@ class BenutzerBearbeitenDialog extends BaseDialog {
     @Override
     protected boolean onSpeichern() {
         if (nameFeld.isEmpty()) {
-            Notification.show("Bitte einen Namen eingeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte einen Namen eingeben.");
             return false;
         }
         user.setBenutzername(usernameFeld.getValue().trim());

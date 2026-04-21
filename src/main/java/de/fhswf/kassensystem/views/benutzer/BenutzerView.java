@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.views.benutzer;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
@@ -118,13 +119,13 @@ public class BenutzerView extends AbstractTabellenView {
     /**
      * Erstellt den "Neuer Benutzer"-Button, der den {@link NeuerBenutzerDialog} öffnet.
      */
-    private com.vaadin.flow.component.button.Button buildNeuerBenutzerButton() {
+    private Button buildNeuerBenutzerButton() {
         Span plusIcon = createIcon("add");
         plusIcon.getStyle().set("font-size", "1.1rem");
         Span btnText = new Span("Neuer Benutzer");
         btnText.getStyle().set("font-weight", "700").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        com.vaadin.flow.component.button.Button btn = new com.vaadin.flow.component.button.Button();
+        Button btn = new com.vaadin.flow.component.button.Button();
         btn.getElement().setAttribute("tour-id", "neuer-benutzer-btn");
         btn.getElement().appendChild(plusIcon.getElement());
         btn.getElement().appendChild(btnText.getElement());

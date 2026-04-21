@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  *   "bestand-geaendert"  – nach Verkauf oder Lieferungsbestätigung
  *   "lager-geaendert"    – nach Wareneingang, Bestätigung oder Stornierung
  *
- * @author Adrian, Paula
+ * @author Adrian Krawietz, Paula Martin
  */
 public class Broadcaster {
 

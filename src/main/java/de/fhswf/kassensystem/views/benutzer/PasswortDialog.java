@@ -4,10 +4,10 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import de.fhswf.kassensystem.model.User;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 /**
  * Dialog zum Zurücksetzen des Passworts eines bestehenden Benutzers.
@@ -64,7 +64,7 @@ class PasswortDialog extends BaseDialog {
     @Override
     protected boolean onSpeichern() {
         if (neuesPasswort.isEmpty()) {
-            Notification.show("Bitte ein neues Passwort eingeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte ein neues Passwort eingeben.");
             return false;
         }
         return FehlerUI.versuch(() -> {

@@ -17,7 +17,6 @@ import java.util.function.Consumer;
  */
 class KategorieChipGroup extends HorizontalLayout {
 
-
     /**
      * Erstellt die Chip-Gruppe mit "Alle" als Standard-Selektion.
      *
@@ -29,7 +28,9 @@ class KategorieChipGroup extends HorizontalLayout {
         getStyle().set("gap", "0.75rem").set("margin-bottom", "2rem").set("flex-wrap", "wrap");
 
         add(buildChip("Alle", true, onSelect));
-        kategorien.stream().sorted().forEach(kat -> add(buildChip(kat, false, onSelect)));
+        kategorien.stream()
+                .sorted()
+                .forEach(kat -> add(buildChip(kat, false, onSelect)));
     }
 
     /**
@@ -42,14 +43,33 @@ class KategorieChipGroup extends HorizontalLayout {
     private Button buildChip(String label, boolean aktiv, Consumer<String> onSelect) {
         Button chip = new Button(label);
         stilisiere(chip, aktiv);
-
-        chip.addClickListener(e -> {
-            getChildren().forEach(c -> {
-                if (c instanceof Button b) stilisiere(b, b.getText().equals(label));
-            });
-            onSelect.accept(label);
-        });
+        chip.addClickListener(e -> onChipGeklickt(label, onSelect));
         return chip;
+    }
+
+    /**
+     * Hebt den geklickten Chip hervor, setzt alle anderen zurück
+     * und benachrichtigt den Callback mit dem gewählten Kategorienamen.
+     *
+     * @param label    der Kategoriename des geklickten Chips
+     * @param onSelect Callback der mit dem Kategorienamen aufgerufen wird
+     */
+    private void onChipGeklickt(String label, Consumer<String> onSelect) {
+        aktualisiereChipStyling(label);
+        onSelect.accept(label);
+    }
+
+    /**
+     * Setzt das Styling aller Chips neu – der aktive Chip wird hervorgehoben,
+     * alle anderen zurückgesetzt.
+     *
+     * @param aktiveLabel der Kategoriename des aktiven Chips
+     */
+    private void aktualisiereChipStyling(String aktiveLabel) {
+        getChildren()
+                .filter(c -> c instanceof Button)
+                .map(c -> (Button) c)
+                .forEach(b -> stilisiere(b, b.getText().equals(aktiveLabel)));
     }
 
     /**

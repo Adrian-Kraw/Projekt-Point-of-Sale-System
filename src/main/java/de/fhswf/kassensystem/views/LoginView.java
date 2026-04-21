@@ -84,7 +84,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 "Benutzername oder Passwort ist falsch. Bitte erneut versuchen.");
 
         loginForm.setI18n(i18n);
-        loginForm.setAction("login");  // POST /login → Spring Security
+        loginForm.setAction("login");
         loginForm.setForgotPasswordButtonVisible(false);
         loginForm.getStyle()
                 .set("border-radius", "1.25rem")

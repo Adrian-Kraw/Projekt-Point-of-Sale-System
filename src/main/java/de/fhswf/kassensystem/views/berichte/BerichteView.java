@@ -9,20 +9,23 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.dto.ArtikelStatistikDTO;
 import de.fhswf.kassensystem.model.dto.TagesabschlussDTO;
-import de.fhswf.kassensystem.exception.KassensystemException;
+import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.BerichteService;
-import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.service.EinstellungService;
 import de.fhswf.kassensystem.service.PdfExportService;
 import de.fhswf.kassensystem.views.MainLayout;
 import de.fhswf.kassensystem.views.SecuredView;
-import de.fhswf.kassensystem.model.enums.Rolle;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Berichte-View mit drei Tabs: Tagesabschluss, Umsatzübersicht und Artikelstatistik.
@@ -124,8 +127,6 @@ public class BerichteView extends SecuredView {
 
     /**
      * Erstellt den Seitenkopf mit Titel, Icon und PDF-Export-Button.
-     *
-     * @return fertig gestylter Header
      */
     private HorizontalLayout buildHeader() {
         HorizontalLayout header = new HorizontalLayout();
@@ -175,8 +176,6 @@ public class BerichteView extends SecuredView {
 
     /**
      * Erstellt die Tab-Navigationsleiste mit den drei Tabs und setzt deren Tour-IDs.
-     *
-     * @return horizontales Tab-Layout
      */
     private HorizontalLayout buildTabNavigation() {
         HorizontalLayout tabs = new HorizontalLayout();
@@ -204,7 +203,7 @@ public class BerichteView extends SecuredView {
     /**
      * Wechselt den aktiven Tab, aktualisiert die visuellen Zustände und lädt den Tab-Inhalt.
      *
-     * @param tab      ID des neuen aktiven Tabs ("tagesabschluss", "umsatz" oder "artikel")
+     * @param tab      ID des neuen aktiven Tabs
      * @param aktiv    der Span des nun aktiven Tabs
      * @param inaktive die Spans der inaktiven Tabs
      */
@@ -220,8 +219,7 @@ public class BerichteView extends SecuredView {
      * Erstellt einen einzelnen Tab-Span mit aktivem oder inaktivem Styling.
      *
      * @param label der angezeigte Tab-Text
-     * @param aktiv {@code true} für aktiv-Styling (braun, Unterstrich)
-     * @return gestylter Tab-Span
+     * @param aktiv {@code true} für aktiv-Styling
      */
     private Span buildTab(String label, boolean aktiv) {
         Span tab = new Span(label);
@@ -237,9 +235,6 @@ public class BerichteView extends SecuredView {
 
     /**
      * Erstellt die Zeile mit dem Datums-Picker und dem Echtzeit-Hinweis.
-     * Eine Datumsänderung lädt den Tab-Inhalt automatisch neu.
-     *
-     * @return horizontales Layout mit Datepicker und Hinweis
      */
     private HorizontalLayout buildDatumZeile() {
         HorizontalLayout zeile = new HorizontalLayout();
@@ -250,7 +245,7 @@ public class BerichteView extends SecuredView {
         zeile.getStyle().set("margin-bottom", "2rem");
 
         DatePicker datePicker = new DatePicker(aktivDatum);
-        datePicker.setLocale(java.util.Locale.GERMAN);
+        datePicker.setLocale(Locale.GERMAN);
         datePicker.addValueChangeListener(e -> {
             if (e.getValue() != null) { aktivDatum = e.getValue(); ladeTabInhalt(); }
         });
@@ -271,10 +266,10 @@ public class BerichteView extends SecuredView {
         try {
             TagesabschlussDTO tagesabschluss = berichteService.getTagesabschluss(aktivDatum);
             List<ArtikelStatistikDTO> statistik = berichteService.getArtikelStatistik(30);
-            byte[] pdfBytes = pdfExportService.exportiereTagebericht(tagesabschluss, statistik);
+            byte[] pdfBytes  = pdfExportService.exportiereTagebericht(tagesabschluss, statistik);
             String dateiname = "Tagesbericht_" +
-                    aktivDatum.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
-            String base64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
+                    aktivDatum.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
+            String base64    = Base64.getEncoder().encodeToString(pdfBytes);
             UI.getCurrent().getPage().executeJs(
                     "const bytes=atob($0);const arr=new Uint8Array(bytes.length);" +
                             "for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);" +

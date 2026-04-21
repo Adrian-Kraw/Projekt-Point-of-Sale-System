@@ -1,37 +1,41 @@
 package de.fhswf.kassensystem.views.verkauf;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.shared.Registration;
+import de.fhswf.kassensystem.broadcast.Broadcaster;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.Verkauf;
 import de.fhswf.kassensystem.model.Verkaufsposition;
 import de.fhswf.kassensystem.model.enums.Zahlungsart;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.shared.Registration;
-import de.fhswf.kassensystem.broadcast.Broadcaster;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.ArtikelService;
-import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.service.PdfExportService;
 import de.fhswf.kassensystem.service.VerkaufService;
 import de.fhswf.kassensystem.views.MainLayout;
+import de.fhswf.kassensystem.views.components.FehlerUI;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +66,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     private final WarenkorbZusammenfassung zusammenfassung;
 
     private final List<WarenkorbEintrag>  warenkorbListe  = new ArrayList<>();
-    private final Map<Long, Div>          kartenMap       = new HashMap<>(); // artikelId für Karte
+    private final Map<Long, Div>          kartenMap       = new HashMap<>();
     private String aktiveKategorie = "Alle";
     private String aktuelleSuche   = "";
 
@@ -74,8 +78,8 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     /**
      * Erstellt die View mit linker Artikel-Spalte und rechter Warenkorb-Spalte.
      *
-     * @param artikelService  Service für Artikel-Abfragen
-     * @param verkaufService  Service für das Abschließen von Verkäufen
+     * @param artikelService   Service für Artikel-Abfragen
+     * @param verkaufService   Service für das Abschließen von Verkäufen
      * @param pdfExportService Service für den Kassenbon-PDF-Export
      */
     public VerkaufView(ArtikelService artikelService, VerkaufService verkaufService,
@@ -87,7 +91,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 this::warenkorbLeeren,
                 gesamtBetrag -> {
                     if (warenkorbListe.isEmpty()) {
-                        Notification.show("Warenkorb ist leer.", 2000, Notification.Position.MIDDLE);
+                        FehlerUI.fehler("Warenkorb ist leer.");
                         return;
                     }
                     String betrag = gesamtBetrag != null ? gesamtBetrag : "0,00€";
@@ -163,7 +167,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                     ? artikelService.findAllArtikel()
                     : artikelService.findByName(aktuelleSuche))
                     .stream()
-                    .sorted(java.util.Comparator.comparing(Artikel::getName))
+                    .sorted(Comparator.comparing(Artikel::getName))
                     .toList();
 
             for (Artikel a : alle) {
@@ -260,22 +264,20 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
 
     /**
      * Legt einen Artikel in den Warenkorb oder erhöht dessen Menge.
-     * Prüft ob der Bestand ausreicht und zeigt eine Notification wenn nicht.
+     * Prüft ob der Bestand ausreicht und zeigt eine Fehlermeldung wenn nicht.
      *
      * @param artikel der hinzuzufügende Artikel
      */
     private void artikelZumKorbHinzufuegen(Artikel artikel) {
         if (artikel.getBestand() == 0) {
-            Notification.show("\"" + artikel.getName() + "\" ist nicht mehr auf Lager.",
-                    3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("\"" + artikel.getName() + "\" ist nicht mehr auf Lager.");
             return;
         }
 
         for (WarenkorbEintrag e : warenkorbListe) {
             if (e.artikel.getId().equals(artikel.getId())) {
                 if (artikel.getBestand() < 999 && e.menge >= artikel.getBestand()) {
-                    Notification.show("Nicht mehr Bestand vorhanden als bereits im Warenkorb.",
-                            2500, Notification.Position.MIDDLE);
+                    FehlerUI.fehler("Nicht mehr Bestand vorhanden als bereits im Warenkorb.");
                     return;
                 }
                 e.menge++;
@@ -306,7 +308,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             zebra = !zebra;
         }
         zusammenfassung.aktualisierePreise(warenkorbListe);
-
         aktualisiereBestandBadges();
     }
 
@@ -320,30 +321,21 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             Long artikelId = entry.getKey();
             Div  karte     = entry.getValue();
 
-            // Wie viel liegt im Warenkorb?
             int imKorb = warenkorbListe.stream()
                     .filter(e -> e.artikel.getId().equals(artikelId))
                     .mapToInt(e -> e.menge)
                     .sum();
 
-            // DB-Bestand des Artikels (aus dem WarenkorbEintrag oder der Karte)
             int dbBestand = warenkorbListe.stream()
                     .filter(e -> e.artikel.getId().equals(artikelId))
                     .map(e -> e.artikel.getBestand())
                     .findFirst()
-                    .orElseGet(() -> {
-                        // Artikel nicht im Warenkorb → Originalbestand aus Service holen
-                        // (nur wenn nötig, dh. imKorb == 0 → Badge bleibt eh gleich)
-                        return 0;
-                    });
+                    .orElse(0);
 
-            // Wenn Artikel im Warenkorb: Bestand live anpassen
             if (imKorb > 0) {
                 int anzeige = dbBestand >= 999 ? 999 : Math.max(0, dbBestand - imKorb);
                 ArtikelKarteFactory.aktualisiereBestand(karte, artikelId, anzeige);
             } else {
-                // Nicht im Warenkorb → Originalbestand wiederherstellen
-                // Artikel aus Service nachladen um echten Bestand zu kennen
                 artikelService.findAllArtikel().stream()
                         .filter(a -> a.getId().equals(artikelId))
                         .findFirst()
@@ -385,10 +377,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 positionen.add(pos);
             }
 
-            // Service macht Summenberechnung, Bestandsabbuch und Persistierung
             Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
-
-            // Alle anderen offenen Tabs (Lager, Kassieren) über Bestandsänderung informieren
             Broadcaster.broadcast("bestand-geaendert");
 
             FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
@@ -410,16 +399,16 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     /**
      * Generiert den Kassenbon als PDF und löst den Browser-Download aus.
      *
-     * @param positionen  die Verkaufspositionen des abgeschlossenen Verkaufs
-     * @param rabatt      der angewendete Rabatt in Prozent
+     * @param positionen die Verkaufspositionen des abgeschlossenen Verkaufs
+     * @param rabatt     der angewendete Rabatt in Prozent
      */
     private void druckeKassenbon(List<Verkaufsposition> positionen, BigDecimal rabatt) {
         try {
             byte[] pdfBytes = pdfExportService.exportiereKassenbon(positionen, rabatt);
-            String dateiname = "Kassenbon_" + java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm")) + ".pdf";
-            String base64 = java.util.Base64.getEncoder().encodeToString(pdfBytes);
-            com.vaadin.flow.component.UI.getCurrent().getPage().executeJs(
+            String dateiname = "Kassenbon_" + LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm")) + ".pdf";
+            String base64 = Base64.getEncoder().encodeToString(pdfBytes);
+            UI.getCurrent().getPage().executeJs(
                     "const bytes=atob($0);const arr=new Uint8Array(bytes.length);" +
                             "for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);" +
                             "const blob=new Blob([arr],{type:'application/pdf'});" +
@@ -457,6 +446,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             event.rerouteTo("login");
         }
     }
+
     // ═══════════════════════════════════════════════════════════
     // TOUR-AKTIONEN
     // ═══════════════════════════════════════════════════════════
@@ -519,5 +509,4 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             broadcasterRegistration = null;
         }
     }
-
 }

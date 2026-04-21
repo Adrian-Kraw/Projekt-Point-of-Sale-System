@@ -1,5 +1,6 @@
 package de.fhswf.kassensystem.views.artikel;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
@@ -8,11 +9,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.Artikel;
 import de.fhswf.kassensystem.model.enums.Rolle;
 import de.fhswf.kassensystem.service.ArtikelService;
 import de.fhswf.kassensystem.views.MainLayout;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.views.components.AbstractTabellenView;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.StatistikKarte;
@@ -107,11 +108,11 @@ public class ArtikelView extends AbstractTabellenView {
     private void ladeStatistikKarten() {
         statistikKartenLayout.removeAll();
         try {
-            List<Artikel> alle      = artikelService.findAllArtikel();
-            long gesamtArtikel      = alle.size();
-            long aktiv              = alle.stream().filter(Artikel::isAktiv).count();
-            long niedrigBestand     = alle.stream().filter(a -> a.getBestand() < a.getMinimalbestand()).count();
-            long kategorien         = alle.stream().map(a -> a.getKategorie().getId()).collect(Collectors.toSet()).size();
+            List<Artikel> alle  = artikelService.findAllArtikel();
+            long gesamtArtikel  = alle.size();
+            long aktiv          = alle.stream().filter(Artikel::isAktiv).count();
+            long niedrigBestand = alle.stream().filter(a -> a.getBestand() < a.getMinimalbestand()).count();
+            long kategorien     = alle.stream().map(a -> a.getKategorie().getId()).collect(Collectors.toSet()).size();
 
             statistikKartenLayout.add(
                     new StatistikKarte("Gesamtartikel",     String.valueOf(gesamtArtikel), "inventory_2",  false),
@@ -128,8 +129,6 @@ public class ArtikelView extends AbstractTabellenView {
 
     /**
      * Erstellt die Titelgruppe (Icon-Box + Überschrift "Artikelverwaltung").
-     *
-     * @return fertig gestylte Titelgruppe
      */
     private HorizontalLayout buildTitel() {
         HorizontalLayout titelGruppe = new HorizontalLayout();
@@ -157,8 +156,6 @@ public class ArtikelView extends AbstractTabellenView {
 
     /**
      * Erstellt den rechten Teil des Headers mit Suchfeld und "Neuer Artikel"-Button.
-     *
-     * @return Layout mit Suchfeld und Button
      */
     private HorizontalLayout buildHeaderAktionen() {
         HorizontalLayout aktionen = new HorizontalLayout();
@@ -180,16 +177,14 @@ public class ArtikelView extends AbstractTabellenView {
 
     /**
      * Erstellt den "Neuer Artikel"-Button, der beim Klick den {@link NeuerArtikelDialog} öffnet.
-     *
-     * @return konfigurierter Button
      */
-    private com.vaadin.flow.component.button.Button buildNeuerArtikelButton() {
+    private Button buildNeuerArtikelButton() {
         Span plusIcon = createIcon("add");
         plusIcon.getStyle().set("font-size", "1.1rem");
         Span btnText = new Span("Neuer Artikel");
         btnText.getStyle().set("font-weight", "700").set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        com.vaadin.flow.component.button.Button btn = new com.vaadin.flow.component.button.Button();
+        Button btn = new Button();
         btn.getElement().setAttribute("tour-id", "neuer-artikel-btn");
         btn.getElement().appendChild(plusIcon.getElement());
         btn.getElement().appendChild(btnText.getElement());
@@ -199,11 +194,7 @@ public class ArtikelView extends AbstractTabellenView {
                 .set("cursor", "pointer").set("display", "flex").set("align-items", "center")
                 .set("justify-content", "center").set("gap", "0.5rem").set("white-space", "nowrap")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
-        btn.addClickListener(e -> {
-            NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService);
-            dialog.addOpenedChangeListener(ev -> { if (!ev.isOpened()) refresh(); });
-            dialog.open();
-        });
+        btn.addClickListener(e -> oeffneNeuerArtikelDialog());
         return btn;
     }
 
@@ -215,19 +206,22 @@ public class ArtikelView extends AbstractTabellenView {
      */
     public void tourAktion(String action) {
         switch (action) {
-            case "open-neuer-artikel-dialog" -> {
-                NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService);
-                dialog.addOpenedChangeListener(ev -> { if (!ev.isOpened()) refresh(); });
-                dialog.open();
-            }
+            case "open-neuer-artikel-dialog" -> oeffneNeuerArtikelDialog();
             default -> {}
         }
     }
 
     /**
+     * Öffnet den {@link NeuerArtikelDialog} und lädt nach dem Schließen die Daten neu.
+     */
+    private void oeffneNeuerArtikelDialog() {
+        NeuerArtikelDialog dialog = new NeuerArtikelDialog(artikelService);
+        dialog.addOpenedChangeListener(ev -> { if (!ev.isOpened()) refresh(); });
+        dialog.open();
+    }
+
+    /**
      * Umhüllt die Tabelle in einem styled Container und setzt die Tour-ID.
-     *
-     * @return Container mit der Artikeltabelle
      */
     private VerticalLayout buildTabellenBereich() {
         VerticalLayout bereich = new VerticalLayout();
@@ -243,9 +237,6 @@ public class ArtikelView extends AbstractTabellenView {
 
     /**
      * Erstellt die Kopfzeile der Tabelle mit allen Spaltenüberschriften.
-     * Die Aktionen-Spalte erhält zusätzlich die Tour-ID {@code "artikel-aktionen-header"}.
-     *
-     * @return horizontales Layout mit Spaltenüberschriften
      */
     private HorizontalLayout buildTabellenHeader() {
         HorizontalLayout header = new HorizontalLayout();

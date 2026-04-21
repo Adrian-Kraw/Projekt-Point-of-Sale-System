@@ -1,6 +1,5 @@
 package de.fhswf.kassensystem.views.benutzer;
 
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -8,7 +7,6 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import de.fhswf.kassensystem.model.User;
 import de.fhswf.kassensystem.model.enums.Rolle;
-import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.service.UserService;
 import de.fhswf.kassensystem.views.components.FehlerUI;
 import de.fhswf.kassensystem.views.components.BaseDialog;
@@ -94,7 +92,7 @@ class NeuerBenutzerDialog extends BaseDialog {
     @Override
     protected boolean onSpeichern() {
         if (nameFeld.isEmpty() || passwortFeld.isEmpty()) {
-            Notification.show("Bitte Name und Passwort eingeben.", 3000, Notification.Position.MIDDLE);
+            FehlerUI.fehler("Bitte Name und Passwort eingeben.");
             return false;
         }
         User u = new User();
