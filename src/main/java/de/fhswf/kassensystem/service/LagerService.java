@@ -142,7 +142,8 @@ public class LagerService {
             throw new WareneingangBereitsBestaetigt(wareneingangId);
         }
         // Schöner wäre es ein STORNIERT Flag zu setzen
-        wareneingangRepository.deleteById(wareneingangId);
+        wareneingang.setStatus(WareneingangStatus.STORNIERT);
+        wareneingangRepository.save(wareneingang);
     }
 
     /**
