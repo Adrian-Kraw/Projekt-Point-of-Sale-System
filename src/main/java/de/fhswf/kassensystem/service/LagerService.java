@@ -65,6 +65,7 @@ public class LagerService {
         return artikelRepository.findArtikelUnterMinimalbestand()
                 .stream()
                 .filter(a -> !bereitsBestellt.contains(a.getId()))
+                .filter(Artikel::isAktiv)
                 .toList();
     }
 

@@ -222,7 +222,7 @@ public class DataInitializer implements ApplicationRunner {
             User manager = new User();
             manager.setBenutzername("Tobias");
             manager.setName("Tobias Linnemann-Holke");
-            manager.setPassword(passwordEncoder.encode("Tobias123"));
+            manager.setPassword(passwordEncoder.encode("tobias123"));
             manager.setRolle(Rolle.MANAGER);
             manager.setAktiv(true);
             userRepository.save(manager);

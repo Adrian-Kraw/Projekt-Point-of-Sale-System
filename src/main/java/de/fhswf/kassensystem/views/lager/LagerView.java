@@ -313,7 +313,7 @@ public class LagerView extends AbstractTabellenView {
         try {
             List<Artikel> artikel = (suchBegriff != null && !suchBegriff.isBlank())
                     ? artikelService.findByName(suchBegriff)
-                    : artikelService.findAllArtikel();
+                    : artikelService.findAllArtikel().stream().filter(Artikel::isAktiv).toList();;
             artikel = artikel.stream()
                     .sorted(Comparator.comparing((Artikel a) -> a.getKategorie().getName())
                             .thenComparing(Artikel::getName))
