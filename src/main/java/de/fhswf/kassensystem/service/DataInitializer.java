@@ -11,6 +11,7 @@ import de.fhswf.kassensystem.repository.MehrwertsteuerRepository;
 import de.fhswf.kassensystem.repository.UserRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
  * noch nicht existiert.
  */
 @Component
+@Profile("!test")
 public class DataInitializer implements ApplicationRunner {
 
     private final KategorieRepository kategorieRepository;

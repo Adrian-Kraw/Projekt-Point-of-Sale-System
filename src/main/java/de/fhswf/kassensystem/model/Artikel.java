@@ -60,6 +60,6 @@ public class Artikel {
      * Artikelbild als Byte-Array (JPEG oder PNG).
      * Null wenn kein Bild hochgeladen wurde.
      */
-    @Column(name = "bild", columnDefinition = "BYTEA")
+    @Column(name = "bild")
     private byte[] bild;
 }
