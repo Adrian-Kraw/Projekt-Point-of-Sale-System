@@ -218,20 +218,20 @@ public class DataInitializer implements ApplicationRunner {
     // ═══════════════════════════════════════════════════════════
 
     private void legeStandardUserAn() {
-        if (userRepository.findByBenutzername("manager") == null) {
+        if (userRepository.findByBenutzername("Tobias") == null) {
             User manager = new User();
-            manager.setBenutzername("manager");
-            manager.setName("Manager");
-            manager.setPassword(passwordEncoder.encode("manager123"));
+            manager.setBenutzername("Tobias");
+            manager.setName("Tobias Linnemann-Holke");
+            manager.setPassword(passwordEncoder.encode("Tobias123"));
             manager.setRolle(Rolle.MANAGER);
             manager.setAktiv(true);
             userRepository.save(manager);
         }
-        if (userRepository.findByBenutzername("kassierer") == null) {
+        if (userRepository.findByBenutzername("Stefan") == null) {
             User kassierer = new User();
-            kassierer.setBenutzername("kassierer");
-            kassierer.setName("Kassierer");
-            kassierer.setPassword(passwordEncoder.encode("kassierer123"));
+            kassierer.setBenutzername("Stefan");
+            kassierer.setName("Stefan");
+            kassierer.setPassword(passwordEncoder.encode("stefan123"));
             kassierer.setRolle(Rolle.KASSIERER);
             kassierer.setAktiv(true);
             userRepository.save(kassierer);

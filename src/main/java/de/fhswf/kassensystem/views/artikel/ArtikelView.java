@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * <p>Unterhalb der Tabelle werden vier {@link de.fhswf.kassensystem.views.components.StatistikKarte Statistikkarten}
  * angezeigt: Gesamtartikel, aktive Artikel, Artikel mit niedrigem Bestand und Kategorienanzahl.
  *
- * <p>Zugriff: Rollen {@code KASSIERER} und {@code MANAGER}.
+ * <p>Zugriff: Rolle {@code MANAGER}.
  *
  * @author Adrian Krawietz
  */
@@ -45,7 +45,7 @@ public class ArtikelView extends AbstractTabellenView {
      * @param artikelService Service für alle Artikel-Operationen
      */
     public ArtikelView(ArtikelService artikelService) {
-        super(Rolle.KASSIERER);
+        super(Rolle.MANAGER);
         this.artikelService = artikelService;
 
         statistikKartenLayout.setWidthFull();

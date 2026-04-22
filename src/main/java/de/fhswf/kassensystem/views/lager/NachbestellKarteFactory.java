@@ -37,7 +37,8 @@ class NachbestellKarteFactory {
         karte.getStyle()
                 .set("background", "rgba(255,255,255,0.6)").set("border-radius", "0.75rem")
                 .set("padding", "1rem 1.25rem").set("gap", "1rem")
-                .set("flex", "1").set("min-width", "200px");
+                .set("flex", "0 1 calc(33.333% - 0.75rem)").set("min-width", "200px")
+                .set("align-items", "flex-start");
 
         Span nameSpan = new Span(artikel.getName());
         nameSpan.getStyle()

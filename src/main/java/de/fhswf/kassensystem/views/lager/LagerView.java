@@ -229,12 +229,13 @@ public class LagerView extends AbstractTabellenView {
     private HorizontalLayout buildLieferungsKarte(Long lieferungId, String artikelName, int menge,
                                                   String bestelltAm, String bestelltVon, String liefertAm) {
         HorizontalLayout karte = new HorizontalLayout();
-        karte.setAlignItems(FlexComponent.Alignment.CENTER);
         karte.setSpacing(false);
         karte.getStyle()
                 .set("background", "rgba(255,255,255,0.7)").set("border-radius", "0.75rem")
                 .set("padding", "1rem 1.25rem").set("gap", "1rem")
-                .set("flex", "1").set("min-width", "260px");
+                .set("flex", "0 1 calc(33.333% - 0.75rem)").set("min-width", "260px")
+                .set("flex-wrap", "wrap")
+                .set("align-items", "flex-start");
 
         Span name = new Span(artikelName);
         name.getStyle().set("font-weight", "700").set("font-size", "0.875rem").set("color", "#1a1a2e")
@@ -246,22 +247,25 @@ public class LagerView extends AbstractTabellenView {
                 .set("padding", "0.15rem 0.6rem").set("font-size", "0.75rem").set("font-weight", "700")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        Span meta = new Span("Bestellt am " + bestelltAm + " von @" + bestelltVon
-                + "  ·  Lieferung erwartet: " + liefertAm);
-        meta.getStyle().set("font-size", "0.75rem").set("color", "#82746d")
+        Span metaBestellung = new Span("Bestellt am " + bestelltAm + " von @" + bestelltVon);
+        metaBestellung.getStyle().set("font-size", "0.75rem").set("color", "#82746d")
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
 
-        HorizontalLayout badgeRow = new HorizontalLayout();
-        badgeRow.setAlignItems(FlexComponent.Alignment.CENTER);
-        badgeRow.setSpacing(false);
-        badgeRow.getStyle().set("gap", "0.5rem");
-        badgeRow.add(mengeBadge, meta);
+        Span metaLieferung = new Span("Lieferung erwartet: " + liefertAm);
+        metaLieferung.getStyle().set("font-size", "0.75rem").set("color", "#82746d")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+
+        VerticalLayout metaBlock = new VerticalLayout();
+        metaBlock.setPadding(false);
+        metaBlock.setSpacing(false);
+        metaBlock.getStyle().set("gap", "0.2rem");
+        metaBlock.add(mengeBadge, metaBestellung, metaLieferung);
 
         VerticalLayout info = new VerticalLayout();
         info.setPadding(false);
         info.setSpacing(false);
         info.getStyle().set("flex", "1").set("gap", "0.3rem");
-        info.add(name, badgeRow);
+        info.add(name, metaBlock);
 
         Button bestaetigenBtn = new Button("✓  Lieferung bestätigen");
         bestaetigenBtn.getStyle()
@@ -283,7 +287,7 @@ public class LagerView extends AbstractTabellenView {
         HorizontalLayout btnRow = new HorizontalLayout();
         btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
         btnRow.setSpacing(false);
-        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0");
+        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0").set("flex-wrap", "wrap");
         btnRow.add(bestaetigenBtn, ablehnBtn);
 
         karte.add(info, btnRow);
