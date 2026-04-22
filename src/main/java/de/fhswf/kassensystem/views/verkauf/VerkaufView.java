@@ -384,10 +384,14 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                     + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
 
             final List<Verkaufsposition> bonPositionen = new ArrayList<>(positionen);
-            new QuittungsDialog(
+            QuittungsDialog quittungsDialog = new QuittungsDialog(
                     () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); },
                     () -> { warenkorbLeeren(); ladeArtikelGrid(); }
-            ).open();
+            );
+            quittungsDialog.addOpenedChangeListener(e -> {
+                if (!quittungsDialog.isOpened()) { warenkorbLeeren(); ladeArtikelGrid(); }
+            });
+            quittungsDialog.open();
 
         } catch (KassensystemException ex) {
             FehlerUI.fehler(ex.getMessage());
