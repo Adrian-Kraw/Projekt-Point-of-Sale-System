@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link TourStep#hasTarget()}, {@link TourStep#hasAction()}
  * und {@link TourStep#tooltipCentered()} – inklusive Grenzfälle
  * wie leere Strings und nur Leerzeichen.
+ *
+ * @author Adrian Krawietz
  */
 class TourStepTest {
 

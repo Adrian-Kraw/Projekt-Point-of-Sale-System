@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
  * <p>Das {@link UserRepository} wird per Mockito gemockt damit keine
  * Datenbankverbindung benötigt wird. Der {@link SecurityContextHolder}
  * wird vor jedem Test geleert um Zustandsübertragung zwischen Tests zu verhindern.</p>
+ *
+ * @author Adrian Krawietz, Paula Martin
  */
 class SecurityUtilsTest {
 

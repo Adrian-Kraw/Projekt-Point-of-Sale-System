@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>Prüft das Kategorie-zu-Tabler-Icon-Mapping für alle bekannten
  * Kategorien sowie Grenzfälle (unbekannte Kategorie, null, leerer String,
  * Leerzeichen, Groß-/Kleinschreibung, führende/nachfolgende Leerzeichen).
+ *
+ * @author Adrian Krawietz
  */
 class ArtikelKarteFactoryTest {
 

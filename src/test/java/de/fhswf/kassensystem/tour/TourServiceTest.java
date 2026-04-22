@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Prüft ob die vordefinierten Touren korrekt geladen werden
  * und ob Grenzfälle (unbekannte ID, leere ID, null) sicher behandelt werden.
+ *
+ * @author Adrian Krawietz
  */
 class TourServiceTest {
 

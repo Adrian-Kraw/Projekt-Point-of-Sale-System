@@ -20,6 +20,8 @@ import static org.mockito.Mockito.*;
  * (leerer Benutzername, Leerzeichen).
  *
  * <p>Das {@link UserRepository} wird per Mockito gemockt.
+ *
+ * @author Adrian Krawietz
  */
 class UserDetailsServiceImplTest {
 

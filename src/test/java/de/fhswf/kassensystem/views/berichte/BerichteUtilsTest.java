@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Voraussetzung: {@code BerichteUtils.fp()} muss {@link java.util.Locale#GERMANY}
  * verwenden damit die Formatierung unabhängig vom System-Locale korrekt ist.
+ *
+ * @author Adrian Krawietz
  */
 class BerichteUtilsTest {
 

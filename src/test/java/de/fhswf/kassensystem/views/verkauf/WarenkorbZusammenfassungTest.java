@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Voraussetzung: {@code format()} muss {@link java.util.Locale#GERMANY}
  * verwenden und einen null-Check enthalten damit alle Tests korrekt laufen.
+ *
+ * @author Adrian Krawietz
  */
 class WarenkorbZusammenfassungTest {
 
