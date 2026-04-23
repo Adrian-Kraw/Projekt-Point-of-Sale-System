@@ -717,14 +717,24 @@ public class LagerView extends AbstractTabellenView {
         header.setAlignItems(FlexComponent.Alignment.CENTER);
         header.setPadding(false);
         header.setSpacing(false);
-        header.getStyle().set("background", "#f5f2ff").set("padding", "0.75rem 2rem").set("gap", "0");
-        header.add(
-                headerZelle("Artikel",       LagerZeileFactory.BREITE_ARTIKEL),
-                headerZelle("Kategorie",     LagerZeileFactory.BREITE_KATEGORIE),
-                headerZelle("Bestand",       LagerZeileFactory.BREITE_BESTAND),
-                headerZelle("Minimalgrenze", LagerZeileFactory.BREITE_MINIMAL),
-                buildStatusHeaderZelle()
-        );
+        header.getStyle().set("background", "#f5f2ff").set("padding", "0").set("gap", "0");
+
+        Span artikelHeader = headerZelle("Artikel", LagerZeileFactory.BREITE_ARTIKEL);
+        artikelHeader.getStyle().set("padding-left", "2rem").set("padding-top", "0.75rem").set("padding-bottom", "0.75rem");
+
+        Span kategorieHeader = headerZelle("Kategorie", LagerZeileFactory.BREITE_KATEGORIE);
+        kategorieHeader.getStyle().set("padding-top", "0.75rem").set("padding-bottom", "0.75rem");
+
+        Span bestandHeader = headerZelle("Bestand", LagerZeileFactory.BREITE_BESTAND);
+        bestandHeader.getStyle().set("padding-top", "0.75rem").set("padding-bottom", "0.75rem");
+
+        Span minimalHeader = headerZelle("Minimalgrenze", LagerZeileFactory.BREITE_MINIMAL);
+        minimalHeader.getStyle().set("padding-top", "0.75rem").set("padding-bottom", "0.75rem");
+
+        Span statusHeader = buildStatusHeaderZelle();
+        statusHeader.getStyle().set("padding-right", "2rem").set("padding-top", "0.75rem").set("padding-bottom", "0.75rem").set("text-align", "center");
+
+        header.add(artikelHeader, kategorieHeader, bestandHeader, minimalHeader, statusHeader);
         return header;
     }
 

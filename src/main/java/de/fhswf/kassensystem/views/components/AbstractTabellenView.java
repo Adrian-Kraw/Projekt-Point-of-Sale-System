@@ -49,7 +49,8 @@ public abstract class AbstractTabellenView extends SecuredView {
     protected Span headerZelle(String text, String breite) {
         Span zelle = new Span(text);
         zelle.getStyle()
-                .set("width", breite)
+                .set("flex", "0 0 " + breite)
+                .set("min-width", "0")
                 .set("font-size", "0.65rem")
                 .set("font-weight", "800")
                 .set("text-transform", "uppercase")

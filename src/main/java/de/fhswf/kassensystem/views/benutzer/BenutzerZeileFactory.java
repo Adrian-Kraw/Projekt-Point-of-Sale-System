@@ -69,13 +69,13 @@ class BenutzerZeileFactory {
         Span nameZelle = buildTextZelle(user.getName(), BREITE_NAME, "0.875rem", "#50453e", false);
 
         Div rolleZelle = new Div(buildRolleBadge(rolleText));
-        rolleZelle.getStyle().set("width", BREITE_ROLLE);
+        rolleZelle.getStyle().set("flex", "0 0 " + BREITE_ROLLE).set("min-width", "0");
 
         HorizontalLayout statusZelle = buildStatusZelle(user.isAktiv());
-        statusZelle.getStyle().set("width", BREITE_STATUS);
+        statusZelle.getStyle().set("flex", "0 0 " + BREITE_STATUS).set("min-width", "0");
 
         HorizontalLayout aktionenZelle = buildAktionenZelle(user, userService, onAenderung, onPasswortReset);
-        aktionenZelle.getStyle().set("width", BREITE_AKTIONEN).set("justify-content", "flex-end");
+        aktionenZelle.getStyle().set("flex", "0 0 " + BREITE_AKTIONEN).set("min-width", "0").set("justify-content", "flex-start");
 
         String normalBg = zebra ? "rgba(245,242,255,0.4)" : "white";
         zeile.getElement().executeJs(
@@ -93,7 +93,8 @@ class BenutzerZeileFactory {
                                        String fontSize, String color, boolean bold) {
         Span span = new Span(text);
         span.getStyle()
-                .set("width", breite).set("font-size", fontSize).set("color", color)
+                .set("flex", "0 0 " + breite).set("min-width", "0")
+                .set("font-size", fontSize).set("color", color)
                 .set("font-family", "'Plus Jakarta Sans', sans-serif");
         if (bold) span.getStyle().set("font-weight", "600");
         return span;

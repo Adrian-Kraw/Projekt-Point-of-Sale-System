@@ -177,7 +177,8 @@ public class BenutzerView extends AbstractTabellenView {
         header.setPadding(false);
         header.setSpacing(false);
         header.getStyle()
-                .set("background", "#f5f2ff").set("padding", "0.75rem 2rem").set("gap", "0");
+                .set("background", "#f5f2ff").set("padding", "0.75rem 2rem").set("gap", "0")
+                .set("box-sizing", "border-box");
         header.add(
                 headerZelle("ID",           BenutzerZeileFactory.BREITE_ID),
                 headerZelle("Benutzername", BenutzerZeileFactory.BREITE_USERNAME),
