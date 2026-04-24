@@ -56,7 +56,6 @@ public class VerkaufService {
      * @param positionen Liste der Verkaufspositionen mit Artikel, Menge und Einzelpreis
      * @param zahlungsart gewählte Zahlungsart (BAR oder KARTE)
      * @param rabatt gewährter prozentualer Rabatt, {@code 0} für keinen Rabatt
-     * // @param gesamtsumme berechneter Gesamtbetrag nach Rabattabzug inklusive MwSt
      * @return der persistierte {@link Verkauf} inklusive generierter ID
      */
     @Transactional
@@ -123,5 +122,37 @@ public class VerkaufService {
         verkauf.setPositionen(positionen);
 
         return verkaufRepository.save(verkauf);
+    }
+
+    /**
+     * Storniert einen abgeschlossenen Verkauf.
+     *
+     * <p>Setzt den Status auf {@link Status#STORNIERT} und bucht den Bestand
+     * aller Positionen zurück. Die Operation ist atomar – schlägt ein
+     * Bestandsupdate fehl, wird die gesamte Transaktion zurückgerollt.</p>
+     *
+     * @param verkaufId ID des zu stornierenden Verkaufs
+     * @throws UngueltigeEingabeException wenn der Verkauf nicht gefunden wird oder
+     *                                    bereits storniert ist
+     */
+    @Transactional
+    public void verkaufStornieren(Long verkaufId) {
+        Verkauf verkauf = verkaufRepository.findById(verkaufId)
+                .orElseThrow(() -> new UngueltigeEingabeException("Verkauf nicht gefunden."));
+
+        if (verkauf.getStatus() == Status.STORNIERT) {
+            throw new UngueltigeEingabeException("Verkauf ist bereits storniert.");
+        }
+
+        for (Verkaufsposition pos : verkauf.getPositionen()) {
+            Artikel artikel = pos.getArtikel();
+            if (artikel.getBestand() < 999) {
+                artikel.setBestand(artikel.getBestand() + pos.getMenge());
+                artikelRepository.save(artikel);
+            }
+        }
+
+        verkauf.setStatus(Status.STORNIERT);
+        verkaufRepository.save(verkauf);
     }
 }

@@ -64,6 +64,7 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
     private final VerkaufService           verkaufService;
     private final PdfExportService         pdfExportService;
     private final WarenkorbZusammenfassung zusammenfassung;
+    private Long letzterVerkaufId = null;
 
     private final List<WarenkorbEintrag>  warenkorbListe  = new ArrayList<>();
     private final Map<Long, Div>          kartenMap       = new HashMap<>();
@@ -378,21 +379,45 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             }
 
             Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
+            letzterVerkaufId = verkauf.getId();
             Broadcaster.broadcast("bestand-geaendert");
 
             FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
                     + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
 
             final List<Verkaufsposition> bonPositionen = new ArrayList<>(positionen);
+            final Long verkaufIdFinal = verkauf.getId();
+
             QuittungsDialog quittungsDialog = new QuittungsDialog(
                     () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); },
-                    () -> { warenkorbLeeren(); ladeArtikelGrid(); }
+                    () -> { warenkorbLeeren(); ladeArtikelGrid(); },
+                    () -> { verkaufStornieren(verkaufIdFinal); }
             );
             quittungsDialog.addOpenedChangeListener(e -> {
                 if (!quittungsDialog.isOpened()) { warenkorbLeeren(); ladeArtikelGrid(); }
             });
             quittungsDialog.open();
 
+        } catch (KassensystemException ex) {
+            FehlerUI.fehler(ex.getMessage());
+        } catch (Exception ex) {
+            FehlerUI.technischerFehler(ex);
+        }
+    }
+
+    /**
+     * Storniert den zuletzt abgeschlossenen Verkauf, bucht den Bestand zurück
+     * und gibt eine Erfolgsmeldung aus.
+     *
+     * @param verkaufId ID des zu stornierenden Verkaufs
+     */
+    private void verkaufStornieren(Long verkaufId) {
+        try {
+            verkaufService.verkaufStornieren(verkaufId);
+            Broadcaster.broadcast("bestand-geaendert");
+            warenkorbLeeren();
+            ladeArtikelGrid();
+            FehlerUI.erfolg("Verkauf wurde erfolgreich storniert.");
         } catch (KassensystemException ex) {
             FehlerUI.fehler(ex.getMessage());
         } catch (Exception ex) {
@@ -474,7 +499,11 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
                 String anzeige = (betrag == null || betrag.isBlank()) ? "2,99€" : betrag;
                 new ZahlungsDialog(anzeige, art -> {}).open();
             }
-            case "open-quittungsdialog" -> new QuittungsDialog(() -> {}, () -> {}).open();
+            case "open-quittungsdialog" -> new QuittungsDialog(
+                    () -> {},
+                    () -> {},
+                    () -> FehlerUI.erfolg("Stornierung war Erfolgreich.")
+            ).open();
         }
     }
 

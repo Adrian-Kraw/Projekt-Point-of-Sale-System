@@ -92,7 +92,7 @@ public class TourService {
                     // position "dialog-left" → Tooltip erscheint links neben dem Dialog
                     new TourStep(null,
                             "Quittung drucken?",
-                            "Nach der Zahlung kannst Du dem Kunden eine Quittung als PDF erstellen. Dies ist nur eine Demo – es wird nichts gedruckt.",
+                            "Nach der Zahlung kannst Du dem Kunden eine Quittung als PDF erstellen. Falls etwas nicht stimmt, kann der Verkauf über den Stornieren-Button noch rückgängig gemacht werden, bevor die Quittung ausgestellt wird. Dies ist nur eine Demo – es wird nichts gedruckt.",
                             "dialog-left", "open-quittungsdialog"),
 
                     // 10 – Lager-Nav → direkt navigieren
@@ -200,7 +200,7 @@ public class TourService {
                     // 9 – Quittung
                     new TourStep(null,
                             "Quittung drucken?",
-                            "Nach der Zahlung kannst Du dem Kunden eine Quittung als PDF erstellen. Dies ist nur eine Demo – es wird nichts gedruckt.",
+                            "Nach der Zahlung kannst Du dem Kunden eine Quittung als PDF erstellen. Falls etwas nicht stimmt, kann der Verkauf über den Stornieren-Button noch rückgängig gemacht werden, bevor die Quittung ausgestellt wird. Dies ist nur eine Demo – es wird nichts gedruckt.",
                             "dialog-left", "open-quittungsdialog"),
 
                     // ── LAGER ──────────────────────────────────────────────────────
