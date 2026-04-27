@@ -184,7 +184,7 @@ class VerkaufServiceTest {
                     Zahlungsart.BAR,
                     new BigDecimal("-0.10")))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("negativ");
+                    .hasMessageContaining("kleiner als 0");
 
             verify(verkaufRepository, never()).save(any());
         }

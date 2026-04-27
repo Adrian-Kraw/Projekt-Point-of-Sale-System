@@ -265,7 +265,9 @@ class LagerServiceTest {
 
             lagerService.lieferungStornieren(1L);
 
-            verify(wareneingangRepository).deleteById(1L);
+            assertThat(testWareneingang.getStatus()).isEqualTo(WareneingangStatus.STORNIERT);
+            verify(wareneingangRepository).save(testWareneingang);
+            verify(wareneingangRepository, never()).deleteById(any());
         }
 
         @Test

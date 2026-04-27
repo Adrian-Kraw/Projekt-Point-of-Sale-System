@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Zentraler Event-Bus für Live-Updates zwischen Browser-Tabs.
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
  */
 public class Broadcaster {
 
+    private static final Logger logger = Logger.getLogger(Broadcaster.class.getName());
     private static final Executor executor = Executors.newSingleThreadExecutor();
     private static final LinkedList<Consumer<String>> listeners = new LinkedList<>();
 
@@ -90,7 +93,8 @@ public class Broadcaster {
                 try {
                     listener.accept(event);
                 } catch (Exception ex) {
-                    throw new BroadcastListenerException(event, ex);
+                    BroadcastListenerException ble = new BroadcastListenerException(event, ex);
+                    logger.log(Level.WARNING, ble.getMessage(), ble);
                 }
             });
         }
