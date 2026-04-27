@@ -76,6 +76,12 @@ spring:
 
 Die grüne **Run**-Schaltfläche in IntelliJ drücken oder `Shift + F10`.
 
+Alternativ per Maven in PowerShell:
+
+```powershell
+mvn spring-boot:run "-Dspring-boot.run.profiles=dev"
+```
+
 Die Anwendung ist erreichbar unter: [http://localhost:8080](http://localhost:8080)
 
 Beim ersten Start legt der `DataInitializer` automatisch alle Stammdaten (Artikel, Kategorien, MwSt-Sätze) sowie die Standard-Benutzer an.
@@ -167,7 +173,7 @@ src/
 
 ## Tests ausführen
 
-```bash
+```powershell
 mvn test
 ```
 
@@ -177,4 +183,4 @@ Tests laufen gegen eine H2-In-Memory-Datenbank (Profil `test`) – PostgreSQL wi
 
 ## Entwickler
 
-Entwickelt von **Paula Martin** und **Adrian Krawietz** 
+Entwickelt von **Paula Martin** und **Adrian Krawietz**
