@@ -124,7 +124,7 @@ class UmsatzuebersichtPanel extends VerticalLayout {
             stundenDiag.setAlignItems(FlexComponent.Alignment.END);
             stundenDiag.setSpacing(false);
             stundenDiag.getStyle().set("height", "14rem").set("gap", "0.5rem").set("padding", "0 0.5rem");
-            String[] labels = {"8","9","10","11","12","13","14","15","16","17","18"};
+            String[] labels = {"8:00-8:59","9:00-9:59","10:00-10:59","11:00-11:59","12:00-12:59","13:00-13:59","14:00-14:59","15:00-15:59","16:00-16:59","17:00-17:59","18:00-18:59"};
             for (int i = 0; i < 11; i++) {
                 stundenDiag.add(DiagrammFactory.buildBalken(labels[i],
                         Math.max(BerichteUtils.pct(bar[i], maxH), 2) + "%",
