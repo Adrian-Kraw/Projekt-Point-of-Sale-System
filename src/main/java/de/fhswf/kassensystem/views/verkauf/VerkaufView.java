@@ -380,7 +380,6 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
 
             Verkauf verkauf = verkaufService.verkaufKomplett(positionen, zahlungsart, rabatt);
             letzterVerkaufId = verkauf.getId();
-            Broadcaster.broadcast("bestand-geaendert");
 
             FehlerUI.erfolg("Zahlung per " + zahlungsart.name() + " erfolgreich! Betrag: "
                     + WarenkorbZusammenfassung.format(verkauf.getGesamtsumme()));
@@ -389,8 +388,8 @@ public class VerkaufView extends HorizontalLayout implements BeforeEnterObserver
             final Long verkaufIdFinal = verkauf.getId();
 
             QuittungsDialog quittungsDialog = new QuittungsDialog(
-                    () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); },
-                    () -> { warenkorbLeeren(); ladeArtikelGrid(); },
+                    () -> { druckeKassenbon(bonPositionen, rabatt); warenkorbLeeren(); ladeArtikelGrid(); Broadcaster.broadcast("bestand-geaendert"); },
+                    () -> { warenkorbLeeren(); ladeArtikelGrid(); Broadcaster.broadcast("bestand-geaendert"); },
                     () -> { verkaufStornieren(verkaufIdFinal); }
             );
             quittungsDialog.addOpenedChangeListener(e -> {
