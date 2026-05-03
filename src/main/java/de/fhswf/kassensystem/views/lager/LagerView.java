@@ -233,8 +233,8 @@ public class LagerView extends AbstractTabellenView {
         karte.getStyle()
                 .set("background", "rgba(255,255,255,0.7)").set("border-radius", "0.75rem")
                 .set("padding", "1rem 1.25rem").set("gap", "1rem")
-                .set("flex", "0 1 calc(33.333% - 0.75rem)").set("min-width", "260px")
-                .set("flex-wrap", "wrap")
+                .set("flex", "0 1 calc(33.333% - 0.75rem)").set("min-width", "300px")
+                .set("flex-wrap", "nowrap")
                 .set("align-items", "flex-start");
 
         Span name = new Span(artikelName);
@@ -287,10 +287,12 @@ public class LagerView extends AbstractTabellenView {
         HorizontalLayout btnRow = new HorizontalLayout();
         btnRow.setAlignItems(FlexComponent.Alignment.CENTER);
         btnRow.setSpacing(false);
-        btnRow.getStyle().set("gap", "0.5rem").set("flex-shrink", "0").set("flex-wrap", "wrap");
+        btnRow.getStyle().set("gap", "0.5rem").set("flex-wrap", "nowrap").set("margin-top", "0.5rem");
         btnRow.add(bestaetigenBtn, ablehnBtn);
 
-        karte.add(info, btnRow);
+        info.add(btnRow);
+
+        karte.add(info);
         return karte;
     }
 

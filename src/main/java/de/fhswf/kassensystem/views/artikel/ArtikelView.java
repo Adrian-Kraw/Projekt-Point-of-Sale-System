@@ -8,6 +8,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import de.fhswf.kassensystem.exception.KassensystemException;
 import de.fhswf.kassensystem.model.Artikel;
@@ -52,7 +53,7 @@ public class ArtikelView extends AbstractTabellenView {
         statistikKartenLayout.setSpacing(false);
         statistikKartenLayout.getStyle().set("gap", "1.5rem").set("margin-top", "1.5rem");
 
-        add(buildHeader(), buildTabellenBereich(), statistikKartenLayout);
+        add(buildHeader(), statistikKartenLayout, buildTabellenBereich());
         ladeDaten();
         ladeStatistikKarten();
     }
@@ -169,6 +170,7 @@ public class ArtikelView extends AbstractTabellenView {
         suchfeld.addClassName("artikel-suchfeld");
         suchfeld.getStyle().set("width", "18rem");
         suchfeld.getElement().setAttribute("tour-id", "artikel-suchfeld");
+        suchfeld.setValueChangeMode(ValueChangeMode.EAGER);
         suchfeld.addValueChangeListener(e -> { aktuelleSuche = e.getValue(); ladeDaten(); });
 
         aktionen.add(suchfeld, buildNeuerArtikelButton());
