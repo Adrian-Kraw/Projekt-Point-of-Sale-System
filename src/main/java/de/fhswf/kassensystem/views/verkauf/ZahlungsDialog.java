@@ -101,6 +101,27 @@ class ZahlungsDialog extends BaseDialog {
         return btn;
     }
 
+    /**
+     * Überschreibt den Footer mit nur einem Abbrechen-Button.
+     */
+    @Override
+    protected HorizontalLayout buildCustomFooter() {
+        Button abbrechenBtn = new Button("Abbrechen");
+        abbrechenBtn.getStyle()
+                .set("flex", "1").set("background", "transparent").set("color", "#553722")
+                .set("border", "1.5px solid #553722").set("border-radius", "1rem")
+                .set("padding", "0.75rem 2rem").set("font-weight", "700").set("cursor", "pointer")
+                .set("font-family", "'Plus Jakarta Sans', sans-serif");
+        abbrechenBtn.addClickListener(e -> close());
+
+        HorizontalLayout footer = new HorizontalLayout();
+        footer.setWidthFull();
+        footer.setSpacing(false);
+        footer.getStyle().set("background", "#f5f2ff").set("padding", "1.25rem 1.5rem").set("gap", "1rem");
+        footer.add(abbrechenBtn);
+        return footer;
+    }
+
     @Override
     protected boolean onSpeichern() { return true; }
 }
